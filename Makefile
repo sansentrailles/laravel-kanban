@@ -1,6 +1,6 @@
 # =============================================================================
 # Laravel 13 + Docker Makefile
-# PHP 8.5 | PostgreSQL | Redis | ImageMagick
+# PHP 8.5 | PostgreSQL | Redis
 # =============================================================================
 
 # Переменные
@@ -40,11 +40,10 @@ usage: ## 💡 Показать примеры использования
 	@echo "  make test                                          # Запустить тесты"
 	@echo "  make composer-require PACKAGE=laravel/sanctum       # Установить пакет"
 	@echo "  make fresh                                         # Полный сброс проекта"
-	@echo "  make imagick-check                                 # Проверить ImageMagick"
 	@echo ""
 
 # =============================================================================
-# DOCKER: УПРАВЛЕНИЕ КОНТЕЙНЕРАМИ
+# DOCKER: УПРАВЛЕНИЕ КОНТЕЙНЕРАМИ (только для текущего проекта)
 # =============================================================================
 
 .PHONY: up
@@ -52,23 +51,24 @@ up: ## 🚀 Запустить все контейнеры в фоне
 	$(DOCKER_COMPOSE) up -d
 
 .PHONY: down
-down: ## 🛑 Остановить все контейнеры
+down: ## 🛑 Остановить все контейнеры проекта
 	$(DOCKER_COMPOSE) down
 
 .PHONY: restart
-restart: down up ## 🔄 Полный перезапуск контейнеров
+restart: down up ## 🔄 Полный перезапуск контейнеров проекта
 
 .PHONY: build
 build: ## 🔨 Собрать образы и запустить контейнеры
 	$(DOCKER_COMPOSE) up -d --build
 
 .PHONY: rebuild
-rebuild: ## 🔥 Полная пересборка (с удалением volumes и данных)
+rebuild: ## 🔥 Полная пересборка проекта (с удалением volumes проекта)
 	$(DOCKER_COMPOSE) down -v
-	$(DOCKER_COMPOSE) up -d --build
+	$(DOCKER_COMPOSE) build --no-cache
+	$(DOCKER_COMPOSE) up -d
 
 .PHONY: logs
-logs: ## 📜 Показать логи всех контейнеров
+logs: ## 📜 Показать логи всех контейнеров проекта
 	$(DOCKER_COMPOSE) logs -f
 
 .PHONY: logs-app
@@ -88,8 +88,13 @@ logs-nginx: ## 📜 Показать логи Nginx
 	$(DOCKER_COMPOSE) logs -f nginx
 
 .PHONY: ps
-ps: ## 📋 Показать статус контейнеров
+ps: ## 📋 Показать статус контейнеров проекта
 	$(DOCKER_COMPOSE) ps
+
+.PHONY: clean
+clean: ## 🧹 Очистить ресурсы ТОЛЬКО текущего проекта
+	$(DOCKER_COMPOSE) down -v --rmi local --remove-orphans
+	@echo "$(GREEN)Ресурсы проекта очищены$(NC)"
 
 # =============================================================================
 # ДОСТУП К КОНТЕЙНЕРАМ
@@ -208,8 +213,8 @@ optimize-clear: ## 🧹 Снять всю оптимизацию
 # =============================================================================
 
 .PHONY: key
-key: ## 🔑 Сгенерировать APP_KEY
-	$(EXEC) php artisan key:generate
+key: ## 🔑 Сгенерировать APP_KEY (безопасно, если ключ уже есть)
+	$(DOCKER_COMPOSE) exec $(APP_CONTAINER) sh -c "grep -q 'APP_KEY=$$' .env && php artisan key:generate --force || php artisan key:generate"
 
 .PHONY: tinker
 tinker: ## 🔧 Запустить Tinker (интерактивная консоль)
@@ -220,8 +225,8 @@ routes: ## 🛣 Показать список маршрутов
 	$(EXEC) php artisan route:list
 
 .PHONY: storage-link
-storage-link: ## 🔗 Создать символическую ссылку storage
-	$(EXEC) php artisan storage:link
+storage-link: ## 🔗 Создать символическую ссылку storage (безопасно, даже если уже существует)
+	$(DOCKER_COMPOSE) exec $(APP_CONTAINER) sh -c "rm -f public/storage && php artisan storage:link"
 
 .PHONY: serve
 serve: ## 🌐 Запустить встроенный сервер Laravel
@@ -316,51 +321,6 @@ phpstan: ## 🔍 Запустить PHPStan анализ
 	$(EXEC) ./vendor/bin/phpstan analyse
 
 # =============================================================================
-# ПРОВЕРКА НАСТРОЕК (PHP, IMAGICK, GD)
-# =============================================================================
-
-.PHONY: php-info
-php-info: ## ℹ️ Показать ключевые настройки PHP
-	@echo "$(GREEN)=== Настройки PHP ===$(NC)"
-	$(EXEC) php -i | grep -E "^(memory_limit|upload_max_filesize|post_max_size|max_execution_time|imagick|gd)" || true
-
-.PHONY: php-version
-php-version: ## ℹ️ Показать версию PHP
-	$(EXEC) php -v
-
-.PHONY: php-ini
-php-ini: ## 📜 Показать путь к загруженному php.ini
-	$(EXEC) php --ini
-
-.PHONY: php-modules
-php-modules: ## 📜 Показать список установленных модулей PHP
-	$(EXEC) php -m
-
-.PHONY: imagick-check
-imagick-check: ## 🖼 Проверить настройки ImageMagick
-	@echo "$(GREEN)=== ImageMagick PHP Extension ===$(NC)"
-	$(EXEC) php -r "echo 'Imagick version: ' . Imagick::getVersion()['versionString'] . PHP_EOL; echo 'Supported formats: ' . count(Imagick::queryFormats()) . PHP_EOL;"
-	@echo ""
-	@echo "$(GREEN)=== ImageMagick CLI ===$(NC)"
-	$(EXEC) convert --version 2>/dev/null || $(EXEC) magick --version 2>/dev/null || echo "$(RED)ImageMagick CLI не найден$(NC)"
-
-.PHONY: imagick-policy
-imagick-policy: ## 📜 Показать текущий policy.xml ImageMagick
-	$(EXEC) cat /etc/ImageMagick-6/policy.xml 2>/dev/null || $(EXEC) cat /etc/ImageMagick-7/policy.xml 2>/dev/null || echo "$(RED)policy.xml не найден$(NC)"
-
-.PHONY: imagick-formats
-imagick-formats: ## 🖼 Показать все поддерживаемые форматы ImageMagick
-	$(EXEC) php -r "print_r(Imagick::queryFormats());"
-
-.PHONY: imagick-test
-imagick-test: ## 🖼 Тест создания изображения через ImageMagick
-	$(EXEC) php -r "\$$im = new Imagick(); \$$im->newImage(100, 100, new ImagickPixel('red')); \$$im->setImageFormat('png'); \$$im->writeImage('/tmp/test.png'); echo 'OK: ' . filesize('/tmp/test.png') . ' bytes' . PHP_EOL;"
-
-.PHONY: gd-check
-gd-check: ## 🖼 Проверить настройки GD
-	$(EXEC) php -r "print_r(gd_info());"
-
-# =============================================================================
 # ПОЛНАЯ ИНИЦИАЛИЗАЦИЯ ПРОЕКТА
 # =============================================================================
 
@@ -376,12 +336,15 @@ init: env build composer-install key storage-link migrate ## 🎯 Полная �
 	@echo "$(YELLOW)  🔴 Redis:      localhost:6379$(NC)"
 	@echo ""
 
-.PHONY: fresh
-fresh: rebuild composer-install key fresh-seed ## 🔥 Полный сброс проекта (с удалением данных)
-	@echo ""
-	@echo "$(GREEN)✅ Проект полностью сброшен и инициализирован заново!$(NC)"
-	@echo "$(YELLOW)🌐 Откройте: http://localhost$(NC)"
-	@echo ""
+.PHONY: rebuild
+rebuild: ## 🔥 Полная пересборка проекта (с удалением volumes и автоматическими миграциями)
+	$(DOCKER_COMPOSE) down -v
+	$(DOCKER_COMPOSE) build --no-cache
+	$(DOCKER_COMPOSE) up -d
+	@echo "$(YELLOW)⏳ Ожидание готовности контейнеров...$(NC)"
+	@sleep 5
+	$(EXEC) php artisan migrate --force
+	@echo "$(GREEN)✅ Проект полностью пересобран и инициализирован!$(NC)"
 
 # =============================================================================
 # ДОПОЛНИТЕЛЬНЫЕ КОМАНДЫ
@@ -391,11 +354,16 @@ fresh: rebuild composer-install key fresh-seed ## 🔥 Полный сброс �
 env: ## 📄 Скопировать .env.example в .env (если не существует)
 	@test -f .env && echo "$(YELLOW).env уже существует$(NC)" || (cp .env.example .env && echo "$(GREEN).env файл создан из .env.example$(NC)")
 
+# .PHONY: perms
+# perms: ## 🔐 Исправить права на storage и bootstrap/cache
+# 	$(DOCKER_COMPOSE) exec -u root $(APP_CONTAINER) chown -R www-data:www-data storage bootstrap/cache
+# 	$(DOCKER_COMPOSE) exec -u root $(APP_CONTAINER) chmod -R 775 storage bootstrap/cache
+# 	@echo "$(GREEN)Права исправлены$(NC)"
+
 .PHONY: perms
-perms: ## 🔐 Исправить права на storage и bootstrap/cache
-	$(DOCKER_COMPOSE) exec -u root $(APP_CONTAINER) chown -R www-data:www-data storage bootstrap/cache
-	$(DOCKER_COMPOSE) exec -u root $(APP_CONTAINER) chmod -R 775 storage bootstrap/cache
-	@echo "$(GREEN)Права исправлены$(NC)"
+perms: ## 🔐 Исправить права на storage и bootstrap/cache (создает папки при необходимости)
+	$(DOCKER_COMPOSE) exec -u root $(APP_CONTAINER) sh -c "mkdir -p storage/framework/{sessions,views,cache} && chown -R www-data:www-data storage bootstrap/cache && chmod -R 775 storage bootstrap/cache"
+	@echo "$(GREEN)Права и структура папок исправлены$(NC)"
 
 .PHONY: artisan
 artisan: ## 🛠 Выполнить произвольную artisan команду (make artisan CMD="route:list")
@@ -405,12 +373,19 @@ artisan: ## 🛠 Выполнить произвольную artisan коман�
 composer: ## 🛠 Выполнить произвольную composer команду (make composer CMD="show")
 	$(EXEC) composer $(CMD)
 
-.PHONY: prune
-prune: ## 🧹 Очистить неиспользуемые Docker ресурсы
-	docker system prune -f
-	@echo "$(GREEN)Docker ресурсы очищены$(NC)"
 
-.PHONY: prune-all
-prune-all: ## 🧹 Полная очистка Docker (включая volumes!)
-	docker system prune -a --volumes -f
-	@echo "$(RED)Все Docker ресурсы удалены!$(NC)"
+# =============================================================================
+# FRONTEND (NPM / VITE)
+# =============================================================================
+
+.PHONY: npm-install
+npm-install: ## 📦 Установить зависимости NPM
+	$(DOCKER_COMPOSE) run --rm node npm install
+
+.PHONY: npm-dev
+npm-dev: ## 🚀 Запустить Vite в режиме разработки
+	$(DOCKER_COMPOSE) run --rm -p 5173:5173 node npm run dev
+
+.PHONY: npm-build
+npm-build: ## 📦 Собрать фронтенд для production
+	$(DOCKER_COMPOSE) run --rm node npm run build

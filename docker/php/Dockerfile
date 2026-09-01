@@ -1,45 +1,43 @@
 FROM php:8.5-fpm
 
-# Установка системных зависимостей
+# 1. Системные зависимости
 RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libwebp-dev \
-    libmagickwand-dev \
+    libonig-dev \
+    libxml2-dev \
     libpq-dev \
     libzip-dev \
+    libicu-dev \
+    zip \
     unzip \
-    ghostscript \
-    && rm -rf /var/lib/apt/lists/*
+    autoconf \
+    build-essential \
+    && docker-php-ext-install pdo_pgsql pgsql bcmath gd intl mbstring xml zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Настройка и установка расширения GD
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) gd
+# 2. Установка Redis из исходного кода (GitHub master)
+RUN git clone https://github.com/phpredis/phpredis.git /tmp/phpredis \
+    && cd /tmp/phpredis \
+    && phpize \
+    && ./configure \
+    && make \
+    && make install \
+    && docker-php-ext-enable redis \
+    && rm -rf /tmp/phpredis
 
-# Установка ImageMagick (Imagick)
-RUN pecl install imagick \
-    && docker-php-ext-enable imagick
-
-# Установка остальных расширений PHP
-RUN docker-php-ext-install pdo_pgsql pgsql redis zip pcntl bcmath opcache
-
-# Создание директории для логов PHP
-RUN mkdir -p /var/log/php \
-    && chown -R www-data:www-data /var/log/php
-
-# Копирование php.ini
-COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
-
-# Копирование policy.xml для ImageMagick
-COPY docker/php/imagemagick/policy.xml /etc/ImageMagick-6/policy.xml
-
-# Установка Composer
+# 3. Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# 4. Рабочая директория
 WORKDIR /var/www/html
 
-# Права на storage и cache
-RUN chown -R www-data:www-data /var/www/html || true
+# 5. ИСПРАВЛЕНИЕ: Разрешаем Git работать в этой папке внутри контейнера
+RUN git config --global --add safe.directory /var/www/html
+
+# 6. Установка прав
+RUN chown -R www-data:www-data /var/www
+
+EXPOSE 9000
+CMD ["php-fpm"]
