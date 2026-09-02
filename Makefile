@@ -282,6 +282,10 @@ make-model: ## 📝 Создать модель (make make-model NAME=User)
 make-controller: ## 📝 Создать контроллер (make make-controller NAME=UserController)
 	$(EXEC) php artisan make:controller $(NAME)
 
+.PHONY: make-form-request
+make-form-request: ## 📝 Создать FormRequest (make make-request  NAME=FormRequest)
+	$(EXEC) php artisan make:request  $(NAME)
+
 .PHONY: make-migration
 make-migration: ## 📝 Создать миграцию (make make-migration NAME=create_posts_table)
 	$(EXEC) php artisan make:migration $(NAME)
