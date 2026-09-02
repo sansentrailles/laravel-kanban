@@ -62,7 +62,7 @@ services:
   queue:
     build:
       context: .
-      dockerfile: docker/php/Dockerfile  # ← Путь к Dockerfile
+      dockerfile: docker/php/Dockerfile
     container_name: laravel_queue
     restart: unless-stopped
     working_dir: /var/www/html
@@ -76,9 +76,22 @@ services:
     networks:
       - laravel_net
 
+  # Node.js для сборки фронтенда (Vite)
+  node:
+    image: node:22-alpine
+    container_name: laravel_node
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - node_modules:/var/www/html/node_modules  # <-- Используем именованный том
+    networks:
+      - laravel_net
+    restart: "no"
+
 volumes:
   db_data:
   redis_data:
+  node_modules:
 
 networks:
   laravel_net:

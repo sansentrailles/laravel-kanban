@@ -61,11 +61,53 @@ restart: down up ## 🔄 Полный перезапуск контейнеро�
 build: ## 🔨 Собрать образы и запустить контейнеры
 	$(DOCKER_COMPOSE) up -d --build
 
+# =============================================================================
+# ПОЛНАЯ ПЕРЕСБОРКА ПРОЕКТА
+# =============================================================================
+
 .PHONY: rebuild
-rebuild: ## 🔥 Полная пересборка проекта (с удалением volumes проекта)
+rebuild: ## 🔥 Полная пересборка (очистка volumes, переустановка deps, БД)
+	@echo "$(RED)⚠️ Начинается полная пересборка с удалением всех volumes проекта...$(NC)"
+	@echo "$(RED)⚠️ Все данные в БД и node_modules будут безвозвратно удалены!$(NC)"
+	@sleep 2
+	
+	# 1. Полная очистка Docker
 	$(DOCKER_COMPOSE) down -v
+	
+	# 2. Пересборка образов без кэша
 	$(DOCKER_COMPOSE) build --no-cache
 	$(DOCKER_COMPOSE) up -d
+	
+	@echo "$(YELLOW)⏳ Ожидание готовности контейнеров...$(NC)"
+	@sleep 5
+	
+	# 3. Восстановление окружения и зависимостей (переиспользуем существующие цели)
+	$(MAKE) env
+	$(MAKE) composer-install
+	$(MAKE) key
+	$(MAKE) storage-link
+	
+	# 4. Критически важно для Inertia/Vue: переустановка npm пакетов, 
+	# так как volume с node_modules был удален командой down -v
+	$(MAKE) npm-install
+	
+	# 5. Чистая база данных с сидерами
+	$(MAKE) fresh-seed
+	
+	@echo ""
+	@echo "$(GREEN)╔══════════════════════════════════════════════════════════╗$(NC)"
+	@echo "$(GREEN)║       ✅ Проект полностью пересобран и готов!           ║$(NC)"
+	@echo "$(GREEN)╚══════════════════════════════════════════════════════════╝$(NC)"
+	@echo ""
+	@echo "$(YELLOW)  🌐 Откройте: http://localhost$(NC)"
+	@echo "$(YELLOW)  👤 Тест:       http://localhost/register$(NC)"
+	@echo ""
+
+# .PHONY: rebuild
+# rebuild: ## 🔥 Полная пересборка проекта (с удалением volumes проекта)
+# 	$(DOCKER_COMPOSE) down -v
+# 	$(DOCKER_COMPOSE) build --no-cache
+# 	$(DOCKER_COMPOSE) up -d
 
 .PHONY: logs
 logs: ## 📜 Показать логи всех контейнеров проекта
@@ -325,26 +367,17 @@ phpstan: ## 🔍 Запустить PHPStan анализ
 # =============================================================================
 
 .PHONY: init
-init: env build composer-install key storage-link migrate ## 🎯 Полная инициализация проекта с нуля
+init: env build composer-install key storage-link breeze-install npm-install npm-build migrate fresh-seed ## 🎯 Полная инициализация (Breeze + NPM + сборка)
 	@echo ""
 	@echo "$(GREEN)╔══════════════════════════════════════════════════════════╗$(NC)"
 	@echo "$(GREEN)║       ✅ Проект успешно инициализирован!                ║$(NC)"
 	@echo "$(GREEN)╚══════════════════════════════════════════════════════════╝$(NC)"
 	@echo ""
 	@echo "$(YELLOW)  🌐 Откройте: http://localhost$(NC)"
-	@echo "$(YELLOW)  📊 PostgreSQL: localhost:5432 (laravel / secret)$(NC)"
 	@echo "$(YELLOW)  🔴 Redis:      localhost:6379$(NC)"
+	@echo "$(YELLOW)  👤 Тест:       http://localhost/register$(NC)"
+	@echo "$(YELLOW)  💡 Для разработки запустите: make npm-dev$(NC)"
 	@echo ""
-
-.PHONY: rebuild
-rebuild: ## 🔥 Полная пересборка проекта (с удалением volumes и автоматическими миграциями)
-	$(DOCKER_COMPOSE) down -v
-	$(DOCKER_COMPOSE) build --no-cache
-	$(DOCKER_COMPOSE) up -d
-	@echo "$(YELLOW)⏳ Ожидание готовности контейнеров...$(NC)"
-	@sleep 5
-	$(EXEC) php artisan migrate --force
-	@echo "$(GREEN)✅ Проект полностью пересобран и инициализирован!$(NC)"
 
 # =============================================================================
 # ДОПОЛНИТЕЛЬНЫЕ КОМАНДЫ
@@ -373,14 +406,32 @@ artisan: ## 🛠 Выполнить произвольную artisan коман�
 composer: ## 🛠 Выполнить произвольную composer команду (make composer CMD="show")
 	$(EXEC) composer $(CMD)
 
+# =============================================================================
+# LARAVEL BREEZE (Аутентификация)
+# =============================================================================
+
+.PHONY: breeze-install
+breeze-install: ## 🌬 Установить Laravel Breeze (Vue 3 + Inertia + Pest)
+	@echo "$(YELLOW)⏳ Проверка установки Laravel Breeze...$(NC)"
+	@if [ -f "resources/js/bootstrap.js" ]; then \
+		echo "$(GREEN)✅ Файлы Breeze уже существуют, пропускаем установку.$(NC)"; \
+	else \
+		echo "$(YELLOW)⏳ Установка PHP-каркаса Laravel Breeze (Vue + Pest)...$(NC)"; \
+		$(EXEC) composer require laravel/breeze --dev; \
+		$(EXEC) php artisan breeze:install vue --pest --no-interaction; \
+		echo "$(GREEN)✅ Каркас Laravel Breeze успешно установлен$(NC)"; \
+	fi
 
 # =============================================================================
 # FRONTEND (NPM / VITE)
 # =============================================================================
 
 .PHONY: npm-install
-npm-install: ## 📦 Установить зависимости NPM
-	$(DOCKER_COMPOSE) run --rm node npm install
+npm-install: ## 📦 Установить зависимости NPM (быстро, без лишних логов)
+	@echo "$(YELLOW)⏳ Установка Node.js зависимостей (может занять 1-3 минуты)...$(NC)"
+	$(DOCKER_COMPOSE) run --rm node npm install --no-fund --no-audit --loglevel=error
+	$(MAKE) npm-sync-perms
+	@echo "$(GREEN)✅ Node.js зависимости установлены$(NC)"
 
 .PHONY: npm-dev
 npm-dev: ## 🚀 Запустить Vite в режиме разработки
@@ -389,3 +440,18 @@ npm-dev: ## 🚀 Запустить Vite в режиме разработки
 .PHONY: npm-build
 npm-build: ## 📦 Собрать фронтенд для production
 	$(DOCKER_COMPOSE) run --rm node npm run build
+
+.PHONY: npm-sync-perms
+npm-sync-perms: ## 🔐 Синхронизировать права node_modules для PHP-контейнера
+	@echo "$(YELLOW)⏳ Синхронизация прав node_modules...$(NC)"
+	$(DOCKER_COMPOSE) run --rm node chown -R 1000:1000 /var/www/html/node_modules
+	@echo "$(GREEN)✅ Права синхронизированы$(NC)"
+
+.PHONY: npm-clean
+npm-clean: ## 🧹 Полная очистка node_modules (том Docker + хост)
+	@echo "$(YELLOW)⏳ Очистка node_modules...$(NC)"
+	$(DOCKER_COMPOSE) down -v
+	@docker volume rm $(docker volume ls -q | grep node_modules) 2>/dev/null || true
+	@docker run --rm -v $(pwd):/host alpine rm -rf /host/node_modules /host/package-lock.json 2>/dev/null || true
+	@echo "$(GREEN)✅ node_modules полностью очищены$(NC)"
+
