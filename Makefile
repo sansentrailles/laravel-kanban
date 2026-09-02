@@ -6,7 +6,18 @@
 # Переменные
 DOCKER_COMPOSE = docker compose
 APP_CONTAINER  = app
-EXEC           = $(DOCKER_COMPOSE) exec $(APP_CONTAINER)
+# EXEC           = $(DOCKER_COMPOSE) exec $(APP_CONTAINER)
+
+# Получаем ID текущего пользователя и группы (работает одинаково в Linux и WSL)
+HOST_UID := $(shell id -u)
+HOST_GID := $(shell id -g)
+
+# Экспортируем их, чтобы docker-compose.yml мог их прочитать
+export HOST_UID
+export HOST_GID
+
+# Теперь EXEC запускает команды от имени вашего пользователя (благодаря директиве user в compose)
+EXEC = $(DOCKER_COMPOSE) exec $(APP_CONTAINER)
 
 # Цвета для вывода
 GREEN  = \033[0;32m
@@ -398,9 +409,12 @@ env: ## 📄 Скопировать .env.example в .env (если не суще
 # 	@echo "$(GREEN)Права исправлены$(NC)"
 
 .PHONY: perms
-perms: ## 🔐 Исправить права на storage и bootstrap/cache (создает папки при необходимости)
-	$(DOCKER_COMPOSE) exec -u root $(APP_CONTAINER) sh -c "mkdir -p storage/framework/{sessions,views,cache} && chown -R www-data:www-data storage bootstrap/cache && chmod -R 775 storage bootstrap/cache"
-	@echo "$(GREEN)Права и структура папок исправлены$(NC)"
+perms: ## 🔐 Исправить права: гарантируем запись в storage и cache
+	@echo "$(YELLOW)⏳ Исправление прав доступа...$(NC)"
+	$(DOCKER_COMPOSE) exec $(APP_CONTAINER) sh -c "\
+		mkdir -p storage/framework/{sessions,views,cache} && \
+		chmod -R 775 storage bootstrap/cache"
+	@echo "$(GREEN)✅ Права успешно исправлены$(NC)"
 
 .PHONY: artisan
 artisan: ## 🛠 Выполнить произвольную artisan команду (make artisan CMD="route:list")

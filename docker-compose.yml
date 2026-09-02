@@ -7,6 +7,7 @@ services:
     container_name: laravel_app
     restart: unless-stopped
     working_dir: /var/www/html
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     volumes:
       - ./:/var/www/html
     depends_on:
@@ -66,6 +67,7 @@ services:
     container_name: laravel_queue
     restart: unless-stopped
     working_dir: /var/www/html
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     command: php artisan queue:work --tries=3 --timeout=90
     volumes:
       - ./:/var/www/html
@@ -81,6 +83,7 @@ services:
     image: node:22-alpine
     container_name: laravel_node
     working_dir: /var/www/html
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     volumes:
       - ./:/var/www/html
       - node_modules:/var/www/html/node_modules  # <-- Используем именованный том
