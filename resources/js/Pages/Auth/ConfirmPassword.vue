@@ -22,8 +22,7 @@ const submit = () => {
         <Head title="Confirm Password" />
 
         <div class="mb-4 text-sm text-gray-600">
-            This is a secure area of the application. Please confirm your
-            password before continuing.
+            Пожалуйста, подтвердите свой пароль, прежде чем продолжить.
         </div>
 
         <form @submit.prevent="submit">
@@ -47,7 +46,7 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Confirm
+                    Подтвердить
                 </PrimaryButton>
             </div>
         </form>
