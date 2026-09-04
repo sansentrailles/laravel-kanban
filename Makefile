@@ -451,6 +451,13 @@ npm-install: ## 📦 Установить зависимости NPM (быстр
 	$(MAKE) npm-sync-perms
 	@echo "$(GREEN)✅ Node.js зависимости установлены$(NC)"
 
+.PHONY: npm-require
+npm-require: ## 📦 Установить NPM пакет (make npm-require PACKAGE=@heroicons/vue)
+	@echo "$(YELLOW)⏳ Установка NPM пакета $(PACKAGE)...$(NC)"
+	$(DOCKER_COMPOSE) run --rm node npm install $(PACKAGE)
+	$(MAKE) npm-sync-perms
+	@echo "$(GREEN)✅ Пакет $(PACKAGE) успешно установлен$(NC)"
+
 .PHONY: npm-dev
 npm-dev: ## 🚀 Запустить Vite в режиме разработки
 	$(DOCKER_COMPOSE) run --rm -p 5173:5173 node npm run dev
