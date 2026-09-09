@@ -101,6 +101,7 @@ rebuild: ## 🔥 Полная пересборка (очистка volumes, пе
 	# 4. Критически важно для Inertia/Vue: переустановка npm пакетов, 
 	# так как volume с node_modules был удален командой down -v
 	$(MAKE) npm-install
+	$(MAKE) npm-build 
 	
 	# 5. Чистая база данных с сидерами
 	$(MAKE) fresh-seed
@@ -441,21 +442,24 @@ breeze-install: ## 🌬 Установить Laravel Breeze (Vue 3 + Inertia + P
 	fi
 
 # =============================================================================
-# FRONTEND (NPM / VITE)
+# FRONTEND (NPM / Vite)
 # =============================================================================
-
 .PHONY: npm-install
 npm-install: ## 📦 Установить зависимости NPM (быстро, без лишних логов)
+	@echo "$(YELLOW)⏳ Подготовка прав для node_modules...$(NC)"
+	# Создаем папку и меняем права от root, так как именованный том по умолчанию принадлежит root
+	$(DOCKER_COMPOSE) run --rm --user root node sh -c "mkdir -p /var/www/html/node_modules && chown -R ${HOST_UID}:${HOST_GID} /var/www/html/node_modules"
 	@echo "$(YELLOW)⏳ Установка Node.js зависимостей (может занять 1-3 минуты)...$(NC)"
+	# Запускаем установку от имени текущего пользователя
 	$(DOCKER_COMPOSE) run --rm node npm install --no-fund --no-audit --loglevel=error
-	$(MAKE) npm-sync-perms
 	@echo "$(GREEN)✅ Node.js зависимости установлены$(NC)"
 
 .PHONY: npm-require
 npm-require: ## 📦 Установить NPM пакет (make npm-require PACKAGE=@heroicons/vue)
+	@echo "$(YELLOW)⏳ Подготовка прав для node_modules...$(NC)"
+	$(DOCKER_COMPOSE) run --rm --user root node sh -c "mkdir -p /var/www/html/node_modules && chown -R ${HOST_UID}:${HOST_GID} /var/www/html/node_modules"
 	@echo "$(YELLOW)⏳ Установка NPM пакета $(PACKAGE)...$(NC)"
 	$(DOCKER_COMPOSE) run --rm node npm install $(PACKAGE)
-	$(MAKE) npm-sync-perms
 	@echo "$(GREEN)✅ Пакет $(PACKAGE) успешно установлен$(NC)"
 
 .PHONY: npm-dev
@@ -469,7 +473,8 @@ npm-build: ## 📦 Собрать фронтенд для production
 .PHONY: npm-sync-perms
 npm-sync-perms: ## 🔐 Синхронизировать права node_modules для PHP-контейнера
 	@echo "$(YELLOW)⏳ Синхронизация прав node_modules...$(NC)"
-	$(DOCKER_COMPOSE) run --rm node chown -R 1000:1000 /var/www/html/node_modules
+	# Команда chown должна выполняться от root, иначе получим Permission denied
+	$(DOCKER_COMPOSE) run --rm --user root node chown -R ${HOST_UID}:${HOST_GID} /var/www/html/node_modules
 	@echo "$(GREEN)✅ Права синхронизированы$(NC)"
 
 .PHONY: npm-clean
@@ -479,4 +484,3 @@ npm-clean: ## 🧹 Полная очистка node_modules (том Docker + х�
 	@docker volume rm $(docker volume ls -q | grep node_modules) 2>/dev/null || true
 	@docker run --rm -v $(pwd):/host alpine rm -rf /host/node_modules /host/package-lock.json 2>/dev/null || true
 	@echo "$(GREEN)✅ node_modules полностью очищены$(NC)"
-
