@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Providers\Enums\Kanban;
+namespace App\Enums\Kanban;
 
 enum BoardVisibility: string
 {

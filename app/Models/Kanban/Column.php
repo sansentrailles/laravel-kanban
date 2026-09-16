@@ -2,6 +2,7 @@
 
 namespace App\Models\Kanban;
 
+use Database\Factories\Kanban\ColumnFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Column extends Model
 {
-    /** @use HasFactory<\Database\Factories\Kanban\ColumnFactory> */
+    /** @use HasFactory<ColumnFactory> */
     use HasFactory, SoftDeletes;
 
     protected $table = 'kanban_columns';
@@ -109,4 +110,3 @@ class Column extends Model
         return $this->settings[$key] ?? $default;
     }
 }
- 
