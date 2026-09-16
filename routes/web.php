@@ -23,6 +23,7 @@ Route::get('/boards/{board}', function ($boardId) {
     // Временно возвращаем мок-данные
     // Позже заменим на контроллер
     return Inertia::render('Boards/Show', [
+        'title' => 'Abc',
         'auth' => [
             'user' => [
                 'id' => 1,
