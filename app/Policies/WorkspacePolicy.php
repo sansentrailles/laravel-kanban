@@ -32,5 +32,4 @@ final class WorkspacePolicy
 
         return $role?->canManageMembers() ?? false;
     }
-
 }

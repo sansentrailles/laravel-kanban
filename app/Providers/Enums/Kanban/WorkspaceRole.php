@@ -36,4 +36,3 @@ enum WorkspaceRole: string
         return $this === self::Owner;
     }
 }
-

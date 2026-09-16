@@ -29,10 +29,10 @@ class AppServiceProvider extends ServiceProvider
         Inertia::share([
             // Данные текущего пользователя
             'auth' => fn () => [
-                'user' => Auth::user()
+                'user' => Auth::user(),
             ],
             // flash-сообщение
-            'flash' => fn () => session('message')
+            'flash' => fn () => session('message'),
         ]);
 
         Gate::policy(Workspace::class, WorkspacePolicy::class);

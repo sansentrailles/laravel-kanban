@@ -29,7 +29,7 @@ Route::get('/boards/{board}', function ($boardId) {
                 'id' => 1,
                 'name' => 'Alex Johnson',
                 'email' => 'alex@example.com',
-            ]
+            ],
         ],
         'workspaces' => [
             [
@@ -37,7 +37,7 @@ Route::get('/boards/{board}', function ($boardId) {
                 'name' => 'My Workspace',
                 'plan' => 'Pro',
                 'members_count' => 5,
-            ]
+            ],
         ],
         'currentWorkspace' => [
             'id' => 1,
@@ -57,7 +57,7 @@ Route::get('/boards/{board}', function ($boardId) {
                 'name' => 'Marketing Q4',
                 'color' => '#10b981',
                 'cards_count' => 12,
-            ]
+            ],
         ],
         'unreadNotifications' => 3,
     ]);

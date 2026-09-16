@@ -4,6 +4,7 @@ namespace App\Models\Kanban;
 
 use App\Enums\Kanban\WorkspaceRole;
 use App\Models\User;
+use Database\Factories\Kanban\WorkspaceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,15 +15,17 @@ use Illuminate\Support\Str;
 
 class Workspace extends Model
 {
-    /** @use HasFactory<\Database\Factories\Kanban\WorkspaceFactory> */
+    /** @use HasFactory<WorkspaceFactory> */
     use HasFactory, SoftDeletes;
+
+    protected $table = 'kanban_workspaces';
 
     protected $fillable = [
         'name',
         'slug',
         'description',
         'owner_id',
-        'settigns'
+        'settigns',
     ];
 
     protected function casts(): array
@@ -35,7 +38,6 @@ class Workspace extends Model
 
     /**
      * Автогенерация slug при создание
-     * @return void
      */
     public static function booter(): void
     {
@@ -58,11 +60,11 @@ class Workspace extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(
-                User::class,
-                'kanban_workspace_user',
-                'workspace_id',
-                'user_id'
-            )
+            User::class,
+            'kanban_workspace_user',
+            'workspace_id',
+            'user_id'
+        )
             ->withPivot(['role', 'joined_at', 'invite_token'])
             ->withTimestamps();
     }
@@ -75,7 +77,7 @@ class Workspace extends Model
     // ─────────────────────────────────────────────
     //  Helpers
     // ─────────────────────────────────────────────
-    
+
     public function getRoleForUser(User $user): ?WorkspaceRole
     {
         if ($this->owner_id === $user->id) {
@@ -86,7 +88,7 @@ class Workspace extends Model
             ->where('user_id', $user->id)
             ->first()
             ?->pivot;
-        
+
         return $pivot?->role ? WorkspaceRole::from($pivot->role) : null;
     }
 
