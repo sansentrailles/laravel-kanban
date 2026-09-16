@@ -17,6 +17,8 @@ class Board extends Model
     /** @use HasFactory<BoardFactory> */
     use HasFactory, SoftDeletes;
 
+    protected $table = 'kanban_boards';
+
     protected $fillable = [
         'workspace_id',
         'created_by',
@@ -66,10 +68,10 @@ class Board extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    // public function columns(): HasMany
-    // {
-    //     return $this->hasMany(Column::class)->orderBy('order');
-    // }
+    public function columns(): HasMany
+    {
+        return $this->hasMany(Column::class)->orderBy('order');
+    }
 
     /**
      * Получение настроек с дефолтными значениями
