@@ -3,6 +3,7 @@
 namespace Database\Factories\Kanban;
 
 use App\Models\Kanban\Label;
+use App\Models\Kanban\Workspace;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class LabelFactory extends Factory
 {
+    protected $model = Label::class;
+
     /**
      * Define the model's default state.
      *
@@ -18,7 +21,24 @@ class LabelFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'workspace_id' => Workspace::factory(),
+            'name' => fake()->unique()->randomElement([
+                'Bug', 'Feature', 'Design', 'Backend', 'Frontend',
+                'DevOps', 'Documentation', 'Urgent'
+            ]),
+            'color' => fake()->hexColor(),
+            'description' => fake()->optional()->sentence(),
+            'order' => fake()->numberBetween(1, 100),
         ];
+    }
+
+    /**
+     * Состояние: метка с конкретным цветом
+     */
+    public function withColor(string $color): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'color' => $color,
+        ]);
     }
 }
