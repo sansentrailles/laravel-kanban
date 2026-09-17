@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Label newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Label newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Label query()
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kanban\Card> $cards
+ * @property-read int|null $cards_count
  * @mixin \Eloquent
  */
 class Label extends Model

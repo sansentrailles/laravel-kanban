@@ -2,18 +2,18 @@
 
 // use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WorkspaceController;
 // use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Route::get('/', function () {
-//     return Inertia::render('Welcome', [
-//         'canLogin' => Route::has('login'),
-//         'canRegister' => Route::has('register'),
-//         'laravelVersion' => Application::VERSION,
-//         'phpVersion' => PHP_VERSION,
-//     ]);
-// });
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/', [WorkspaceController::class, 'index'])->name('dashboard');
+
+    // Воркспейсы
+    Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
+    Route::get('/workspaces/{slug}', [WorkspaceController::class, 'show'])->name('workspaces.show');
+});
 
 Route::get('/', function () {
     return redirect()->route('boards.show', 1);

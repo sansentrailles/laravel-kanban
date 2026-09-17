@@ -16,7 +16,7 @@ final class MoveCardAction
     //  public function execute(Card $card, Column $targetColumn, ?Card $previousCard, ?Card $nextCard): Card
     public function execute(Card $card, Column $targetColumn, ?Card $prevCard, ?Card $nextCard): Card
     {
-        return DB::transaction(function () use ($card, $prevCard, $targetColumn, $prevCard, $nextCard) {
+        return DB::transaction(function () use ($card, $targetColumn, $prevCard, $nextCard) {
             $newOrder = $this->calculateOrder($prevCard, $nextCard);
 
             $card->update([

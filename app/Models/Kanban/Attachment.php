@@ -7,6 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @property-read \App\Models\Kanban\Card|null $card
+ * @property-read string $formatted_size
+ * @property-read User|null $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attachment newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attachment newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attachment query()
+ * @mixin \Eloquent
+ */
 class Attachment extends Model
 {
     protected $fillable = [

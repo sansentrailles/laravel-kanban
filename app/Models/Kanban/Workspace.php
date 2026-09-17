@@ -23,6 +23,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace withoutTrashed()
+ * @property-read User|null $owner
  * @mixin \Eloquent
  */
 class Workspace extends Model

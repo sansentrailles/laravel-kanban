@@ -27,6 +27,7 @@ return new class extends Migration
             $table->foreignId('checklist_id')->constrained('kanban_checklists')->cascadeOnDelete();
             $table->string('content', 500); // Текст задачи
             $table->boolean('is_completed')->default(false);
+            $table->unsignedInteger('order')->default(0);
             $table->timestamps();
 
             $table->index(['checklist_id', 'order']);
