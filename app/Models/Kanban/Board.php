@@ -3,7 +3,7 @@
 namespace App\Models\Kanban;
 
 use App\Models\User;
-use App\Providers\Enums\Kanban\BoardVisibility;
+use App\Enums\Kanban\BoardVisibility;
 use Database\Factories\Kanban\BoardFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +12,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
+/**
+ * @property mixed $visibility
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kanban\Column> $columns
+ * @property-read int|null $columns_count
+ * @property-read User|null $creator
+ * @property-read \App\Models\Kanban\Workspace|null $workspace
+ * @method static \Database\Factories\Kanban\BoardFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Board newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Board newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Board onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Board ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Board query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Board withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Board withoutTrashed()
+ * @mixin \Eloquent
+ */
 class Board extends Model
 {
     /** @use HasFactory<BoardFactory> */

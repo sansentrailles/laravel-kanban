@@ -13,6 +13,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $members
+ * @property-read int|null $members_count
+ * @method static \Database\Factories\Kanban\WorkspaceFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace withoutTrashed()
+ * @mixin \Eloquent
+ */
 class Workspace extends Model
 {
     /** @use HasFactory<WorkspaceFactory> */
@@ -54,7 +66,7 @@ class Workspace extends Model
 
     public function owner(): BelongsTo
     {
-        return $this->belongs(User::class, 'owner_id');
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
     public function members(): BelongsToMany

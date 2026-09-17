@@ -9,6 +9,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property-read \App\Models\Kanban\Board|null $board
+ * @method static \Database\Factories\Kanban\ColumnFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column visible()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column withoutTrashed()
+ * @mixin \Eloquent
+ */
 class Column extends Model
 {
     /** @use HasFactory<ColumnFactory> */
