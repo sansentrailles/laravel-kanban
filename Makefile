@@ -194,6 +194,10 @@ composer-dump: ## 📦 Пересоздать автозагрузчик Compose
 composer-require: ## 📦 Установить пакет (make composer-require PACKAGE=vendor/name)
 	$(EXEC) composer require $(PACKAGE)
 
+.PHONY: composer-require-dev
+composer-require-dev: ## 📦 Установить dev пакет (make composer-require-dev PACKAGE=vendor/name)
+	$(EXEC) composer require --dev $(PACKAGE)
+
 .PHONY: composer-remove
 composer-remove: ## 📦 Удалить пакет (make composer-remove PACKAGE=vendor/name)
 	$(EXEC) composer remove $(PACKAGE)
