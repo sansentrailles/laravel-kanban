@@ -5,6 +5,7 @@ namespace App\Models\Kanban;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Attachment extends Model
 {
@@ -49,5 +50,10 @@ class Attachment extends Model
         $bytes /= (1 << (10 * $pow));
 
         return round($bytes, 2) . ' ' . $units[$pow];
+    }
+
+    public function getUrl(): string
+    {
+        return Storage::disk('public')->url($this->path);
     }
 }
