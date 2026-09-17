@@ -38,10 +38,23 @@ class CardResource extends JsonResource
             // Агрегации
             // TODO: реализовать
             // 'comments_count' => $this->whenCounted('comments'),
-            // 'attachments_count' => $this->whenCounted('attachments'),
+            'attachments_count' => $this->whenCounted('attachments'),
 
             // Вычисляемое поле для чек-листа
-            // 'checklist' => $this->w
+            'checklists' => $this->whenLoaded('checklists', function () {
+                return $this->checklists->map(function ($checklist) {
+                    return [
+                        'id' => $checklist->id,
+                        'title' => $checklist->title,
+                        'progress' => $checklist->progress,
+                        'items' => $checklist->items->map(fn ($item) => [
+                            'id' => $item->id,
+                            'content' => $item->content,
+                            'is_completed' => $item->is_completed,
+                        ])->values(),
+                    ];
+                })->values();
+            }),
 
             'is_overdue' => $this->isOverdue(),
         ];

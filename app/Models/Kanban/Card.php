@@ -95,15 +95,15 @@ class Card extends Model
     //     return $this->hasMany(Comment::class);
     // }
 
-    // public function attachments(): HasMany
-    // {
-    //     return $this->hasMany(Attachment::class);
-    // }
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class);
+    }
 
-    // public function checklists(): HasMany
-    // {
-    //     return $this->hasMany(Checklist::class);
-    // }
+    public function checklists(): HasMany
+    {
+        return $this->hasMany(Checklist::class);
+    }
 
     // ─────────────────────────────────────────────
     //  Scopes
