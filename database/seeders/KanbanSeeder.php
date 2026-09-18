@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Models\Kanban\Board;
@@ -8,59 +10,168 @@ use App\Models\Kanban\Column;
 use App\Models\Kanban\Label;
 use App\Models\Kanban\Workspace;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class KanbanSeeder extends Seeder
+final class KanbanSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * php artisan db:seed --class=KanbanSeeder
      */
     public function run(): void
     {
-        // Создаем пользователя или берем первого
-        $user = User::first() ?? User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@gmail.com',
-            'password' => bcrypt('123123123'),
-        ]);
+        $password = bcrypt('123123123');
 
+        // 1. Создаем ровно 3 пользователей
+        $user1 = User::firstOrCreate(
+            ['email' => 'dev@gmail.com'],
+            ['name' => 'Dev Lead', 'password' => $password]
+        );
+
+        $user2 = User::firstOrCreate(
+            ['email' => 'alice@example.com'],
+            ['name' => 'Alice Manager', 'password' => $password]
+        );
+
+        $user3 = User::firstOrCreate(
+            ['email' => 'bob@example.com'],
+            ['name' => 'Bob Designer', 'password' => $password]
+        );
+
+        $allUsers = [$user1, $user2, $user3];
+
+        // 2. Конфигурация воркспейсов и распределение участников
+        $workspacesConfig = [
+            [
+                'name' => 'Project Sandbox',
+                'owner' => $user1,
+                'members' => [$user1, $user2, $user3], // 3 члена (все пользователи)
+                'board_name' => 'Main Development Board',
+                'board_icon' => '🚀',
+                'board_color' => '#3b82f6',
+            ],
+            [
+                'name' => 'Marketing Q4',
+                'owner' => $user2,
+                'members' => [$user2], // 1 член (только владелец)
+                'board_name' => 'Campaigns & Content',
+                'board_icon' => '📈',
+                'board_color' => '#10b981',
+            ],
+            [
+                'name' => 'HR & Onboarding',
+                'owner' => $user3,
+                'members' => [$user3, $user1], // 2 члена (владелец + Dev Lead)
+                'board_name' => 'New Hires Pipeline',
+                'board_icon' => '👥',
+                'board_color' => '#a855f7',
+            ],
+        ];
+
+        // 3. Создаем каждый воркспейс
+        foreach ($workspacesConfig as $config) {
+            $this->createPopulatedWorkspace($config['owner'], $config['members'], $config);
+        }
+    }
+
+    /**
+     * Создает один воркспейс со всеми связанными сущностями.
+     */
+    private function createPopulatedWorkspace(User $owner, array $members, array $config): void
+    {
         // Создание воркспейса
         $workspace = Workspace::factory()->create([
-            'name' => 'Project Sandbox',
-            'owner_id' => $user->id,
+            'name' => $config['name'],
+            'owner_id' => $owner->id,
         ]);
 
-        // Привязка пользователя воркспейса
-        $workspace->members()->attach($user->id, [
-            'role' => 'owner',
-            'joined_at' => now(),
-        ]);
+        // Привязка всех участников с правильными ролями
+        foreach ($members as $member) {
+            $role = $member->id === $owner->id ? 'owner' : 'member';
+            $workspace->members()->attach($member->id, [
+                'role' => $role,
+                'joined_at' => now(),
+            ]);
+        }
 
         // Создание меток
-        $labels = Label::factory(5)->create(['workspace_id' => $workspace->id]);
+        $labelsData = [
+            ['name' => 'Bug', 'color' => '#ef4444', 'description' => 'Ошибка или дефект в коде'],
+            ['name' => 'Feature', 'color' => '#3b82f6', 'description' => 'Новая функциональность'],
+            ['name' => 'Design', 'color' => '#a855f7', 'description' => 'Задачи по UI/UX или макетам'],
+            ['name' => 'Backend', 'color' => '#10b981', 'description' => 'Серверная разработка'],
+            ['name' => 'Urgent', 'color' => '#f59e0b', 'description' => 'Требует немедленного внимания'],
+        ];
+
+        $labels = collect($labelsData)->map(fn ($data) => 
+            Label::factory()->create(array_merge($data, [
+                'workspace_id' => $workspace->id,
+            ]))
+        );
 
         // Создание доски
         $board = Board::factory()->create([
             'workspace_id' => $workspace->id,
-            'created_by' => $user->id,
-            'name' => "Main Board",
+            'created_by' => $owner->id,
+            'name' => $config['board_name'],
+            'icon' => $config['board_icon'],
+            'color' => $config['board_color'],
         ]);
 
-        // Создание колонок
-        $columns = Column::factory(4)->create(['board_id' => $board->id]);
+        // Создание реалистичных колонок
+        $columnsData = [
+            ['title' => 'Backlog', 'order' => 100],
+            ['title' => 'To Do', 'order' => 200],
+            ['title' => 'In Progress', 'order' => 300, 'wip_limit' => 5],
+            ['title' => 'Review', 'order' => 400],
+            ['title' => 'Done', 'order' => 500],
+        ];
 
-        // Создание карточек в каждой колонке
-        foreach ($columns as $column) {
-            $cards = Card::factory(3)->create(['column_id' => $column->id]);
+        $columns = collect($columnsData)->map(fn ($data) => 
+            Column::factory()->create(array_merge($data, [
+                'board_id' => $board->id,
+            ]))
+        )->values();
 
-            foreach ($cards as $card) {
-                $card->lables()->attach(
-                    $labels->random(rand(1, 3))->pluck('id')
-                );
+        // Вспомогательная функция для получения случайного участника этого воркспейса
+        $getRandomMember = fn () => collect($members)->random();
 
-                $card->assignee()->attach($user->id);
-            }
-        }
+        // Создание карточек с использованием States
+        
+        // Backlog: Обычные задачи с 1-2 случайными метками
+        Card::factory(4)->create(['column_id' => $columns[0]->id, 'created_by' => $getRandomMember()->id])
+            ->each(fn ($card) => $card->labels()->attach($labels->random(fake()->numberBetween(1, 2))->pluck('id')));
+
+        // To Do: Задачи без описания + метка Feature
+        Card::factory(2)->withoutDescription()->create(['column_id' => $columns[1]->id, 'created_by' => $getRandomMember()->id])
+            ->each(function ($card) use ($labels) {
+                $featureLabel = $labels->firstWhere('name', 'Feature');
+                if ($featureLabel) $card->labels()->attach($featureLabel->id);
+            });
+
+        // In Progress: Срочные задачи с назначенным исполнителем и метками Urgent/Backend
+        Card::factory(3)->urgent()->create(['column_id' => $columns[2]->id, 'created_by' => $getRandomMember()->id])
+            ->each(function ($card) use ($labels, $getRandomMember) {
+                $urgentLabel = $labels->firstWhere('name', 'Urgent');
+                $backendLabel = $labels->firstWhere('name', 'Backend');
+                $card->labels()->attach(collect([$urgentLabel, $backendLabel])->filter()->pluck('id'));
+                $card->assignees()->attach($getRandomMember()->id);
+            });
+
+        // Review: Просроченная задача + метка Bug
+        Card::factory(1)->overdue()->create(['column_id' => $columns[3]->id, 'created_by' => $getRandomMember()->id])
+            ->each(function ($card) use ($labels, $getRandomMember) {
+                $bugLabel = $labels->firstWhere('name', 'Bug');
+                if ($bugLabel) $card->labels()->attach($bugLabel->id);
+                $card->assignees()->attach($getRandomMember()->id);
+            });
+
+        // Done: Завершенные задачи с меткой Design
+        Card::factory(3)->completed()->create(['column_id' => $columns[4]->id, 'created_by' => $getRandomMember()->id])
+            ->each(function ($card) use ($labels, $getRandomMember) {
+                $designLabel = $labels->firstWhere('name', 'Design');
+                if ($designLabel) $card->labels()->attach($designLabel->id);
+                $card->assignees()->attach($getRandomMember()->id);
+            });
     }
 }
