@@ -20,14 +20,14 @@ class BoardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Находим доску и жадно загружаем все необходимые связи
+        // Находим доску и жадно загружаем все необходимые связи
         $board = Board::with([
             'columns.cards.labels',       // Колонки -> Карточки -> Метки
             'columns.cards.assignees',    // Колонки -> Карточки -> Исполнители
             'workspace.labels',           // Метки воркспейса
         ])->where('uuid', $uuid)->firstOrFail();
 
-        // 2. Собираем данные для сайдбара (ИСПРАВЛЕННЫЙ ЗАПРОС)
+        // Собираем данные для сайдбара (ИСПРАВЛЕННЫЙ ЗАПРОС)
         // Получаем все воркспейсы, где пользователь является owner ИЛИ member
         $workspaces = Workspace::where('owner_id', $user->id)
             ->orWhereHas('members', function ($query) use ($user) {
@@ -44,7 +44,6 @@ class BoardController extends Controller
             ->ordered()
             ->get();
 
-        // 3. Отправляем данные в Inertia
         return Inertia::render('Boards/Show', [
             'board' => (new BoardResource($board))->resolve(),
             'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
