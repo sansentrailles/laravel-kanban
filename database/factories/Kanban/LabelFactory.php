@@ -24,7 +24,7 @@ class LabelFactory extends Factory
             'workspace_id' => Workspace::factory(),
             'name' => fake()->randomElement([
                 'Bug', 'Feature', 'Design', 'Backend', 'Frontend',
-                'DevOps', 'Documentation', 'Urgent', 'Good First Issue'
+                'DevOps', 'Documentation', 'Urgent', 'Good First Issue',
             ]),
             'color' => fake()->hexColor(),
             'description' => fake()->optional()->sentence(),

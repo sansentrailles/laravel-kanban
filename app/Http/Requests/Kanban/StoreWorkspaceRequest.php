@@ -25,7 +25,7 @@ class StoreWorkspaceRequest extends FormRequest
     {
         return [
             'name' => [
-                'required', 'string', 'max:255', Rule::unique('kanban_workspaces', 'name')
+                'required', 'string', 'max:255', Rule::unique('kanban_workspaces', 'name'),
             ],
             'description' => [
                 'nullable', 'string', 'max:1000',

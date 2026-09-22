@@ -2,24 +2,27 @@
 
 namespace App\Models\Kanban;
 
-use App\Models\User;
 use App\Enums\Kanban\BoardVisibility;
+use App\Models\User;
 use Database\Factories\Kanban\BoardFactory;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
  * @property mixed $visibility
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kanban\Column> $columns
+ * @property-read Collection<int, Column> $columns
  * @property-read int|null $columns_count
  * @property-read User|null $creator
- * @property-read \App\Models\Kanban\Workspace|null $workspace
+ * @property-read Workspace|null $workspace
+ *
  * @method static \Database\Factories\Kanban\BoardFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board newQuery()
@@ -28,6 +31,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board withoutTrashed()
+ *
  * @property int $id
  * @property int $workspace_id
  * @property int|null $created_by
@@ -38,9 +42,10 @@ use Illuminate\Support\Str;
  * @property string|null $icon
  * @property int $order
  * @property array<array-key, mixed>|null $settings
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board whereColor($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board whereCreatedBy($value)
@@ -55,9 +60,9 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board whereUuid($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board whereVisibility($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board whereWorkspaceId($value)
+ *
  * @mixin \Eloquent
  */
-
 #[Table('kanban_boards')]
 class Board extends Model
 {

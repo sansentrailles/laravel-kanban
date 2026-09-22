@@ -14,7 +14,6 @@ use Inertia\Inertia;
 Route::get('/', [WorkspaceController::class, 'index'])->name('dashboard');
 Route::get('/boards/{uuid}', [BoardController::class, 'show'])->name('kanban.board');
 
-
 // Route::get('/', [ProjectController::class, 'home'])->name('projects.home');
 Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
 // Route::get('/', [WorkspaceController::class, 'index'])->name('dashboard');
@@ -22,7 +21,6 @@ Route::get('/projects', [ProjectController::class, 'index'])->name('projects.ind
 // Route::get('/', function () {
 //     return redirect()->route('boards.show', 1);
 // });
-
 
 // Route::middleware(['auth', 'verified'])->group(function () {
 //     Route::get('/', [WorkspaceController::class, 'index'])->name('dashboard');
@@ -59,7 +57,7 @@ Route::get('/projects', [ProjectController::class, 'index'])->name('projects.ind
 
 //     // Доски текущего воркспейса
 //     $boards = $currentWorkspace->boards()
-//         ->withCount('cards') 
+//         ->withCount('cards')
 //         ->ordered()
 //         ->get();
 

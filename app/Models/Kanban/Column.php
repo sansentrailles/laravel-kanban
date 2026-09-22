@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
- * @property-read \App\Models\Kanban\Board|null $board
+ * @property-read Board|null $board
+ *
  * @method static \Database\Factories\Kanban\ColumnFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column newQuery()
@@ -20,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column visible()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column withoutTrashed()
+ *
  * @property int $id
  * @property int $board_id
  * @property string $title
@@ -28,9 +31,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_hidden
  * @property int|null $wip_limit
  * @property array<array-key, mixed>|null $settings
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereBoardId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereColor($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereCreatedAt($value)
@@ -42,6 +46,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereWipLimit($value)
+ *
  * @mixin \Eloquent
  */
 class Column extends Model

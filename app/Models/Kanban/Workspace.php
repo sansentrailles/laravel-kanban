@@ -6,17 +6,20 @@ use App\Enums\Kanban\WorkspaceRole;
 use App\Models\User;
 use Database\Factories\Kanban\WorkspaceFactory;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $members
+ * @property-read Collection<int, User> $members
  * @property-read int|null $members_count
+ *
  * @method static \Database\Factories\Kanban\WorkspaceFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace newQuery()
@@ -24,6 +27,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace withoutTrashed()
+ *
  * @property-read User|null $owner
  * @property int $id
  * @property string $name
@@ -31,9 +35,10 @@ use Illuminate\Support\Str;
  * @property string|null $description
  * @property int $owner_id
  * @property array<array-key, mixed>|null $settings
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereDescription($value)
@@ -43,6 +48,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereSettings($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 #[Table('kanban_workspaces')]

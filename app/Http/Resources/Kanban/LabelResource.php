@@ -18,7 +18,7 @@ class LabelResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'color' => $this->color,
-            'description' => $this->description
+            'description' => $this->description,
         ];
     }
 }

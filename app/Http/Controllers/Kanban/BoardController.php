@@ -40,7 +40,7 @@ class BoardController extends Controller
 
         // Доски текущего воркспейса
         $boards = $currentWorkspace->boards()
-            ->withCount('columns') 
+            ->withCount('columns')
             ->ordered()
             ->get();
 
@@ -52,5 +52,5 @@ class BoardController extends Controller
             'boards' => BoardResource::collection($boards),
             'unreadNotifications' => 0,
         ]);
-    }   
+    }
 }

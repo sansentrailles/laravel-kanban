@@ -2,18 +2,21 @@
 
 namespace App\Models\Kanban;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @property-read \App\Models\Kanban\Card|null $card
+ * @property-read Card|null $card
  * @property-read float $progress
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kanban\ChecklistItem> $items
+ * @property-read Collection<int, ChecklistItem> $items
  * @property-read int|null $items_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Checklist newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Checklist newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Checklist query()
+ *
  * @mixin \Eloquent
  */
 class Checklist extends Model
@@ -21,7 +24,7 @@ class Checklist extends Model
     protected $fillable = [
         'card_id',
         'title',
-        'order'
+        'order',
     ];
 
     public function casts(): array

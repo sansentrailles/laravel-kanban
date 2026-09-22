@@ -4,22 +4,25 @@ namespace App\Models\Kanban;
 
 use App\Enums\Kanban\CardPriority;
 use App\Models\User;
+use Database\Factories\Kanban\CardFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Illuminate\Support\Carbon;
 
 /**
  * @property CardPriority $priority
- * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $assignee
+ * @property-read Collection<int, User> $assignee
  * @property-read int|null $assignee_count
- * @property-read \App\Models\Kanban\Column|null $column
+ * @property-read Column|null $column
  * @property-read User|null $creator
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kanban\Label> $labels
+ * @property-read Collection<int, Label> $labels
  * @property-read int|null $labels_count
+ *
  * @method static \Database\Factories\Kanban\CardFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card newQuery()
@@ -28,9 +31,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card withoutTrashed()
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kanban\Attachment> $attachments
+ *
+ * @property-read Collection<int, Attachment> $attachments
  * @property-read int|null $attachments_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kanban\Checklist> $checklists
+ * @property-read Collection<int, Checklist> $checklists
  * @property-read int|null $checklists_count
  * @property int $id
  * @property int $column_id
@@ -38,13 +42,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $title
  * @property string|null $description
  * @property numeric $order
- * @property \Illuminate\Support\Carbon|null $due_date
- * @property \Illuminate\Support\Carbon|null $start_date
+ * @property Carbon|null $due_date
+ * @property Carbon|null $start_date
  * @property string|null $completed_at
  * @property array<array-key, mixed>|null $settings
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card whereColumnId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card whereCompletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card whereCreatedAt($value)
@@ -59,15 +64,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card whereStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Card whereUpdatedAt($value)
- * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $assignees
+ *
+ * @property-read Collection<int, User> $assignees
  * @property-read int|null $assignees_count
+ *
  * @mixin \Eloquent
  */
 class Card extends Model
 {
-    /** @use HasFactory<\Database\Factories\Kanban\CardFactory> */
+    /** @use HasFactory<CardFactory> */
     use HasFactory, SoftDeletes;
-    
+
     protected $table = 'kanban_cards';
 
     protected $fillable = [
@@ -100,7 +107,7 @@ class Card extends Model
     // ─────────────────────────────────────────────
     //  Relationships
     // ─────────────────────────────────────────────
-    
+
     public function column(): BelongsTo
     {
         return $this->belongsTo(Column::class);

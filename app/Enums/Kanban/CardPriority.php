@@ -13,7 +13,7 @@ enum CardPriority: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Low => 'Низкий',
             self::Medium => 'Средний',
             self::High => 'Высокий',
@@ -23,12 +23,11 @@ enum CardPriority: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Low => '#10b981', // Green
             self::Medium => '#3b82f6', // Blue
             self::High => '#f59e0b', // Orange
             self::Urgent => '#ef4444', // Red
         };
     }
-
 }

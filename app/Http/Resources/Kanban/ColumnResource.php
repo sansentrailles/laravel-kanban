@@ -4,7 +4,6 @@ namespace App\Http\Resources\Kanban;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\Kanban\CardResource;
 
 class ColumnResource extends JsonResource
 {
@@ -24,7 +23,7 @@ class ColumnResource extends JsonResource
             'is_hidden' => $this->is_hidden,
             'wip_limit' => $this->wip_limit,
             'settings' => $this->settings ?? [],
-            
+
             // Карточки внутри колонки
             'cards' => CardResource::collection($this->whenLoaded('cards')),
         ];

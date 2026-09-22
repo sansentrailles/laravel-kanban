@@ -103,10 +103,9 @@ final class KanbanSeeder extends Seeder
             ['name' => 'Urgent', 'color' => '#f59e0b', 'description' => 'Требует немедленного внимания'],
         ];
 
-        $labels = collect($labelsData)->map(fn ($data) => 
-            Label::factory()->create(array_merge($data, [
-                'workspace_id' => $workspace->id,
-            ]))
+        $labels = collect($labelsData)->map(fn ($data) => Label::factory()->create(array_merge($data, [
+            'workspace_id' => $workspace->id,
+        ]))
         );
 
         // Создание доски
@@ -127,17 +126,16 @@ final class KanbanSeeder extends Seeder
             ['title' => 'Done', 'order' => 500],
         ];
 
-        $columns = collect($columnsData)->map(fn ($data) => 
-            Column::factory()->create(array_merge($data, [
-                'board_id' => $board->id,
-            ]))
+        $columns = collect($columnsData)->map(fn ($data) => Column::factory()->create(array_merge($data, [
+            'board_id' => $board->id,
+        ]))
         )->values();
 
         // Вспомогательная функция для получения случайного участника этого воркспейса
         $getRandomMember = fn () => collect($members)->random();
 
         // Создание карточек с использованием States
-        
+
         // Backlog: Обычные задачи с 1-2 случайными метками
         Card::factory(4)->create(['column_id' => $columns[0]->id, 'created_by' => $getRandomMember()->id])
             ->each(fn ($card) => $card->labels()->attach($labels->random(fake()->numberBetween(1, 2))->pluck('id')));
@@ -146,7 +144,9 @@ final class KanbanSeeder extends Seeder
         Card::factory(2)->withoutDescription()->create(['column_id' => $columns[1]->id, 'created_by' => $getRandomMember()->id])
             ->each(function ($card) use ($labels) {
                 $featureLabel = $labels->firstWhere('name', 'Feature');
-                if ($featureLabel) $card->labels()->attach($featureLabel->id);
+                if ($featureLabel) {
+                    $card->labels()->attach($featureLabel->id);
+                }
             });
 
         // In Progress: Срочные задачи с назначенным исполнителем и метками Urgent/Backend
@@ -162,7 +162,9 @@ final class KanbanSeeder extends Seeder
         Card::factory(1)->overdue()->create(['column_id' => $columns[3]->id, 'created_by' => $getRandomMember()->id])
             ->each(function ($card) use ($labels, $getRandomMember) {
                 $bugLabel = $labels->firstWhere('name', 'Bug');
-                if ($bugLabel) $card->labels()->attach($bugLabel->id);
+                if ($bugLabel) {
+                    $card->labels()->attach($bugLabel->id);
+                }
                 $card->assignees()->attach($getRandomMember()->id);
             });
 
@@ -170,7 +172,9 @@ final class KanbanSeeder extends Seeder
         Card::factory(3)->completed()->create(['column_id' => $columns[4]->id, 'created_by' => $getRandomMember()->id])
             ->each(function ($card) use ($labels, $getRandomMember) {
                 $designLabel = $labels->firstWhere('name', 'Design');
-                if ($designLabel) $card->labels()->attach($designLabel->id);
+                if ($designLabel) {
+                    $card->labels()->attach($designLabel->id);
+                }
                 $card->assignees()->attach($getRandomMember()->id);
             });
     }

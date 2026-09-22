@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * @property-read \App\Models\Kanban\Card|null $card
+ * @property-read Card|null $card
  * @property-read string $formatted_size
  * @property-read User|null $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attachment newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attachment newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attachment query()
+ *
  * @mixin \Eloquent
  */
 class Attachment extends Model
@@ -48,17 +50,16 @@ class Attachment extends Model
 
     /**
      * Размер файла в человеческом формате
-     * @return string
      */
     public function getFormattedSizeAttribute(): string
     {
         $units = ['B', 'Kb', 'Mb', 'Gb', 'Tb'];
         $bytes = max($this->size, 0);
-        $pow = floor(($bytes ? log($bytes): 0) / log(1024));
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
         $bytes /= (1 << (10 * $pow));
 
-        return round($bytes, 2) . ' ' . $units[$pow];
+        return round($bytes, 2).' '.$units[$pow];
     }
 
     public function getUrl(): string

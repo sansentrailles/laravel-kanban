@@ -35,11 +35,9 @@ class WorkspaceController extends Controller
             ->unique('id')
             ->values();
 
-
-
         // TODO: Переделать
         $boards = $workspaces->first()?->boards()
-            ->withCount('columns') 
+            ->withCount('columns')
             ->ordered()
             ->get();
 

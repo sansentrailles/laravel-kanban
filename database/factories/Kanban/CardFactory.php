@@ -37,18 +37,18 @@ class CardFactory extends Factory
             'priority' => fake()->randomElement(CardPriority::cases()),
 
             // Даты: 60% крточек имеет дедлайн
-            'due_date' => fake()->boolean(60) 
-                ? fake()->dateTimeBetween('now', '+2 months')->format('Y-m-d') 
+            'due_date' => fake()->boolean(60)
+                ? fake()->dateTimeBetween('now', '+2 months')->format('Y-m-d')
                 : null,
-            
+
             // Даты: 40% карточек имеют дату начала (в прошлом или настоящем)
-            'start_date' => fake()->boolean(40) 
-                ? fake()->dateTimeBetween('-2 weeks', 'now')->format('Y-m-d') 
+            'start_date' => fake()->boolean(40)
+                ? fake()->dateTimeBetween('-2 weeks', 'now')->format('Y-m-d')
                 : null,
 
             // 30% карточек выполнены
-            'completed_at' => fake()->boolean(30) 
-                ? fake()->dateTime() 
+            'completed_at' => fake()->boolean(30)
+                ? fake()->dateTime()
                 : null,
 
             // Гибкие настройки
@@ -111,7 +111,7 @@ class CardFactory extends Factory
     public function createdBy(User $user): static
     {
         return $this->state(fn (array $attributes) => [
-            'created_by' => $user->id
+            'created_by' => $user->id,
         ]);
     }
 }

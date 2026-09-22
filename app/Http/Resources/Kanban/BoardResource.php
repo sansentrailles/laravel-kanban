@@ -4,7 +4,6 @@ namespace App\Http\Resources\Kanban;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\Kanban\ColumnResource;
 
 class BoardResource extends JsonResource
 {

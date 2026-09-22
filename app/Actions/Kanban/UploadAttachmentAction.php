@@ -13,10 +13,10 @@ final class UploadAttachmentAction
     public function execute(AttachmentDTO $dto): Attachment
     {
         // Генерирация безопасного имени, чтобы избежать коллизий
-        $filename = Str::uuid() . '.' . $dto->file->getClientOriginalExtension();
+        $filename = Str::uuid().'.'.$dto->file->getClientOriginalExtension();
 
         // Путь внутри хранилища
-        $directory = 'attachments/' . date('Y/m');
+        $directory = 'attachments/'.date('Y/m');
 
         // Сохранение файла
         $path = $dto->file->storeAs($directory, $filename, 'public');

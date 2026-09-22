@@ -13,7 +13,7 @@ class CreateWorkspaceAction
 {
     public function execute(CreateWorkspaceDTO $dto): Workspace
     {
-        return DB::transaction(function ()  use ($dto) {
+        return DB::transaction(function () use ($dto) {
             // Создание воркспейса
             $workspace = Workspace::create([
                 'name' => $dto->name,
