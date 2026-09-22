@@ -1,10 +1,25 @@
 <script setup>
 import { useBoardStore } from '@/Stores/board'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
+import BoardHeader from './BoardHeader.vue'
+import Column from './Column.vue'
 
+const props = defineProps({
+  board: {
+    type: Array,
+    required: true
+  },
+})
 const store = useBoardStore()
-const board = computed(() => store.currentBoard)
+// const board = computed(() => store.currentBoard)
 const columns = computed(() => store.sortedColumns)
+
+watch(() => props.board, (newBoard) => {
+  if (newBoard) {
+    console.log('set board');
+    store.setBoardData(newBoard, newBoard.columns?.data || [])
+  }
+}, { immediate: true })
 
 const openCardDetail = (card) => {
   store.selectCard(card)
@@ -37,8 +52,6 @@ const applyFilters = (filters) => {
 </script>
 
 <template>
-  abcded
-  {{ board }}
   <div class="h-full flex flex-col">
     <!-- Header доски -->
     <BoardHeader 

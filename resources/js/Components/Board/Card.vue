@@ -2,9 +2,9 @@
 import { computed } from 'vue'
 import { 
   CheckCircleIcon, 
-  ChatBubbleIcon, 
   PaperClipIcon, 
-  CalendarIcon 
+  CalendarIcon, 
+  ChatBubbleBottomCenterIcon
 } from '@heroicons/vue/24/outline'
 import Avatar from '@/Components/UI/Avatar.vue'
 import LabelBadge from '@/Components/UI/LabelBadge.vue'
@@ -82,7 +82,7 @@ const formatDate = (date) => {
         
         <!-- Комментарии -->
         <div v-if="card.comments_count" class="flex items-center gap-1">
-          <ChatBubbleIcon class="w-3 h-3" />
+          <ChatBubbleBottomCenterIcon class="w-3 h-3" />
           <span>{{ card.comments_count }}</span>
         </div>
         

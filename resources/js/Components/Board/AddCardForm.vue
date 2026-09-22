@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { DocumentTextIcon, CheckSquareIcon } from '@heroicons/vue/24/outline'
+import { DocumentTextIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   columnId: {
@@ -58,7 +58,7 @@ const submit = () => {
           class="p-1.5 text-gray-500 hover:bg-gray-100 rounded"
           title="Добавить чек-лист"
         >
-          <CheckSquareIcon class="w-4 h-4" />
+          <CheckCircleIcon class="w-4 h-4" />
         </button>
       </div>
       

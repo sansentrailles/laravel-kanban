@@ -2,6 +2,8 @@
 import { computed, ref } from 'vue'
 import BoardView from '@/Components/Board/BoardView.vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import { CircleStackIcon, XCircleIcon } from '@heroicons/vue/24/outline'
+import { Head } from '@inertiajs/vue3'
 
 // 1. Получаем данные от Laravel через Inertia
 const props = defineProps({
@@ -50,6 +52,8 @@ const handleColumnDrop = async (data) => {
 </script>
 
 <template>
+  <Head :title="`Доска: ${board.name}`"/>
+
   <AppLayout>
     <BoardView 
       :board="board"

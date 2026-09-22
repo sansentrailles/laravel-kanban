@@ -8,7 +8,7 @@ export const useBoardStore = defineStore('board', () => {
   const filters = ref({})
 
   const sortedColumns = computed(() => {
-    return columns.value.sort((a, b) => a.order - b.order)
+    return [...columns.value].sort((a, b) => a.order - b.order)
   })
 
   const selectCard = (card) => {
@@ -40,6 +40,11 @@ export const useBoardStore = defineStore('board', () => {
     return null
   }
 
+  const setBoardData = (boardData, columnsData) => {
+    currentBoard.value = boardData
+    columns.value = columnsData
+  }
+
   return {
     currentBoard,
     columns,
@@ -49,6 +54,7 @@ export const useBoardStore = defineStore('board', () => {
     selectCard,
     setFilters,
     moveCardOptimistic,
-    rollbackCardMove
+    rollbackCardMove,
+    setBoardData
   }
 })

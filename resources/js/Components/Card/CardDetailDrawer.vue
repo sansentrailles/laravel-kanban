@@ -1,9 +1,18 @@
 <script setup>
-import { computed } from 'vue'
-// import { XIcon } from '@heroicons/vue/24/outline'
+import { computed, Teleport, Transition } from 'vue'
 import { useBoardStore } from '@/Stores/board'
 import { useDebounceFn } from '@vueuse/core'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
+import DescriptionEditor from './DescriptionEditor.vue'
+import FormField from '../UI/FormField.vue'
+import StatusDropdown from './StatusDropdown.vue'
+import PrioritySelector from './PrioritySelector.vue'
+import AssigneePicker from './AssigneePicker.vue'
+import DateRangePicker from './DateRangePicker.vue'
+import AttachmentsList from './AttachmentsList.vue'
+import ActivityLog from './ActivityLog.vue'
+import ChecklistSection from './ChecklistSection.vue'
+import CommentsSection from './CommentsSection.vue'
 
 const store = useBoardStore()
 const card = computed(() => store.selectedCard)
@@ -50,7 +59,7 @@ const updateDates = async (dates) => {
         
         <!-- Drawer Panel -->
         <div class="relative w-full max-w-2xl bg-white shadow-2xl flex flex-col h-full overflow-hidden">
-          <!-- Header -->
+            <!-- Header -->
           <div class="flex items-center justify-between p-6 border-b">
             <h2 class="text-xl font-semibold">{{ card.title }}</h2>
             <button @click="close" class="text-gray-400 hover:text-gray-600">
@@ -74,6 +83,11 @@ const updateDates = async (dates) => {
                 
                 <!-- Комментарии -->
                 <CommentsSection :comments="card.comments" />
+
+                <!-- Статус -->
+                <FormField label="Статус">
+                  <StatusDropdown :value="card.status" @change="updateStatus" />
+                </FormField>
               </div>
               
               <!-- Сайдбар (1/3) -->

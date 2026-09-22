@@ -1,5 +1,10 @@
 <script setup>
 import { ref } from 'vue'
+import DropdownMenu from '../UI/DropdownMenu.vue'
+import DropdownMenuItem from '../UI/DropdownMenuItem.vue'
+import WipLimitBar from '../UI/WipLimitBar.vue'
+import Card from './Card.vue'
+import AddCardForm from './AddCardForm.vue'
 
 const props = defineProps({
   column: {

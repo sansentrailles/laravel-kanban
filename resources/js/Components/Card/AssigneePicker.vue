@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { XIcon } from '@heroicons/vue/24/outline'
 import Avatar from '@/Components/UI/Avatar.vue'
+import { XMarkIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   value: {
@@ -53,7 +53,7 @@ const removeAssignee = (userId) => {
           @click="removeAssignee(assignee.id)"
           class="text-gray-400 hover:text-gray-600"
         >
-          <XIcon class="w-3 h-3" />
+          <XMarkIcon class="w-3 h-3" />
         </button>
       </div>
     </div>
