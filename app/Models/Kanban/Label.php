@@ -15,6 +15,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Label query()
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kanban\Card> $cards
  * @property-read int|null $cards_count
+ * @property int $id
+ * @property int $workspace_id
+ * @property string $name
+ * @property string $color
+ * @property string|null $description
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereColor($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereWorkspaceId($value)
  * @mixin \Eloquent
  */
 class Label extends Model

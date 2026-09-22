@@ -5,6 +5,7 @@ namespace App\Models\Kanban;
 use App\Enums\Kanban\WorkspaceRole;
 use App\Models\User;
 use Database\Factories\Kanban\WorkspaceFactory;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,14 +25,33 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace withoutTrashed()
  * @property-read User|null $owner
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property int $owner_id
+ * @property array<array-key, mixed>|null $settings
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereOwnerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereSettings($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+#[Table('kanban_workspaces')]
 class Workspace extends Model
 {
     /** @use HasFactory<WorkspaceFactory> */
     use HasFactory, SoftDeletes;
 
-    protected $table = 'kanban_workspaces';
+    // protected $table = 'kanban_workspaces';
 
     protected $fillable = [
         'name',
@@ -82,10 +102,15 @@ class Workspace extends Model
             ->withTimestamps();
     }
 
-    // public function boards(): HasMany
-    // {
-    //     return $this->hasMany(Board::class);
-    // }
+    public function boards(): HasMany
+    {
+        return $this->hasMany(Board::class);
+    }
+
+    public function labels(): HasMany
+    {
+        return $this->hasMany(Label::class);
+    }
 
     // ─────────────────────────────────────────────
     //  Helpers

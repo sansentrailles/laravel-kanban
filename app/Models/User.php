@@ -64,7 +64,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function ownedWorspaces(): HasMany
+    public function ownedWorkspaces(): HasMany
     {
         return $this->hasMany(Workspace::class, 'owner_id');
     }
@@ -81,6 +81,6 @@ class User extends Authenticatable
      */
     public function allWorkspaces(): Collection
     {
-        return $this->ownedWorspaces->merge($this->workspaces);
+        return $this->ownedWorkspaces->merge($this->workspaces);
     }
 }

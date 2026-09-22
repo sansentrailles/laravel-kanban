@@ -20,6 +20,28 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column visible()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column withoutTrashed()
+ * @property int $id
+ * @property int $board_id
+ * @property string $title
+ * @property string|null $color
+ * @property int $order
+ * @property bool $is_hidden
+ * @property int|null $wip_limit
+ * @property array<array-key, mixed>|null $settings
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereBoardId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereColor($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereIsHidden($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereSettings($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereWipLimit($value)
  * @mixin \Eloquent
  */
 class Column extends Model
@@ -62,10 +84,10 @@ class Column extends Model
     /**
      * Карточки в колонке. Всегда отсортированные
      */
-    // public function cards(): HasMany
-    // {
-    //     return $this->hasMany(Card::class)->orderBy('order');
-    // }
+    public function cards(): HasMany
+    {
+        return $this->hasMany(Card::class)->orderBy('order');
+    }
 
     // ─────────────────────────────────────────────
     //  Scopes
