@@ -103,7 +103,7 @@ class Column extends Model
      */
     public function scopeVisible($query)
     {
-        return $query->where('is_hidden', true);
+        return $query->where('is_hidden', false);
     }
 
     /**
