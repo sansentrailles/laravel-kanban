@@ -28,15 +28,27 @@ class WorkspaceController extends Controller
     {
         $user = Auth::user();
 
-        $workspaces = $user->ownedWorspaces()
+        $workspaces = $user->ownedWorkspaces()
             ->withCount('members')
             ->get()
             ->merge($user->workspaces()->withCount('members')->get())
             ->unique('id')
             ->values();
 
+
+
+        // TODO: Переделать
+        $boards = $workspaces->first()?->boards()
+            ->withCount('columns') 
+            ->ordered()
+            ->get();
+
         return Inertia::render('Workspaces/Index', [
-            'workspaces' => WorkspaceResource::collection($workspaces),
+            // 'workspaces' => $workspaces,
+            'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
+            'currentWorkspace' => $workspaces->first() ? (new WorkspaceResource($workspaces->first()))->resolve() : null,
+            'boards' => BoardResource::collection($boards),
+            'unreadNotifications' => 3,
         ]);
     }
 
@@ -70,7 +82,7 @@ class WorkspaceController extends Controller
             ->ordered()
             ->get();
 
-        return Inertia::render('Workspace/Show', [
+        return Inertia::render('Workspaces/Show', [
             'workspace' => new WorkspaceResource($workspace),
             'boards' => BoardResource::collection($boards),
         ]);
