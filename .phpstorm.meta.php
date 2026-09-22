@@ -2419,8 +2419,8 @@ namespace PHPSTORM_META {
 'cache.headers','can','guest','password.confirm','precognitive',
 'signed','throttle','verified',);
         registerArgumentsSet('routes', 
-'boost.browser-logs','sanctum.csrf-cookie','boards.show',
-'dashboard','profile.edit','profile.update','profile.destroy','register','login','password.request','password.email',
+'boost.browser-logs','sanctum.csrf-cookie','projects.home','projects.index',
+'boards.show','profile.edit','profile.update','profile.destroy','register','login','password.request','password.email',
 'password.reset','password.store','verification.notice','verification.verify','verification.send',
 'password.confirm','password.update','logout','storage.local',
 'storage.local.upload',);

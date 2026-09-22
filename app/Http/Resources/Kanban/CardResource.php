@@ -1,19 +1,16 @@
 <?php
+// App\Http\Resources\Kanban\CardResource.php
+
+declare(strict_types=1);
 
 namespace App\Http\Resources\Kanban;
 
 use App\Http\Resources\Auth\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\Kanban\LabelResource;
 
-class CardResource extends JsonResource
+final class CardResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
@@ -21,41 +18,32 @@ class CardResource extends JsonResource
             'column_id' => $this->column_id,
             'title' => $this->title,
             'description' => $this->description,
-
-            // Преобразование enum в строку для Вью
-            'priority' => $this->description?->value,
-
-            'due_date' => $this->when($this->due_date, fn () => $this->due_date->toDateString()),
-            'start_date' => $this->when($this->start_date, fn () => $this->start_date->toDateString()),
-            'completed_at' => $this->when($this->completed_at, fn () => $this->completed_at->toDateString()),
-
-            'order' => (string) $this->order, // Строка, чтобы избежать проблем с точностью float/decimal в JS
-
+            'priority' => $this->priority?->value,
+            'due_date' => $this->due_date?->format('Y-m-d'),
+            'start_date' => $this->start_date?->format('Y-m-d'),
+            'order' => (string) $this->order, // Строка для точности decimal в JS
+            
             // Связи
             'labels' => LabelResource::collection($this->whenLoaded('labels')),
-            'assagnee' => UserResource::collection($this->whenLoaded('assgnee')),
-
+            'assignees' => UserResource::collection($this->whenLoaded('assignees')),
+            
             // Агрегации
-            // TODO: реализовать
-            // 'comments_count' => $this->whenCounted('comments'),
+            'comments_count' => $this->whenCounted('comments'),
             'attachments_count' => $this->whenCounted('attachments'),
-
-            // Вычисляемое поле для чек-листа
-            'checklists' => $this->whenLoaded('checklists', function () {
-                return $this->checklists->map(function ($checklist) {
-                    return [
-                        'id' => $checklist->id,
-                        'title' => $checklist->title,
-                        'progress' => $checklist->progress,
-                        'items' => $checklist->items->map(fn ($item) => [
-                            'id' => $item->id,
-                            'content' => $item->content,
-                            'is_completed' => $item->is_completed,
-                        ])->values(),
-                    ];
-                })->values();
+            
+            // Форматируем чек-листы в удобный для Vue формат { total: X, completed: Y }
+            'checklist' => $this->whenLoaded('checklists', function () {
+                $total = 0;
+                $completed = 0;
+                
+                foreach ($this->checklists as $checklist) {
+                    $total += $checklist->items()->count();
+                    $completed += $checklist->items()->where('is_completed', true)->count();
+                }
+                
+                return $total > 0 ? ['total' => $total, 'completed' => $completed] : null;
             }),
-
+            
             'is_overdue' => $this->isOverdue(),
         ];
     }

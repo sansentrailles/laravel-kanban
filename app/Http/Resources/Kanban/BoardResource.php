@@ -29,6 +29,10 @@ class BoardResource extends JsonResource
             // Отношения
             'columns' => ColumnResource::collection($this->whenLoaded('columns')),
 
+            // 'columns_count' => $this->whenCounted('columns'),
+            'columns_count' => $this->when(isset($this->columns_count), $this->columns_count),
+            // 'cards_count' => $this->when(isset($this->cards_count), $this->cards_count),
+
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

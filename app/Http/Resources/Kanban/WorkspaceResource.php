@@ -18,6 +18,7 @@ class WorkspaceResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'plan' => 1,
             'slug' => $this->slug,
             'description' => $this->description,
             'owner_id' => $this->owner_id,

@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('priority')->default('medium');
             $table->date('due_date')->nullable();
             $table->date('start_date')->nullable();
-            $table->timestamp('complated_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
 
             // Гибкие настройки карточки
             $table->json('settings')->nullable();
@@ -44,10 +44,12 @@ return new class extends Migration
         });
 
         // Pivot таблица для меток (Labels)
-        Schema::create('kanban_card_label', function (Blueprint $table) {
+        Schema::create('kanban_card_labels', function (Blueprint $table) {
             $table->id();
             $table->foreignId('card_id')->constrained('kanban_cards')->cascadeOnDelete();
             $table->foreignId('label_id')->constrained('kanban_labels')->cascadeOnDelete();
+
+            $table->timestamps();
 
             $table->unique(['card_id', 'label_id']);
         });
@@ -57,6 +59,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('card_id')->constrained('kanban_cards')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
+            $table->timestamps();
 
             $table->unique(['card_id', 'user_id']);
         });            

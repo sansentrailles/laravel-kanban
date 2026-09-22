@@ -28,6 +28,9 @@ return new class extends Migration
             // Канбан-ограничения
             $table->unsignedInteger('wip_limit')->nullable();
 
+            // Гибкие настройки
+            $table->json('settings')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
 

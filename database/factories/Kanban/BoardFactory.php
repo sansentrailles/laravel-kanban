@@ -2,10 +2,10 @@
 
 namespace Database\Factories\Kanban;
 
+use App\Enums\Kanban\BoardVisibility;
 use App\Models\Kanban\Board;
 use App\Models\Kanban\Workspace;
 use App\Models\User;
-use App\Providers\Enums\Kanban\BoardVisibility;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
