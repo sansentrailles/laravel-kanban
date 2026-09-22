@@ -1,7 +1,6 @@
 <script setup>
 import { useBoardStore } from '@/Stores/board'
 import { computed } from 'vue'
-// import { useBoardStore } from '@/stores/board'
 
 const store = useBoardStore()
 const board = computed(() => store.currentBoard)
@@ -38,6 +37,8 @@ const applyFilters = (filters) => {
 </script>
 
 <template>
+  abcded
+  {{ board }}
   <div class="h-full flex flex-col">
     <!-- Header доски -->
     <BoardHeader 

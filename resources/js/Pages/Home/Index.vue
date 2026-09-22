@@ -2,18 +2,25 @@
 
 import { defineProps } from 'vue'
 import { Head, Link } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
 
-const props = defineProps(['auth', 'flash'])
+const {auth, flash, user} = defineProps({
+    'auth': {
+        required: true,
+        type: Object
+    },
+    'flash': {
+        required: true,
+        type: Object
+    },
+    'user': {
+        required: true,
+        type: Object
+    }
+})
 
 </script>
 
 <template>
-    <Head title="Main page" />
-    <div>
-        <h1>Главная страница</h1>
-        <div>
-            <span v-if="auth.user">Добро пожаловать, {{ auth.user.name }}</span>
-            <div v-if="flash">{{ flash }}</div>
-        </div>
-    </div>
+    <AppLayout></AppLayout>
 </template>

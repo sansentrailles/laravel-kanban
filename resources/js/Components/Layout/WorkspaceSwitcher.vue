@@ -8,7 +8,7 @@ const props = defineProps({
     required: true
   },
   currentWorkspace: {
-    type: Object,
+    type: Array,
     default: null
   }
 })
@@ -24,7 +24,7 @@ const selectWorkspace = (workspace) => {
 </script>
 
 <template>
-  <div class="p-4 border-b border-slate-700">
+  <div class="p-4 border-b border-slate-700 relative">
     <button 
       @click="isOpen = !isOpen"
       class="flex items-center gap-3 w-full text-left hover:bg-slate-800 rounded-lg p-2 transition-colors"
@@ -36,15 +36,12 @@ const selectWorkspace = (workspace) => {
         <div class="text-sm font-medium text-white truncate">
           {{ currentWorkspace?.name || 'Выбрать пространство' }}
         </div>
-        <div class="text-xs text-slate-400 truncate">
-          {{ currentWorkspace?.plan || 'Free Plan' }}
-        </div>
       </div>
       <ChevronDownIcon class="w-4 h-4 text-slate-400" />
     </button>
 
     <!-- Dropdown -->
-    <div v-if="isOpen" class="absolute left-4 right-4 mt-2 bg-slate-800 rounded-lg shadow-xl border border-slate-700 z-50">
+    <div v-if="isOpen" class="absolute left-4 mt-2 bg-slate-800 rounded-lg shadow-xl border border-slate-700 z-50 w-max min-w-[12rem]">
       <div class="p-2 space-y-1">
         <button
           v-for="workspace in workspaces"
