@@ -6,6 +6,7 @@ export const useBoardStore = defineStore('board', () => {
   const columns = ref([])
   const selectedCard = ref(null)
   const filters = ref({})
+  // const showCreateWorkspaceModal = ref(false)
 
   const sortedColumns = computed(() => {
     return [...columns.value].sort((a, b) => a.order - b.order)
@@ -14,6 +15,11 @@ export const useBoardStore = defineStore('board', () => {
   const selectCard = (card) => {
     selectedCard.value = card
   }
+
+  // TODO: ????
+  // const showWorkspaceModal = () => {
+  //   showCreateWorkspaceModal.value = true
+  // }
 
   const setFilters = (newFilters) => {
     filters.value = newFilters

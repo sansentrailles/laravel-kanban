@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-import { ChevronDownIcon, PlusIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import AddWorkspaceForm from '../Board/AddWorkspaceForm.vue'
 
 const props = defineProps({
   workspaces: {
@@ -13,13 +14,19 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['select'])
+const showAddWorkspace = ref(false)
+
+const emit = defineEmits(['select', 'create-workspace-click'])
 
 const isOpen = ref(false)
 
 const selectWorkspace = (workspace) => {
   emit('select', workspace)
   isOpen.value = false
+}
+
+const addWorkspace = (data) => {
+  showAddWorkspace.value = false
 }
 </script>
 
@@ -59,10 +66,37 @@ const selectWorkspace = (workspace) => {
           </div>
         </button>
       </div>
+
+      <AddWorkspaceForm
+        v-if="showAddWorkspace"
+        @submit="addWorkspace"
+        @cancel="showAddWorkspace = false"        
+      />
+    
       <div class="border-t border-slate-700 p-2">
-        <button class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700 text-slate-300 text-sm">
-          <PlusIcon class="w-4 h-4" />
-          Создать пространство
+        <button class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700 text-slate-300 text-sm"
+          @click="$emit('create-workspace-click', card)"
+        >
+          <div class="flex items-center">
+            <PlusIcon  class="w-4 h-4 mr-1" />
+            Добавить пространство
+          </div>
+        </button>
+      </div>
+
+      <div class="border-t border-slate-700 p-2">
+        <button class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700 text-slate-300 text-sm"
+          @click="showAddWorkspace = !showAddWorkspace"
+        >
+          <div v-if="!showAddWorkspace" class="flex items-center">
+            <PlusIcon  class="w-4 h-4 mr-1" />
+            Создать пространство
+          </div>
+          
+          <div v-else class="flex items-center justify-center">
+            <XMarkIcon  class="w-4 h-4 mr-1" />
+            Отменить
+          </div>
         </button>
       </div>
     </div>

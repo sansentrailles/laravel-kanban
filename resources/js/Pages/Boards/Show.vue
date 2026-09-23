@@ -2,10 +2,9 @@
 import { computed, ref } from 'vue'
 import BoardView from '@/Components/Board/BoardView.vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { CircleStackIcon, XCircleIcon } from '@heroicons/vue/24/outline'
 import { Head } from '@inertiajs/vue3'
 
-// 1. Получаем данные от Laravel через Inertia
+// Получаем данные от Laravel через Inertia
 const props = defineProps({
   board: {
     type: Array,
@@ -29,7 +28,7 @@ const props = defineProps({
   }
 })
 
-// 2. Извлекаем колонки из объекта доски (так как Resource вкладывает их внутрь)
+// Извлекаем колонки из объекта доски (так как Resource вкладывает их внутрь)
 // const columns = computed(() => props.columns?.data || props.columns || [])
 const columns = computed(() => props.board?.columns?.data || [])
 

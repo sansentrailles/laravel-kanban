@@ -50,6 +50,31 @@ class WorkspaceController extends Controller
         ]);
     }
 
+    public function show(string $slug): Response
+    {
+        $user = Auth::user();
+
+        $workspace = Workspace::where('slug', $slug)
+            ->with(['owner', 'members', 'boards'])
+            ->firstOrFail();
+
+        $workspaces = $user->ownedWorkspaces()
+            ->withCount('members')
+            ->get()
+            ->merge($user->workspaces()->withCount('members')->get())
+            ->unique('id')
+            ->values();
+
+        Gate::authorize('view', $workspace);
+
+        return Inertia::render('Workspaces/Index', [
+            'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
+            'currentWorkspace' => (new WorkspaceResource($workspace))->resolve(),
+            'boards' => BoardResource::collection($workspace->boards),
+            'unreadNotifications' => 3,
+        ]);
+    }
+
     /**
      * Создание нового воркспейса
      */
@@ -66,23 +91,23 @@ class WorkspaceController extends Controller
         return redirect()->route('workspaces.show', $workspace->slug);
     }
 
-    public function show(string $slug): Response
-    {
-        $workspace = Workspace::where('slug', $slug)
-            ->with(['owner', 'members'])
-            ->withCount('members')
-            ->firstOrFail();
+    // public function show(string $slug): Response
+    // {
+    //     $workspace = Workspace::where('slug', $slug)
+    //         ->with(['owner', 'members'])
+    //         ->withCount('members')
+    //         ->firstOrFail();
 
-        Gate::authorize('view', $workspace);
+    //     Gate::authorize('view', $workspace);
 
-        $boards = $workspace->boards()
-            ->withCount('columns')
-            ->ordered()
-            ->get();
+    //     $boards = $workspace->boards()
+    //         ->withCount('columns')
+    //         ->ordered()
+    //         ->get();
 
-        return Inertia::render('Workspaces/Show', [
-            'workspace' => new WorkspaceResource($workspace),
-            'boards' => BoardResource::collection($boards),
-        ]);
-    }
+    //     return Inertia::render('Workspaces/Show', [
+    //         'workspace' => new WorkspaceResource($workspace),
+    //         'boards' => BoardResource::collection($boards),
+    //     ]);
+    // }
 }

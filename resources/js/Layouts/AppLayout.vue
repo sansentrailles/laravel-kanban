@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import WorkspaceSwitcher from '@/Components/Layout/WorkspaceSwitcher.vue'
 import SidebarNavItem from '@/Components/Layout/SidebarNavItem.vue'
@@ -9,6 +9,7 @@ import Topbar from '@/Components/Layout/Topbar.vue'
 import CardDetailDrawer from '@/Components/Card/CardDetailDrawer.vue'
 import ToastContainer from '@/Components/UI/ToastContainer.vue'
 import { useBoardStore } from '@/Stores/board'
+import CreateWorkspaceModal from '@/Components/Workspace/CreateWorkspaceModal.vue'
 
 const page = usePage()
 const store = useBoardStore()
@@ -21,8 +22,14 @@ const currentBoard = computed(() => page.props.board)
 const unreadCount = computed(() => page.props.unreadNotifications || 0)
 const selectedCard = computed(() => store.selectedCard)
 
+const showCreateWorkspaceModal = ref(false)
+
 const handleWorkspaceSelect = (workspace) => {
   router.visit(`/workspaces/${workspace.slug}`)
+}
+
+const openCreateWorspaceModal = () => {
+  showCreateWorkspaceModal.value = true
 }
 
 const handleFilterChange = (filters) => {
@@ -39,6 +46,7 @@ const handleFilterChange = (filters) => {
         :workspaces="workspaces"
         :current-workspace="currentWorkspace"
         @select="handleWorkspaceSelect"
+        @create-workspace-click="openCreateWorspaceModal"
       />
       
       <!-- Navigation -->
@@ -94,5 +102,11 @@ const handleFilterChange = (filters) => {
     <!-- Global Overlays -->
     <CardDetailDrawer v-if="selectedCard" :card="selectedCard" />
     <ToastContainer />
+    <!-- Модальное окно создания -->
+    <CreateWorkspaceModal
+      v-if="showCreateWorkspaceModal"
+      @close="showCreateWorkspaceModal = false"
+      @created="handleWorkspaceCreated"
+    />
   </div>
 </template>

@@ -1,11 +1,11 @@
 <script setup>
 import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
 import { PlusIcon, ChevronRightIcon, UsersIcon, UserIcon, ViewColumnsIcon } from '@heroicons/vue/24/outline'
 import AppLayout from '@/Layouts/AppLayout.vue'
 
 const props = defineProps({
-  workspace: {
+  currentWorkspace: {
     type: Object,
     required: true
   },
@@ -23,20 +23,22 @@ const navigateToBoard = (boardId) => {
 </script>
 
 <template>
+  <Head :title="`Пространство: ${currentWorkspace?.name}`"/>
+
   <AppLayout>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Header -->
       <div class="mb-8">
         <div class="flex items-center gap-4 mb-4">
           <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl">
-            {{ workspace.name.charAt(0).toUpperCase() }}
+            {{ currentWorkspace?.name.charAt(0).toUpperCase() }}
           </div>
           <div>
             <h1 class="text-3xl font-bold text-gray-900">
-              {{ workspace.name }}
+              {{ currentWorkspace?.name }}
             </h1>
-            <p v-if="workspace.description" class="text-gray-600 mt-1">
-              {{ workspace.description }}
+            <p v-if="currentWorkspace?.description" class="text-gray-600 mt-1">
+              {{ currentWorkspace?.description }}
             </p>
           </div>
         </div>
@@ -44,11 +46,11 @@ const navigateToBoard = (boardId) => {
         <div class="flex items-center gap-6 text-sm text-gray-500">
           <div class="flex items-center gap-2">
             <UsersIcon class="w-4 h-4" />
-            <span>{{ workspace.members_count }} участников</span>
+            <span>{{ currentWorkspace?.members_count }} участников</span>
           </div>
           <div class="flex items-center gap-2">
             <UserIcon class="w-4 h-4" />
-            <span>Владелец: {{ workspace.owner?.name }}</span>
+            <span>Владелец: {{ currentWorkspace?.owner?.name }}</span>
           </div>
         </div>
       </div>
