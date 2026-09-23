@@ -10,7 +10,6 @@ import CardDetailDrawer from '@/Components/Card/CardDetailDrawer.vue'
 import ToastContainer from '@/Components/UI/ToastContainer.vue'
 import { useBoardStore } from '@/Stores/board'
 
-
 const page = usePage()
 const store = useBoardStore()
 
