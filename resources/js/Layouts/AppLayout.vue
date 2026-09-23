@@ -22,7 +22,7 @@ const unreadCount = computed(() => page.props.unreadNotifications || 0)
 const selectedCard = computed(() => store.selectedCard)
 
 const handleWorkspaceSelect = (workspace) => {
-  router.visit(`/workspaces/${workspace.id}`)
+  router.visit(`/workspaces/${workspace.slug}`)
 }
 
 const handleFilterChange = (filters) => {
