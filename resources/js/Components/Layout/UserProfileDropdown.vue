@@ -37,9 +37,6 @@ const isOpen = ref(false)
           <a href="/settings" class="block px-3 py-2 rounded-lg hover:bg-slate-700 text-sm text-slate-300">
             Настройки
           </a>
-          <a href="/billing" class="block px-3 py-2 rounded-lg hover:bg-slate-700 text-sm text-slate-300">
-            Подписка
-          </a>
         </div>
         <div class="border-t border-slate-700 p-2">
           <a 

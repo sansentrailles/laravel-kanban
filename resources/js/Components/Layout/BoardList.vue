@@ -34,7 +34,7 @@ defineEmits(['select', 'create'])
       <span class="flex-1 truncate">{{ board.name }}</span>
       <span class="text-xs text-slate-500">{{ board.columns_count || 0 }}</span>
     </Link>
-    
+
     <button 
       @click="$emit('create')"
       class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"

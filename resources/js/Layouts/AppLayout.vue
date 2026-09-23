@@ -26,10 +26,6 @@ const handleWorkspaceSelect = (workspace) => {
   router.visit(`/workspaces/${workspace.id}`)
 }
 
-const handleBoardSelect = (board) => {
-  router.visit(`/boards/${board.id}`)
-}
-
 const handleFilterChange = (filters) => {
   store.setFilters(filters)
 }
@@ -55,6 +51,7 @@ const handleFilterChange = (filters) => {
           :active="route().current('tasks')"
           @click="router.visit('/tasks')"
         />
+
         <SidebarNavItem 
           icon="calendar" 
           label="Календарь"
@@ -67,6 +64,7 @@ const handleFilterChange = (filters) => {
             Доски
           </h3>
         </div>
+
         <BoardList 
           :boards="boards"
           :active-board-id="currentBoard?.id"
