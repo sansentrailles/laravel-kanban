@@ -25,7 +25,7 @@ class WorkspaceFactory extends Factory
 
         return [
             'name' => $name,
-            'slug' => Str::slug($name).' - '.fake()->unique()->randomNumber(5),
+            'slug' => Str::slug($name).'-'.fake()->unique()->randomNumber(5),
             'description' => fake()->optional()->paragraph(),
             'owner_id' => User::factory(),
             'settings' => [
