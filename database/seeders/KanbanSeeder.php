@@ -22,25 +22,23 @@ final class KanbanSeeder extends Seeder
     {
         $password = bcrypt('123123123');
 
-        // 1. Создаем ровно 3 пользователей
+        // Создаем трех пользователей
         $user1 = User::firstOrCreate(
             ['email' => 'dev@gmail.com'],
-            ['name' => 'Dev Lead', 'password' => $password]
+            ['name' => 'Dev Lead', 'password' => $password, 'email_verified_at'=> now()]
         );
 
         $user2 = User::firstOrCreate(
             ['email' => 'alice@example.com'],
-            ['name' => 'Alice Manager', 'password' => $password]
+            ['name' => 'Alice Manager', 'password' => $password, 'email_verified_at'=> now()]
         );
 
         $user3 = User::firstOrCreate(
             ['email' => 'bob@example.com'],
-            ['name' => 'Bob Designer', 'password' => $password]
+            ['name' => 'Bob Designer', 'password' => $password, 'email_verified_at'=> now()]
         );
 
-        $allUsers = [$user1, $user2, $user3];
-
-        // 2. Конфигурация воркспейсов и распределение участников
+        // Конфигурация воркспейсов и распределение участников
         $workspacesConfig = [
             [
                 'name' => 'Project Sandbox',
@@ -68,7 +66,7 @@ final class KanbanSeeder extends Seeder
             ],
         ];
 
-        // 3. Создаем каждый воркспейс
+        // Создаем каждый воркспейс
         foreach ($workspacesConfig as $config) {
             $this->createPopulatedWorkspace($config['owner'], $config['members'], $config);
         }
@@ -79,10 +77,16 @@ final class KanbanSeeder extends Seeder
      */
     private function createPopulatedWorkspace(User $owner, array $members, array $config): void
     {
+        // Инициализируем модель без сохранения в БД, чтобы получить доступ к её методам
+        $workspaceInstance = Workspace::factory()->make();
+
+        $slug = $workspaceInstance->generateUniqueSlug($config['name']);
+
         // Создание воркспейса
         $workspace = Workspace::factory()->create([
             'name' => $config['name'],
             'owner_id' => $owner->id,
+            'slug' => $slug,
         ]);
 
         // Привязка всех участников с правильными ролями
@@ -137,7 +141,10 @@ final class KanbanSeeder extends Seeder
         // Создание карточек с использованием States
 
         // Backlog: Обычные задачи с 1-2 случайными метками
-        Card::factory(4)->create(['column_id' => $columns[0]->id, 'created_by' => $getRandomMember()->id])
+        Card::factory(4)->create([
+            'column_id' => $columns[0]->id,
+            'created_by' => $getRandomMember()->id]
+        )
             ->each(fn ($card) => $card->labels()->attach($labels->random(fake()->numberBetween(1, 2))->pluck('id')));
 
         // To Do: Задачи без описания + метка Feature
