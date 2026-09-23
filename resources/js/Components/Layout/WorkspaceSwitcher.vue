@@ -25,7 +25,7 @@ const selectWorkspace = (workspace) => {
   isOpen.value = false
 }
 
-const addWorkspace = (data) => {
+const addWorkspace = () => {
   showAddWorkspace.value = false
 }
 </script>

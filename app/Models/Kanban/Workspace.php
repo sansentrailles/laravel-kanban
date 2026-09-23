@@ -64,7 +64,7 @@ class Workspace extends Model
         'slug',
         'description',
         'owner_id',
-        'settigns',
+        'settings',
     ];
 
     protected function casts(): array
@@ -78,8 +78,9 @@ class Workspace extends Model
     /**
      * Автогенерация slug при создание
      */
-    public static function booter(): void
+    public static function booted(): void
     {
+        parent::boot();
         static::creating(function (self $workspace): void {
             if (empty($workspace->slug)) {
                 $workspace->slug = self::generateUniqueSlug($workspace->name);
@@ -154,7 +155,7 @@ class Workspace extends Model
     /**
      * Генерирует уникальный slug на основе имени
      */
-    public function generateUniqueSlug(string $name, int $attempt = 0): string
+    public static function generateUniqueSlug(string $name, int $attempt = 0): string
     {
         $base = Str::slug($name);
         $slug = $attempt === 0 ? $base : "{$base}-{$attempt}";

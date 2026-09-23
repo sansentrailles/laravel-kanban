@@ -75,9 +75,6 @@ class WorkspaceController extends Controller
         ]);
     }
 
-    /**
-     * Создание нового воркспейса
-     */
     public function store(StoreWorkspaceRequest $request): RedirectResponse
     {
         $dto = new CreateWorkspaceDTO(
@@ -88,26 +85,8 @@ class WorkspaceController extends Controller
 
         $workspace = $this->createWorkspaceAction->execute($dto);
 
-        return redirect()->route('workspaces.show', $workspace->slug);
+        return redirect()->route('kanban.workspace', $workspace->slug)
+            ->with('success', 'Воркспейс создан')
+            ->with('workspace', $workspace);
     }
-
-    // public function show(string $slug): Response
-    // {
-    //     $workspace = Workspace::where('slug', $slug)
-    //         ->with(['owner', 'members'])
-    //         ->withCount('members')
-    //         ->firstOrFail();
-
-    //     Gate::authorize('view', $workspace);
-
-    //     $boards = $workspace->boards()
-    //         ->withCount('columns')
-    //         ->ordered()
-    //         ->get();
-
-    //     return Inertia::render('Workspaces/Show', [
-    //         'workspace' => new WorkspaceResource($workspace),
-    //         'boards' => BoardResource::collection($boards),
-    //     ]);
-    // }
 }

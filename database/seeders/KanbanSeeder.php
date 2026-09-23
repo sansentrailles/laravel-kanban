@@ -25,17 +25,17 @@ final class KanbanSeeder extends Seeder
         // Создаем трех пользователей
         $user1 = User::firstOrCreate(
             ['email' => 'dev@gmail.com'],
-            ['name' => 'Dev Lead', 'password' => $password, 'email_verified_at'=> now()]
+            ['name' => 'Dev Lead', 'password' => $password, 'email_verified_at' => now()]
         );
 
         $user2 = User::firstOrCreate(
             ['email' => 'alice@example.com'],
-            ['name' => 'Alice Manager', 'password' => $password, 'email_verified_at'=> now()]
+            ['name' => 'Alice Manager', 'password' => $password, 'email_verified_at' => now()]
         );
 
         $user3 = User::firstOrCreate(
             ['email' => 'bob@example.com'],
-            ['name' => 'Bob Designer', 'password' => $password, 'email_verified_at'=> now()]
+            ['name' => 'Bob Designer', 'password' => $password, 'email_verified_at' => now()]
         );
 
         // Конфигурация воркспейсов и распределение участников
@@ -77,16 +77,11 @@ final class KanbanSeeder extends Seeder
      */
     private function createPopulatedWorkspace(User $owner, array $members, array $config): void
     {
-        // Инициализируем модель без сохранения в БД, чтобы получить доступ к её методам
-        $workspaceInstance = Workspace::factory()->make();
-
-        $slug = $workspaceInstance->generateUniqueSlug($config['name']);
-
         // Создание воркспейса
         $workspace = Workspace::factory()->create([
             'name' => $config['name'],
             'owner_id' => $owner->id,
-            'slug' => $slug,
+            'slug' => Workspace::generateUniqueSlug($config['name']),
         ]);
 
         // Привязка всех участников с правильными ролями

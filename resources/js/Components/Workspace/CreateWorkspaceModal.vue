@@ -1,6 +1,6 @@
 <script setup>
 import { reactive } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { router, useForm } from '@inertiajs/vue3'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 
 const emit = defineEmits(['close', 'created'])
@@ -10,28 +10,15 @@ const form = useForm({
   description: '',
 })
 
-const errors = reactive({
-  name: '',
-})
-
 const submit = () => {
-  errors.name = ''
-
+  // Передавать form.processing = true вручную не нужно, Inertia делает это сама
   form.post('/workspaces', {
     onSuccess: (page) => {
-      // Если есть ошибки валидации
-      if (page.props.errors?.name) {
-        errors.name = page.props.errors.name
-        return
-      }
-
-      // Успешно создано
-      emit('created', page.props.workspace)
-    },
-    onError: (error) => {
-      if (error.name) {
-        errors.name = error.name
-      }
+      console.log(page)
+      // emit('created', page.props.workspace)
+      emit('close')
+      
+      toast.success('Пространство успешно создано') 
     },
   })
 }
@@ -71,10 +58,11 @@ const submit = () => {
             type="text"
             placeholder="Например, Project Orion"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            :class="{ 'border-red-500': errors.name }"
+            :class="{ 'border-red-500': form.errors.name }"
           />
-          <p v-if="errors.name" class="mt-1 text-sm text-red-600">
-            {{ errors.name }}
+          <!-- Отображение ошибки -->
+          <p v-if="form.errors.name" class="mt-1 text-sm text-red-600">
+            {{ form.errors.name }}
           </p>
         </div>
 
