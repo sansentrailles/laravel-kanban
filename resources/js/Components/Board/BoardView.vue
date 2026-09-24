@@ -1,8 +1,10 @@
 <script setup>
 import { useBoardStore } from '@/Stores/board'
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import BoardHeader from './BoardHeader.vue'
 import Column from './Column.vue'
+import AddColumnButton from './AddColumnButton.vue'
+import CreateColumnModal from './CreateColumnModal.vue'
 
 const props = defineProps({
   board: {
@@ -10,6 +12,9 @@ const props = defineProps({
     required: true
   },
 })
+
+const showCreateColumnModal = ref(false)
+
 const store = useBoardStore()
 // const board = computed(() => store.currentBoard)
 const columns = computed(() => store.sortedColumns)
@@ -43,7 +48,9 @@ const handleColumnDrop = async (data) => {
 }
 
 const showAddColumnModal = () => {
-  // Show modal to add new column
+  console.log('add column')
+  showCreateColumnModal.value = true
+  
 }
 
 const applyFilters = (filters) => {
@@ -80,5 +87,11 @@ const applyFilters = (filters) => {
         <AddColumnButton @click="showAddColumnModal" />
       </div>
     </div>
+
+    <CreateColumnModal
+      v-model="showCreateColumnModal"
+      :board-id="board.id"
+      @created="handleColumnCreated"
+    />
   </div>
 </template>
