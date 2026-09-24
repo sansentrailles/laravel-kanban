@@ -74,6 +74,7 @@ const handleFilterChange = (filters) => {
 
         <BoardList 
           :boards="boards"
+          :workspace="currentWorkspace"
           :active-board-id="currentBoard?.id"
           @select="handleBoardSelect"
           @create="showCreateBoardModal = true"

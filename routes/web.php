@@ -20,7 +20,7 @@ use Inertia\Inertia;
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [WorkspaceController::class, 'index'])->name('dashboard');
     Route::get('/workspaces/{slug}', [WorkspaceController::class, 'show'])->name('kanban.workspace');
-    Route::get('/boards/{uuid}', [BoardController::class, 'show'])->name('kanban.board');
+    Route::get('/workspaces/{slug}/boards/{uuid}', [BoardController::class, 'show'])->name('kanban.board');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('kanban.workspaces.store');
 
     // Воркспейсы
