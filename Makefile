@@ -466,6 +466,14 @@ npm-require: ## 📦 Установить NPM пакет (make npm-require PACKA
 	$(DOCKER_COMPOSE) run --rm node npm install $(PACKAGE)
 	@echo "$(GREEN)✅ Пакет $(PACKAGE) успешно установлен$(NC)"
 
+.PHONY: npm-uninstall
+npm-uninstall: ## 🗑 Удалить NPM пакет (make npm-uninstall PACKAGE=имя_пакета)
+	@echo "$(YELLOW)⏳ Подготовка прав для node_modules...$(NC)"
+	$(DOCKER_COMPOSE) run --rm --user root node sh -c "mkdir -p /var/www/html/node_modules && chown -R ${HOST_UID}:${HOST_GID} /var/www/html/node_modules"
+	@echo "$(YELLOW)⏳ Удаление NPM пакета $(PACKAGE)...$(NC)"
+	$(DOCKER_COMPOSE) run --rm node npm uninstall $(PACKAGE)
+	@echo "$(GREEN)✅ Пакет $(PACKAGE) успешно удален$(NC)"
+
 .PHONY: npm-dev
 npm-dev: ## 🚀 Запустить Vite в режиме разработки
 	$(DOCKER_COMPOSE) run --rm -p 5173:5173 node npm run dev
