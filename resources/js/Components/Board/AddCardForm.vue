@@ -45,7 +45,6 @@ const submit = () => {
 
     <textarea
       v-model="form.description"
-      ref="titleInput"
       placeholder="Введите описание карточки..."
       class="w-full p-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 resize-none"
       rows="3"
