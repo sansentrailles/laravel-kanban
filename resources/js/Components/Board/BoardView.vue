@@ -47,10 +47,6 @@ const handleColumnDrop = async (data) => {
   await axios.patch(`/api/columns/${data.columnId}/move`, data)
 }
 
-const showAddColumnModal = () => {
-  showCreateColumnModal.value = true
-}
-
 const applyFilters = (filters) => {
   store.setFilters(filters)
 }
@@ -62,7 +58,7 @@ const applyFilters = (filters) => {
     <BoardHeader 
       :board="board"
       @filter-change="applyFilters"
-      @add-column="showAddColumnModal"
+      @add-column="showCreateColumnModal = true"
     />
     
     <!-- Холст с колонками -->

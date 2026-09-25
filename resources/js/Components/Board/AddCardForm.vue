@@ -35,15 +35,23 @@ const submit = () => {
 
 <template>
   <form @submit.prevent="submit" class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
-    <textarea
+    <input type="text" 
       v-model="form.title"
       ref="titleInput"
       placeholder="Введите название карточки..."
-      class="w-full p-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-      rows="3"
+      class="w-full p-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 resize-none mb-2"
       autofocus
-    ></textarea>
+    />
+
+    <textarea
+      v-model="form.description"
+      ref="titleInput"
+      placeholder="Введите описание карточки..."
+      class="w-full p-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 resize-none"
+      rows="3"
+    ></textarea> 
     
+   
     <div class="mt-3 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <button 

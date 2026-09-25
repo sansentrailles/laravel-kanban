@@ -24,6 +24,7 @@ const draggedCard = ref(null)
 const showAddCard = ref(false)
 
 const handleDragStart = (card) => {
+  console.log(card)
   draggedCard.value = card
 }
 
