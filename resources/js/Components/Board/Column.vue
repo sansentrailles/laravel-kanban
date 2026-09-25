@@ -77,6 +77,13 @@ const addCard = (data) => {
     @dragleave="handleDragLeave"
     @drop="handleDrop"
   >
+    <!-- Цветная полоска сверху (если цвет задан) -->
+    <div 
+      v-if="column.color"
+      class="h-1.5 w-full rounded-t-lg"
+      :style="{ backgroundColor: column.color }"
+    />
+
     <!-- Header колонки -->
     <div class="p-3 flex items-center justify-between">
       <div class="flex items-center gap-2">
@@ -100,6 +107,7 @@ const addCard = (data) => {
       v-if="column.wip_limit"
       :current="cards.length"
       :limit="column.wip_limit"
+      :color="column.color"
     />
     
     <!-- Список карточек -->

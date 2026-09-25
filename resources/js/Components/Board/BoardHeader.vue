@@ -30,7 +30,14 @@ const handleSearch = useDebounceFn(() => {
   <header class="bg-white border-b border-gray-200 px-6 py-4">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <h1 class="text-2xl font-bold text-gray-900">{{ board.name }}</h1>
+        <div 
+          v-if="board.color"
+          class="w-6 h-6 rounded-full flex-shrink-0 shadow-sm"
+          :style="{ backgroundColor: board.color }"
+        />
+        <h1 class="text-2xl font-bold text-gray-900">          
+          {{ board.name }}
+        </h1>
         <span class="text-sm text-gray-500">{{ board.description }}</span>
       </div>
       

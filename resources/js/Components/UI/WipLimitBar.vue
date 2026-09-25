@@ -6,6 +6,7 @@ const props = defineProps({
     type: Number,
     required: true
   },
+  color: { type: String, default: null },
   limit: {
     type: Number,
     required: true
@@ -23,6 +24,12 @@ const isOverLimit = computed(() => {
 const isNearLimit = computed(() => {
   return props.current >= props.limit * 0.8 && !isOverLimit.value
 })
+
+const barColor = computed(() => {
+  if (props.isOverLimit) return '#ef4444' // red
+  if (props.isNearLimit) return '#f59e0b' // yellow
+  return props.color || '#10b981' // цвет колонки или зеленый по умолчанию
+})
 </script>
 
 <template>
@@ -39,8 +46,7 @@ const isNearLimit = computed(() => {
     <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
       <div 
         class="h-full transition-all duration-300"
-        :class="isOverLimit ? 'bg-red-500' : isNearLimit ? 'bg-yellow-500' : 'bg-green-500'"
-        :style="{ width: `${percentage}%` }"
+        :style="{ width: `${percentage}%`, backgroundColor: barColor }"
       />
     </div>
   </div>
