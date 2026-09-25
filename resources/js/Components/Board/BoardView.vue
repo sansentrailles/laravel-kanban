@@ -48,9 +48,7 @@ const handleColumnDrop = async (data) => {
 }
 
 const showAddColumnModal = () => {
-  console.log('add column')
   showCreateColumnModal.value = true
-  
 }
 
 const applyFilters = (filters) => {

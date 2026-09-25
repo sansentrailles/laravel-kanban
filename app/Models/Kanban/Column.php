@@ -56,7 +56,7 @@ class Column extends Model
 
     protected $table = 'kanban_columns';
 
-    protected $filleable = [
+    protected $fillable = [
         'board_id',
         'title',
         'color',

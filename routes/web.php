@@ -3,25 +3,19 @@
 // use App\Http\Controllers\HomeController;
 
 use App\Http\Controllers\Kanban\BoardController;
+use App\Http\Controllers\Kanban\ColumnController;
 use App\Http\Controllers\Kanban\WorkspaceController;
 use App\Http\Controllers\ProfileController;
-// use App\Http\Controllers\WorkspaceController;
-// use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-
-// Route::get('/', [WorkspaceController::class, 'index'])->name('dashboard');
-// Route::get('/boards/{uuid}', [BoardController::class, 'show'])->name('kanban.board');
-
-// Route::get('/', function () {
-//     return redirect()->route('boards.show', 1);
-// });
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [WorkspaceController::class, 'index'])->name('dashboard');
     Route::get('/workspaces/{slug}', [WorkspaceController::class, 'show'])->name('kanban.workspace');
     Route::get('/workspaces/{slug}/boards/{uuid}', [BoardController::class, 'show'])->name('kanban.board');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('kanban.workspaces.store');
+
+    // Создание колонки
+    Route::post('/boards/{board}/columns', [ColumnController::class, 'store'])->name('boards.columns.store');
 
     // Воркспейсы
     // Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');

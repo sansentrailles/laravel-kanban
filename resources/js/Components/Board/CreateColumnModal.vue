@@ -34,6 +34,7 @@ watch(() => props.modelValue, (isOpen) => {
 })
 
 const submit = () => {
+    console.log('submit column create form')
   form.post(route('boards.columns.store', props.boardId), {
     preserveScroll: true,
     onSuccess: () => {
@@ -68,28 +69,6 @@ watch(() => props.modelValue, (isOpen) => {
   }
 })
 </script>
-
-<style scoped>
-.modal-enter-active,
-.modal-leave-active {
-  transition: all 0.2s ease-out;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-.modal-enter-from .modal-content,
-.modal-leave-to .modal-content {
-  transform: scale(0.95) translateY(10px);
-}
-
-.modal-enter-active .modal-content,
-.modal-leave-active .modal-content {
-  transition: all 0.2s ease-out;
-}
-</style>
 
 <template>
   <Teleport to="body">
@@ -213,3 +192,25 @@ watch(() => props.modelValue, (isOpen) => {
     </Transition>
   </Teleport>
 </template>
+
+<style scoped>
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.2s ease-out;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-from .modal-content,
+.modal-leave-to .modal-content {
+  transform: scale(0.95) translateY(10px);
+}
+
+.modal-enter-active .modal-content,
+.modal-leave-active .modal-content {
+  transition: all 0.2s ease-out;
+}
+</style>

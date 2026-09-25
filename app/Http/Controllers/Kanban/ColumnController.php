@@ -20,7 +20,7 @@ class ColumnController extends Controller
         $maxOrder = $board->columns->max('order') ?? 0;
 
         $dto = new CreateColumnDTO(
-            title: $request->validated('tilte'),
+            title: $request->validated('title'),
             color: $request->validated('color'),
             wipLimit: $request->validated('wip_limmit'),
             boardId: $board->id,
