@@ -1,7 +1,5 @@
 <script setup>
-import { ref } from 'vue'
-import { PlusIcon, MagnifyingGlassIcon, UserIcon, TagIcon, CalendarIcon } from '@heroicons/vue/24/outline'
-import { useDebounceFn } from '@vueuse/core'
+import { PlusIcon } from '@heroicons/vue/24/outline'
 
 defineProps({
   board: {
@@ -16,14 +14,6 @@ defineProps({
 
 defineEmits(['view-change', 'add-column', 'filter-change'])
 
-const searchQuery = ref('')
-const showMemberFilter = ref(false)
-const showLabelFilter = ref(false)
-const showDateFilter = ref(false)
-
-const handleSearch = useDebounceFn(() => {
-  // Emit search event
-}, 300)
 </script>
 
 <template>

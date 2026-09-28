@@ -38,16 +38,6 @@ const openCardDetail = (card) => {
   console.log('Open card:', card)
   // Здесь будет логика открытия CardDetailDrawer (например, через Pinia store)
 }
-
-const handleCardDrop = async (data) => {
-  console.log('Card drop:', data)
-  // Здесь будет вызов axios.patch для перемещения карточки (Optimistic UI)
-}
-
-const handleColumnDrop = async (data) => {
-  console.log('Column drop:', data)
-  // Здесь будет вызов axios.patch для перемещения колонки
-}
 </script>
 
 <template>

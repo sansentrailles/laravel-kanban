@@ -6,7 +6,6 @@ export const useBoardStore = defineStore('board', () => {
   const columns = ref([])
   const selectedCard = ref(null)
   const filters = ref({})
-  // const showCreateWorkspaceModal = ref(false)
 
   const sortedColumns = computed(() => {
     return [...columns.value].sort((a, b) => a.order - b.order)
@@ -16,26 +15,8 @@ export const useBoardStore = defineStore('board', () => {
     selectedCard.value = card
   }
 
-  // TODO: ????
-  // const showWorkspaceModal = () => {
-  //   showCreateWorkspaceModal.value = true
-  // }
-
   const setFilters = (newFilters) => {
     filters.value = newFilters
-  }
-
-  const moveCardOptimistic = (data) => {
-    // Optimistic update logic
-    const card = findCard(data.cardId)
-    if (card) {
-      card.column_id = data.columnId
-      card.order = data.position
-    }
-  }
-
-  const rollbackCardMove = (data) => {
-    // Rollback logic
   }
 
   const findCard = (cardId) => {
@@ -59,8 +40,6 @@ export const useBoardStore = defineStore('board', () => {
     sortedColumns,
     selectCard,
     setFilters,
-    moveCardOptimistic,
-    rollbackCardMove,
     setBoardData
   }
 })

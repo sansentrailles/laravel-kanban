@@ -16,39 +16,16 @@ const props = defineProps({
 const showCreateColumnModal = ref(false)
 
 const store = useBoardStore()
-// const board = computed(() => store.currentBoard)
 const columns = computed(() => store.sortedColumns)
 
 watch(() => props.board, (newBoard) => {
   if (newBoard) {
-    console.log('set board');
     store.setBoardData(newBoard, newBoard.columns?.data || [])
   }
 }, { immediate: true })
 
-const openCardDetail = (card) => {
-  store.selectCard(card)
-}
-
-const handleCardDrop = async (data) => {
-  // Optimistic UI update
-  store.moveCardOptimistic(data)
-  
-  try {
-    await axios.patch(`/api/cards/${data.cardId}/move`, data)
-  } catch (error) {
-    store.rollbackCardMove(data)
-    toast.error('Не удалось переместить карточку')
-  }
-}
-
-const handleColumnDrop = async (data) => {
-  // Handle column reordering
-  await axios.patch(`/api/columns/${data.columnId}/move`, data)
-}
-
-const applyFilters = (filters) => {
-  store.setFilters(filters)
+const showAddColumnModal = () => {
+  showCreateColumnModal.value = true;
 }
 </script>
 
@@ -58,7 +35,7 @@ const applyFilters = (filters) => {
     <BoardHeader 
       :board="board"
       @filter-change="applyFilters"
-      @add-column="showCreateColumnModal = true"
+      @add-column="showAddColumnModal"
     />
     
     <!-- Холст с колонками -->
