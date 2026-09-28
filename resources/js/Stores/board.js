@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
@@ -32,6 +33,22 @@ export const useBoardStore = defineStore('board', () => {
     columns.value = columnsData
   }
 
+  const saveColumnsOrder = async (ids) => {
+    // 1. Оптимистично обновляем локальный state (чтобы UI не ждал ответа сервера)
+    columns.value = columns.value.map((col, index) => {
+      const newOrder = ids.indexOf(col.id)
+      return { ...col, order: newOrder !== -1 ? newOrder : index }
+    })
+
+    // 2. Отправляем на сервер
+    try {
+      return await axios.patch(`/columns/orders`, { ids })
+    } catch (error) {
+      console.error('Ошибка сохранения порядка колонок:', error)
+      // Логика отката (перечитывание с сервера) при ошибке
+    }
+  }
+
   return {
     currentBoard,
     columns,
@@ -40,6 +57,7 @@ export const useBoardStore = defineStore('board', () => {
     sortedColumns,
     selectCard,
     setFilters,
-    setBoardData
+    setBoardData,
+    saveColumnsOrder
   }
 })

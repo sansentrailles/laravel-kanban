@@ -17,6 +17,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Создание колонки
     Route::post('/boards/{board}/columns', [ColumnController::class, 'store'])->name('boards.columns.store');
+    Route::patch('/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
 
     // Воркспейсы
     // Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');

@@ -6,6 +6,7 @@ import Column from './Column.vue'
 import AddColumnButton from './AddColumnButton.vue'
 import CreateColumnModal from './CreateColumnModal.vue'
 import { useDraggable } from 'vue-draggable-plus'
+import ToastContainer from '../UI/ToastContainer.vue'
 
 const props = defineProps({
   board: {
@@ -38,23 +39,22 @@ useDraggable(boardRef, columns, {
   fallbackClass: 'fallback-column',
   // onStart : (event) => {    
   // },
-  onEnd: (event) => {
+  onEnd: async (event) => {
     const { oldIndex, newIndex } = event
     if (oldIndex === newIndex) return
 
-    const orderedColumnIds = columns.value.map(col => col.id)
-    
-    // const updatedColumnsData = columns.value.map(col => ({
-    //   columnId: col.id,
-    //   cardIds: col.cards.map(card => card.id)
-    // }))
+    const orderedColumnIds = columns.value.map(col => col.id)   
 
-    // Вызов экшена в сторе: saveTasksOrder(updatedColumnsData)
-    // store.updateTasksOrder(updatedColumnsData)
-
-    console.log(props.board.id, orderedColumnIds)
+    try {
+      const response = await store.saveColumnsOrder(orderedColumnIds)
+      if (response.status === 200) {
+        toast.success('Порядок успешно обновлен')
+      }
+    } catch (error) {
+      toast.error('Что-то пошло не так.')
+      columns.value = [...store.sortedColumns]
+    }
     
-    // Вызов API: saveColumnsOrder(orderedColumnIds)
   }
 })
 
@@ -69,7 +69,6 @@ const onTaskDragEnd = (event, sourceColumnId) => {
 
   console.log('sourceColumnID ', sourceColumnId);
   
-
   // Находим карточку в обновленной структуре данных
   // Чтобы понять, в какую колонку ее бросили, ищем по DOM-структуре или сопоставляем данные
   console.log('Карточка успешно перемещена. Актуальное состояние данных:', boardData.value)
