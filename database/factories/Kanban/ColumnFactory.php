@@ -24,7 +24,7 @@ class ColumnFactory extends Factory
             'board_id' => Board::factory(),
             'title' => fake()->randomElement(['Backlog', 'To Do', 'In Progress', 'Review', 'Done']),
             'color' => fake()->optional()->hexColor(),
-            'order' => fake()->numberBetween(1, 100),
+            'ord' => fake()->numberBetween(1, 100),
             'is_hidden' => false,
             'wip_limit' => fake()->optional(0.3)->randomElement([3, 5, 10, null]),
             'settings' => [

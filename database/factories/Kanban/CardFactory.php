@@ -32,7 +32,7 @@ class CardFactory extends Factory
 
             // Генерация дробного индекса для сортировки (имитация Fractional Indexing)
             // Генерирация числа в диапазоне 1000000000 - 2000000000 с 10 знаками после запятой
-            'order' => fake()->randomFloat(10, 1000000000, 2000000000),
+            'ord' => fake()->randomFloat(10, 1000000000, 2000000000),
 
             'priority' => fake()->randomElement(CardPriority::cases()),
 

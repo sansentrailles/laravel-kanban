@@ -118,11 +118,11 @@ final class KanbanSeeder extends Seeder
 
         // Создание реалистичных колонок
         $columnsData = [
-            ['title' => 'Backlog', 'order' => 100],
-            ['title' => 'To Do', 'order' => 200],
-            ['title' => 'In Progress', 'order' => 300, 'wip_limit' => 5],
-            ['title' => 'Review', 'order' => 400],
-            ['title' => 'Done', 'order' => 500],
+            ['title' => 'Backlog', 'ord' => 100],
+            ['title' => 'To Do', 'ord' => 200],
+            ['title' => 'In Progress', 'ord' => 300, 'wip_limit' => 5],
+            ['title' => 'Review', 'ord' => 400],
+            ['title' => 'Done', 'ord' => 500],
         ];
 
         $columns = collect($columnsData)->map(fn ($data) => Column::factory()->create(array_merge($data, [

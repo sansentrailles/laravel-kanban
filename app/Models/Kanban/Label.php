@@ -25,7 +25,7 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $color
  * @property string|null $description
- * @property int $order
+ * @property int $ord
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  *
@@ -52,14 +52,14 @@ class Label extends Model
         'name',
         'color',
         'description',
-        'order',
+        'ord',
     ];
 
     protected function casts(): array
     {
         return [
             'workspace_id' => 'integer',
-            'order' => 'integer',
+            'ord' => 'integer',
         ];
     }
 

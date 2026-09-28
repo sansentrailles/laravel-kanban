@@ -20,7 +20,7 @@ class ChecklistItem extends Model
         'checklist_id',
         'content',
         'is_completed',
-        'order',
+        'ord',
     ];
 
     public function casts(): array
@@ -28,7 +28,7 @@ class ChecklistItem extends Model
         return [
             'checklist_id' => 'integer',
             'is_completed' => 'integer',
-            'order' => 'integer',
+            'ord' => 'integer',
         ];
     }
 

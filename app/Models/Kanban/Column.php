@@ -27,7 +27,7 @@ use Illuminate\Support\Carbon;
  * @property int $board_id
  * @property string $title
  * @property string|null $color
- * @property int $order
+ * @property int $ord
  * @property bool $is_hidden
  * @property int|null $wip_limit
  * @property array<array-key, mixed>|null $settings
@@ -60,7 +60,7 @@ class Column extends Model
         'board_id',
         'title',
         'color',
-        'order',
+        'ord',
         'is_hidden',
         'wip_limit',
         'settings',
@@ -70,7 +70,7 @@ class Column extends Model
     {
         return [
             'board_id' => 'integer',
-            'order' => 'integer',
+            'ord' => 'integer',
             'is_hidden' => 'boolean',
             'wip_limit' => 'integer',
             'settings' => 'array',
@@ -91,7 +91,7 @@ class Column extends Model
      */
     public function cards(): HasMany
     {
-        return $this->hasMany(Card::class)->orderBy('order');
+        return $this->hasMany(Card::class)->orderBy('ord');
     }
 
     // ─────────────────────────────────────────────
@@ -111,7 +111,7 @@ class Column extends Model
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('order');
+        return $query->orderBy('ord');
     }
 
     // ─────────────────────────────────────────────

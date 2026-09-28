@@ -24,14 +24,14 @@ class Checklist extends Model
     protected $fillable = [
         'card_id',
         'title',
-        'order',
+        'ord',
     ];
 
     public function casts(): array
     {
         return [
             'card_id' => 'integer',
-            'order' => 'integer',
+            'ord' => 'integer',
         ];
     }
 
@@ -42,7 +42,7 @@ class Checklist extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(ChecklistItem::class)->orderBy('order');
+        return $this->hasMany(ChecklistItem::class)->orderBy('ord');
     }
 
     /**

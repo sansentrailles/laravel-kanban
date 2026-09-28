@@ -41,7 +41,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $created_by
  * @property string $title
  * @property string|null $description
- * @property numeric $order
+ * @property numeric $ord
  * @property Carbon|null $due_date
  * @property Carbon|null $start_date
  * @property string|null $completed_at
@@ -82,7 +82,7 @@ class Card extends Model
         'created_by',
         'title',
         'description',
-        'order',
+        'ord',
         'priority',
         'due_date',
         'start_date',
@@ -95,7 +95,7 @@ class Card extends Model
         return [
             'column_id' => 'integer',
             'created_by' => 'integer',
-            'order' => 'decimal:10',
+            'ord' => 'decimal:10',
             'priority' => CardPriority::class,
             'due_date' => 'date',
             'start_date' => 'date',
@@ -151,7 +151,7 @@ class Card extends Model
 
     public function scopeOrdered($query)
     {
-        return $query->order('order');
+        return $query->order('ord');
     }
 
     public function scopOverdue($query)

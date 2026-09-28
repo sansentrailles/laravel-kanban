@@ -40,7 +40,7 @@ use Illuminate\Support\Str;
  * @property string|null $description
  * @property string|null $color
  * @property string|null $icon
- * @property int $order
+ * @property int $ord
  * @property array<array-key, mixed>|null $settings
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -77,7 +77,7 @@ class Board extends Model
         'description',
         'color',
         'icon',
-        'order',
+        'ord',
         'visibility',
         'settings',
     ];
@@ -87,7 +87,7 @@ class Board extends Model
         return [
             'workspace_id' => 'integer',
             'created_by' => 'integer',
-            'order' => 'integer',
+            'ord' => 'integer',
             'visibility' => BoardVisibility::class,
             'settings' => 'array',
         ];
@@ -121,7 +121,7 @@ class Board extends Model
 
     public function columns(): HasMany
     {
-        return $this->hasMany(Column::class)->orderBy('order');
+        return $this->hasMany(Column::class)->orderBy('ord');
     }
 
     /**
@@ -165,6 +165,6 @@ class Board extends Model
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('order');
+        return $query->orderBy('ord');
     }
 }

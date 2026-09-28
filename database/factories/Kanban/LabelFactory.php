@@ -28,7 +28,7 @@ class LabelFactory extends Factory
             ]),
             'color' => fake()->hexColor(),
             'description' => fake()->optional()->sentence(),
-            'order' => fake()->numberBetween(1, 100),
+            'ord' => fake()->numberBetween(1, 100),
         ];
     }
 
