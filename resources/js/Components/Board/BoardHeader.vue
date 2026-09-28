@@ -69,43 +69,5 @@ const handleSearch = useDebounceFn(() => {
         </button>
       </div>
     </div>
-    
-    <!-- Filters -->
-    <div class="mt-4 flex items-center gap-3">
-      <div class="relative">
-        <MagnifyingGlassIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          v-model="searchQuery"
-          @input="handleSearch"
-          type="text"
-          placeholder="Поиск..."
-          class="pl-10 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      
-      <button 
-        @click="showMemberFilter = !showMemberFilter"
-        class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-      >
-        <UserIcon class="w-4 h-4" />
-        Исполнители
-      </button>
-      
-      <button 
-        @click="showLabelFilter = !showLabelFilter"
-        class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-      >
-        <TagIcon class="w-4 h-4" />
-        Метки
-      </button>
-      
-      <button 
-        @click="showDateFilter = !showDateFilter"
-        class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-      >
-        <CalendarIcon class="w-4 h-4" />
-        Сроки
-      </button>
-    </div>
   </header>
 </template>
