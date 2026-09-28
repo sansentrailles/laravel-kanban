@@ -17,7 +17,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['card-click'])
+const emit = defineEmits(['card-click', 'task-drag-end'])
 
 const showAddCard = ref(false)
 
@@ -50,7 +50,7 @@ const addCard = (data) => {
     />
 
     <!-- Header колонки -->
-    <div class="p-3 flex items-center justify-between">
+    <div class="p-3 flex items-center justify-between column-handle">
       <div class="flex items-center gap-2">
         <h3 class="font-semibold text-gray-900">{{ column.title }}</h3>
         <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
@@ -76,7 +76,10 @@ const addCard = (data) => {
     />
     
     <!-- Список карточек -->
-    <div class="flex-1 overflow-y-auto p-2 space-y-2">
+    <div
+      class="flex-1 overflow-y-auto p-2 space-y-2"
+      ref="tasksListRef"
+    >
       <Card
         v-for="card in cards"
         :key="card.id"

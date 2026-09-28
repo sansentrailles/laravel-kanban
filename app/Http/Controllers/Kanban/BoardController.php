@@ -27,16 +27,12 @@ class BoardController extends Controller
         $board = Board::where('workspace_id', $currentWorkspace->id)
             ->where('uuid', $uuid)
             ->with([
+                'columns.cards',
                 'columns.cards.labels',       // Колонки -> Карточки -> Метки
                 'columns.cards.assignees',    // Колонки -> Карточки -> Исполнители
                 'workspace.labels',           // Метки воркспейса (для выпадающих списков)
             ])
             ->firstOrFail();
-        // $board = Board::with([
-        //     'columns.cards.labels',       // Колонки -> Карточки -> Метки
-        //     'columns.cards.assignees',    // Колонки -> Карточки -> Исполнители
-        //     'workspace.labels',           // Метки воркспейса
-        // ])->where('uuid', $uuid)->firstOrFail();
 
         // Собираем данные для сайдбара (ИСПРАВЛЕННЫЙ ЗАПРОС)
         // Получаем все воркспейсы, где пользователь является owner ИЛИ member

@@ -80,7 +80,10 @@ const updateDates = async (dates) => {
                 <!-- Комментарии -->
                 <CommentsSection :comments="card.comments" />
 
-                
+                <!-- Статус -->
+                <FormField label="Статус">
+                  <StatusDropdown :value="card.status" @change="updateStatus" />
+                </FormField>
               </div>
 
               <!-- Сайдбар (1/3) -->
