@@ -12,7 +12,7 @@ defineProps({
   }
 })
 
-defineEmits(['view-change', 'add-column', 'filter-change'])
+defineEmits(['add-column', 'filter-change'])
 
 </script>
 
@@ -31,25 +31,7 @@ defineEmits(['view-change', 'add-column', 'filter-change'])
         <span class="text-sm text-gray-500">{{ board.description }}</span>
       </div>
       
-      <div class="flex items-center gap-3">
-        <!-- View toggle -->
-        <div class="flex bg-gray-100 rounded-lg p-1">
-          <button 
-            @click="$emit('view-change', 'board')"
-            class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
-            :class="view === 'board' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
-          >
-            Доска
-          </button>
-          <button 
-            @click="$emit('view-change', 'list')"
-            class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
-            :class="view === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
-          >
-            Список
-          </button>
-        </div>
-        
+      <div class="flex items-center gap-3">        
         <button 
           @click="$emit('add-column')"
           class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center gap-2"

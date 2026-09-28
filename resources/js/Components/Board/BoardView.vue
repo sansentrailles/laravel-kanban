@@ -50,8 +50,6 @@ const showAddColumnModal = () => {
           :column="column"
           :cards="column.cards"
           @card-click="openCardDetail"
-          @card-drop="handleCardDrop"
-          @column-drop="handleColumnDrop"
         />
         
         <!-- Кнопка добавления колонки -->
