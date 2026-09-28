@@ -24,8 +24,12 @@ watch(() => props.board, (newBoard) => {
   }
 }, { immediate: true })
 
-const showAddColumnModal = () => {
-  showCreateColumnModal.value = true;
+const openCardDetail = (card) => {
+  store.selectCard(card)
+}
+
+const applyFilters = (filters) => {
+  store.setFilters(filters)
 }
 </script>
 
@@ -35,7 +39,7 @@ const showAddColumnModal = () => {
     <BoardHeader 
       :board="board"
       @filter-change="applyFilters"
-      @add-column="showAddColumnModal"
+      @add-column="showCreateColumnModal = true"
     />
     
     <!-- Холст с колонками -->

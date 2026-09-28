@@ -17,41 +17,10 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['card-click', 'card-drop', 'column-drop'])
+const emit = defineEmits(['card-click'])
 
-const isDraggingOver = ref(false)
-const draggedCard = ref(null)
 const showAddCard = ref(false)
 
-const handleDragStart = (card) => {
-  console.log(card)
-  draggedCard.value = card
-}
-
-const handleDragOver = (e) => {
-  isDraggingOver.value = true
-}
-
-const handleDragLeave = () => {
-  isDraggingOver.value = false
-}
-
-const handleDrop = (e) => {
-  isDraggingOver.value = false
-  
-  if (draggedCard.value) {
-    emit('card-drop', {
-      cardId: draggedCard.value.id,
-      columnId: props.column.id,
-      position: calculatePosition(e)
-    })
-  }
-}
-
-const calculatePosition = (e) => {
-  // Calculate drop position based on mouse coordinates
-  return 0
-}
 
 const editColumn = () => {
   // Edit column logic
@@ -72,12 +41,7 @@ const addCard = (data) => {
 </script>
 
 <template>
-  <div 
-    class="w-80 flex-shrink-0 bg-gray-100 rounded-lg flex flex-col max-h-full"
-    @dragover.prevent="handleDragOver"
-    @dragleave="handleDragLeave"
-    @drop="handleDrop"
-  >
+  <div class="w-80 flex-shrink-0 bg-gray-100 rounded-lg flex flex-col max-h-full">
     <!-- Цветная полоска сверху (если цвет задан) -->
     <div 
       v-if="column.color"
@@ -117,16 +81,9 @@ const addCard = (data) => {
         v-for="card in cards"
         :key="card.id"
         :card="card"
-        draggable="true"
-        @dragstart="handleDragStart(card)"
         @click="$emit('card-click', card)"
       />
       
-      <!-- Drop placeholder -->
-      <div 
-        v-if="isDraggingOver"
-        class="h-20 border-2 border-dashed border-blue-400 rounded-lg bg-blue-50"
-      />
     </div>
     
     <!-- Кнопка добавления карточки -->

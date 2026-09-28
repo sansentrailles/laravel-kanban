@@ -29,15 +29,8 @@ const props = defineProps({
 })
 
 // Извлекаем колонки из объекта доски (так как Resource вкладывает их внутрь)
-// const columns = computed(() => props.columns?.data || props.columns || [])
 const columns = computed(() => props.board?.columns?.data || [])
 
-const showAddColumnModal = ref(false)
-
-const openCardDetail = (card) => {
-  console.log('Open card:', card)
-  // Здесь будет логика открытия CardDetailDrawer (например, через Pinia store)
-}
 </script>
 
 <template>
@@ -47,10 +40,6 @@ const openCardDetail = (card) => {
     <BoardView 
       :board="board"
       :columns="columns"
-      @card-click="openCardDetail"
-      @card-drop="handleCardDrop"
-      @column-drop="handleColumnDrop"
-      @add-column="showAddColumnModal = true"
     />
   </AppLayout>
 </template>
