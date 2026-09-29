@@ -26,7 +26,7 @@ const localCards = ref([...props.column.cards])
 const emit = defineEmits([
   'card-click',
   'card-drag-end',
-  // 'update:cards'
+  'update:cards'
 ])
 
 const showAddCard = ref(false)
@@ -137,6 +137,7 @@ const addCard = (data) => {
         v-for="card in localCards"
         :key="card.id"
         :card="card"
+        data-card-id="card.id"
         @click="handleCardClick"
       />
       

@@ -93,7 +93,6 @@ const onUpdateCards = (columnId, newCards) => {
     console.log(`[update:cards] В колонке "${targetColumn.title}" теперь задач: ${newCards.length}`)
     console.log('targetColumn new cards: ', newCards)
     
-    
     // 3. Здесь можно добавить логику, которая должна сработать сразу при обновлении массива.
     // Например, autosave (автосохранение) с debounce.
   }
