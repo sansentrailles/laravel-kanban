@@ -6,7 +6,6 @@ import Column from './Column.vue'
 import AddColumnButton from './AddColumnButton.vue'
 import CreateColumnModal from './CreateColumnModal.vue'
 import { useDraggable } from 'vue-draggable-plus'
-import ToastContainer from '../UI/ToastContainer.vue'
 
 const props = defineProps({
   board: {
@@ -61,20 +60,45 @@ useDraggable(boardRef, columns, {
 /**
  * Обработка окончания перемещения карточки (вызывается из дочерней колонки)
  */
-const onTaskDragEnd = (event, sourceColumnId) => {
+const onCardDragEnd = (event, sourceColumnId) => {
   const { oldIndex, newIndex, to, from } = event
   
   // Если переместили внутри одной колонки и на то же место
   if (from === to && oldIndex === newIndex) return
 
   console.log('sourceColumnID ', sourceColumnId);
+  const targetColumnId = event.to.dataset.columnId
+  console.log('targetColumnId ', targetColumnId)
   
   // Находим карточку в обновленной структуре данных
   // Чтобы понять, в какую колонку ее бросили, ищем по DOM-структуре или сопоставляем данные
-  console.log('Карточка успешно перемещена. Актуальное состояние данных:', boardData.value)
+  // console.log('Карточка успешно перемещена. Актуальное состояние данных:', boardData.value)
   
   // Отправка на API: saveTaskPosition(...)
 }
+
+/**
+ * Явный обработчик события update:tasks
+ * Вызывается из дочернего компонента при любом изменении массива задач
+ * (перетаскивание внутри колонки или перенос из одной в другую)
+ */
+const onUpdateCards = (columnId, newCards) => {
+  // 1. Находим нужную колонку в реактивных данных
+  const targetColumn = columns.value.find(col => col.id === columnId)
+  
+  if (targetColumn) {
+    // 2. Обновляем данные в родительском состоянии
+    targetColumn.cards = newCards
+    
+    console.log(`[update:cards] В колонке "${targetColumn.title}" теперь задач: ${newCards.length}`)
+    console.log('targetColumn new cards: ', newCards)
+    
+    
+    // 3. Здесь можно добавить логику, которая должна сработать сразу при обновлении массива.
+    // Например, autosave (автосохранение) с debounce.
+  }
+}
+
 //------------------------
 
 watch(() => props.board, (newBoard) => {
@@ -114,9 +138,9 @@ const applyFilters = (filters) => {
           :key="column.id"
           :column="column"
           :cards="column.cards"
-          v-model:cards="column.cards"
+          @update:cards="(newCards) => onUpdateCards(column.id, newCards)"
           @card-click="openCardDetail"
-          @task-drag-end="(event) => onTaskDragEnd(event, column.id)"
+          @card-drag-end="(event) => onCardDragEnd(event, column.id)"
         />
         
         <!-- Кнопка добавления колонки -->
@@ -137,7 +161,7 @@ const applyFilters = (filters) => {
 :deep(.ghost-column) {
   background: rgba(59, 130, 246, 0.1); /* Полупрозрачный синий фон */
   border: 2px dashed #3b82f6;          /* Пунктирная граница */
-  opacity: 0.8;
+  opacity: 0.7 !important;
   border-radius: 8px;
 }
 
@@ -152,7 +176,7 @@ const applyFilters = (filters) => {
   background: #ffffff !important;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transform: rotate(2deg); /* Легкий наклон для эффекта "взял карточку" */
-  opacity: 0.85 !important;
+  opacity: 1 !important;
   cursor: grabbing !important;
 }
 </style>
