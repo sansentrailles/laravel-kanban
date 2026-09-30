@@ -1,6 +1,6 @@
 <script setup>
 import { useBoardStore } from '@/Stores/board'
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import BoardHeader from './BoardHeader.vue'
 import Column from './Column.vue'
 import AddColumnButton from './AddColumnButton.vue'
@@ -136,6 +136,83 @@ watch(() => props.board, (newBoard) => {
   }
 }, { immediate: true })
 
+// --------------------------
+// ==========================================
+// 1. Ссылка на контейнер скролла
+// ==========================================
+const boardContainerRef = ref(null)
+
+// ==========================================
+// 2. Горизонтальный скролл колесиком мыши
+// ==========================================
+const handleWheel = (e) => {
+  const container = boardContainerRef.value
+  if (!container) return
+
+  // Если уже есть горизонтальная составляющая (например, пользователь использует тачпад), не вмешиваемся
+  if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
+
+  // Преобразуем вертикальный скролл колесика в горизонтальный
+  container.scrollLeft += e.deltaY
+  e.preventDefault() // Предотвращаем скролл всей страницы
+}
+// ==========================================
+// 3. Drag-to-Scroll (Перетаскивание фона доски)
+// ==========================================
+const isDown = ref(false)
+const startX = ref(0)
+const startScrollLeft = ref(0)
+
+const handleMouseDown = (e) => {
+  // Игнорируем нажатие, если оно было по колонке, карточке, кнопке или меню
+  // Это гарантирует, что мы не сломаем клики по карточкам или drag-and-drop колонок
+  if (e.target.closest('.column') || e.target.closest('button') || e.target.closest('[role="menu"]')) {
+    return
+  }
+  
+  isDown.value = true
+  const container = boardContainerRef.value
+  container.classList.add('is-dragging')
+  
+  const rect = container.getBoundingClientRect()
+  startX.value = e.clientX - rect.left
+  startScrollLeft.value = container.scrollLeft
+}
+
+const stopDragging = () => {
+  isDown.value = false
+  const container = boardContainerRef.value
+  if (container) {
+    container.classList.remove('is-dragging')
+  }
+}
+
+const handleMouseMove = (e) => {
+  if (!isDown.value) return
+  e.preventDefault()
+  const container = boardContainerRef.value
+  const rect = container.getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const walk = (x - startX.value) * 1.5 // Коэффициент скорости скролла
+  container.scrollLeft = startScrollLeft.value - walk
+}
+
+// Регистрируем слушатель колеса мыши с passive: false, чтобы работал e.preventDefault()
+onMounted(() => {
+  const el = boardContainerRef.value
+  if (el) {
+    el.addEventListener('wheel', handleWheel, { passive: false })
+  }
+})
+
+onUnmounted(() => {
+  const el = boardContainerRef.value
+  if (el) {
+    el.removeEventListener('wheel', handleWheel)
+  }
+})
+// --------------------------
+
 const openCardDetail = (card) => {
   store.selectCard(card)
 }
@@ -160,13 +237,19 @@ const showAddColumnModal = () => {
     
     <!-- Холст с колонками -->
     <div 
-      class="flex-1 overflow-x-auto overflow-y-hidden p-6"
+      ref="boardContainerRef"
+      class="flex-1 overflow-x-auto overflow-y-hidden p-6 board-scroll cursor-grab"
+      @mousedown="handleMouseDown"
+      @mouseleave="stopDragging"
+      @mouseup="stopDragging"
+      @mousemove="handleMouseMove"
     >
       <div
-        class="flex h-ull gap-4 mr-4"
+        class="flex h-full gap-4 min-w-max"
         ref="boardRef"
       >
         <Column
+          class="column"
           v-for="column in columns"
           :key="column.id"
           :column="column"
@@ -179,7 +262,6 @@ const showAddColumnModal = () => {
         
         <!-- Кнопка добавления колонки -->
         <AddColumnButton
-          class="mr-5 pr-5"
           @click="showAddColumnModal" 
         />
       </div>
@@ -194,6 +276,33 @@ const showAddColumnModal = () => {
 </template>
 
 <style scoped>
+
+/* Стилизация горизонтального скроллбара (для WebKit браузеров) */
+.board-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.board-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.board-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5); /* gray-400 с прозрачностью */
+  border-radius: 4px;
+}
+.board-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.8);
+}
+
+/* Базовые настройки контейнера скролла */
+.board-scroll {
+  overscroll-behavior-x: contain; /* Предотвращает "отскок" скролла на macOS */
+}
+
+/* Стили во время перетаскивания фона */
+.board-scroll.is-dragging {
+  cursor: grabbing !important;
+  user-select: none; /* Запрещаем выделение текста пока тянем фон */
+}
+
 /* Если стили scoped, используем :deep() */
 :deep(.ghost-column) {
   background: rgba(59, 130, 246, 0.1); /* Полупрозрачный синий фон */

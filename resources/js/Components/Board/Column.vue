@@ -110,7 +110,7 @@ const addCard = (data) => {
 </script>
 
 <template>
-  <div class="w-80 flex-shrink-0 bg-gray-100 rounded-lg flex flex-col max-h-full">
+  <div class="column w-80 flex-shrink-0 bg-gray-100 rounded-lg flex flex-col max-h-full">
     <!-- Цветная полоска сверху (если цвет задан) -->
     <div 
       v-if="column.color"
