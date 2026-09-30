@@ -165,6 +165,7 @@ const applyFilters = (filters) => {
           :key="column.id"
           :column="column"
           :cards="column.cards"
+          :data-column-id="column.id"
           @update:cards="(newCards) => onUpdateCards(column.id, newCards)"
           @card-click="openCardDetail"
           @card-drag-end="(event) => onCardDragEnd(event, column.id)"
