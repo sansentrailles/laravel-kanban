@@ -157,7 +157,7 @@ const applyFilters = (filters) => {
       class="flex-1 overflow-x-auto overflow-y-hidden p-6"
     >
       <div
-        class="flex h-full gap-4"
+        class="flex h-ull gap-4 mr-4"
         ref="boardRef"
       >
         <Column
@@ -172,7 +172,10 @@ const applyFilters = (filters) => {
         />
         
         <!-- Кнопка добавления колонки -->
-        <AddColumnButton @click="showAddColumnModal" />
+        <AddColumnButton
+          class="mr-5 pr-5"
+          @click="showAddColumnModal" 
+        />
       </div>
     </div>
 
