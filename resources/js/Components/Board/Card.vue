@@ -31,6 +31,7 @@ const formatDate = (date) => {
 
 <template>
   <div 
+    v-bind="$attrs"
     class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 cursor-pointer hover:shadow-md transition-shadow"
     :class="{ 'border-l-4 border-l-red-500': isOverdue }"
   >

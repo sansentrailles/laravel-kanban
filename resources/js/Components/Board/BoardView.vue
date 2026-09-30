@@ -57,24 +57,48 @@ useDraggable(boardRef, columns, {
   }
 })
 
-/**
- * Обработка окончания перемещения карточки (вызывается из дочерней колонки)
- */
-const onCardDragEnd = (event, sourceColumnId) => {
-  const { oldIndex, newIndex, to, from } = event
-  
-  // Если переместили внутри одной колонки и на то же место
+// 2. ОСНОВНАЯ ЛОГИКА: Отправка на API после дропа
+const onCardDragEnd = async (event) => {
+  const { item, to, from, oldIndex, newIndex } = event
+
+  // 1. ID перемещенной карточки (с атрибута на <Card>)
+  const movedCardId = item?.dataset?.cardId
+  if (!movedCardId) return
+
+  // 2. ID целевой колонки (с атрибута на контейнере списка в Column.vue)
+  const targetColumnId = to?.dataset?.columnId
+  if (!targetColumnId) return
+
+  // 3. Если ничего не изменилось (клик без движения или возврат на место)
   if (from === to && oldIndex === newIndex) return
 
-  console.log('sourceColumnID ', sourceColumnId);
-  const targetColumnId = event.to.dataset.columnId
-  console.log('targetColumnId ', targetColumnId)
-  
-  // Находим карточку в обновленной структуре данных
-  // Чтобы понять, в какую колонку ее бросили, ищем по DOM-структуре или сопоставляем данные
-  // console.log('Карточка успешно перемещена. Актуальное состояние данных:', boardData.value)
-  
-  // Отправка на API: saveTaskPosition(...)
+  // 4. Берем АКТУАЛЬНЫЙ порядок карточек в ЦЕЛЕВОЙ колонке из реактивного состояния
+  // На этот момент onUpdateCards уже обновил columns.value
+  const targetColumn = columns.value.find(col => col.id === targetColumnId)
+  if (!targetColumn) {
+    console.error('Target column not found in state', targetColumnId)
+    columns.value = [...store.sortedColumns] // фоллбэк
+    return
+  }
+
+  const orderedCardIds = targetColumn.cards.map(c => c.id)
+
+  try {
+    if (from !== to) {
+      // --- МЕЖКОЛОНОЧНОЕ перемещение ---
+      const sourceColumnId = from.dataset.columnId
+      // Пример вызова стора: передаем ID карточки, откуда, куда, и новый порядок в целевой
+      // await store.moveCardBetweenColumns(movedCardId, sourceColumnId, targetColumnId, orderedCardIds)
+    } else {
+      // --- ПЕРЕСОРТИРОВКА ВНУТРИ ОДНОЙ КОЛОНКИ ---
+      // await store.saveCardsOrder(targetColumnId, orderedCardIds)
+    }
+    toast.success('Порядок сохранен')
+  } catch (error) {
+    toast.error('Ошибка сохранения позиции')
+    // Откат UI к серверному состоянию
+    columns.value = [...store.sortedColumns]
+  }
 }
 
 /**
@@ -85,13 +109,17 @@ const onCardDragEnd = (event, sourceColumnId) => {
 const onUpdateCards = (columnId, newCards) => {
   // 1. Находим нужную колонку в реактивных данных
   const targetColumn = columns.value.find(col => col.id === columnId)
+  console.log(targetColumn?.title)
   
   if (targetColumn) {
     // 2. Обновляем данные в родительском состоянии
     targetColumn.cards = newCards
     
     console.log(`[update:cards] В колонке "${targetColumn.title}" теперь задач: ${newCards.length}`)
-    console.log('targetColumn new cards: ', newCards)
+    // console.log('targetColumn new cards: ', newCards)
+
+    console.log('=== CARDS ===')
+    newCards.forEach(card => console.log(card.title))
     
     // 3. Здесь можно добавить логику, которая должна сработать сразу при обновлении массива.
     // Например, autosave (автосохранение) с debounce.

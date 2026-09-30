@@ -50,7 +50,24 @@ useDraggable(cardsListRef, localCards, {
   onStart: () => {
     isDragging.value = true
   },
+  // 1. Карточка ДОБАВЛЕНА в эту колонку (из другой колонки)
+  onAdd: (event) => {
+    console.log('--- onAdd ---')
+    emit('update:cards', localCards.value)
+  },
+
+  // 2. Карточка ПЕРЕМЕЩЕНА внутри этой колонки (пересортировка)
+  onUpdate: (event) => {
+    console.log('--- onUpdate ---')
+    emit('update:cards', localCards.value)
+  },
+
+  // 3. Карточка УДАЛЕНА из этой колонки (перетащена в другую)
+  // onRemove: (event) => {
+  //   emit('update:cards', localCards.value)
+  // },
   onEnd: (event) => {
+    console.log('--- onEnd ---')
     // ВАЖНО: Сбрасываем флаг с микро-задержкой (setTimeout 0).
     // Это гарантирует, что событие @click (которое сработает сразу после mouseup)
     // увидит isDragging = true и заблокируется.
@@ -59,7 +76,7 @@ useDraggable(cardsListRef, localCards, {
     }, 0)
 
     // Оповещаем родителя, что массив внутри колонки изменился
-    emit('update:cards', localCards.value)
+    // emit('update:cards', localCards.value)
     
     // Передаем событие окончания перетаскивания для отправки на API
     emit('card-drag-end', event)
@@ -137,7 +154,7 @@ const addCard = (data) => {
         v-for="card in localCards"
         :key="card.id"
         :card="card"
-        data-card-id="card.id"
+        :data-card-id="card.id"
         @click="handleCardClick"
       />
       
