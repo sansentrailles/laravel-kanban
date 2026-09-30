@@ -14,7 +14,7 @@ const props = defineProps({
   },
 })
 
-const showCreateColumnModal = ref(false)
+const isShowCreateColumnModal = ref(false)
 
 const store = useBoardStore()
 const columns = ref([])
@@ -143,6 +143,10 @@ const openCardDetail = (card) => {
 const applyFilters = (filters) => {
   store.setFilters(filters)
 }
+
+const showAddColumnModal = () => {
+  isShowCreateColumnModal.value = true
+}
 </script>
 
 <template>
@@ -151,7 +155,7 @@ const applyFilters = (filters) => {
     <BoardHeader 
       :board="board"
       @filter-change="applyFilters"
-      @add-column="showCreateColumnModal = true"
+      @add-column="showAddColumnModal"
     />
     
     <!-- Холст с колонками -->
@@ -182,7 +186,7 @@ const applyFilters = (filters) => {
     </div>
 
     <CreateColumnModal
-      v-model="showCreateColumnModal"
+      v-model="isShowCreateColumnModal"
       :board-id="board.id"
       @created="handleColumnCreated"
     />
