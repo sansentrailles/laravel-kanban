@@ -100,7 +100,7 @@ rebuild: ## 🔥 Полная пересборка (очистка volumes, пе
 	
 	# 4. Критически важно для Inertia/Vue: переустановка npm пакетов, 
 	# так как volume с node_modules был удален командой down -v
-	$(MAKE) npm-install
+	$(MAKE) npm-install-all
 	$(MAKE) npm-build 
 	
 	# 5. Чистая база данных с сидерами
@@ -387,7 +387,7 @@ phpstan: ## 🔍 Запустить PHPStan анализ
 # =============================================================================
 
 .PHONY: init
-init: env build composer-install key storage-link breeze-install npm-install npm-build migrate fresh-seed ## 🎯 Полная инициализация (Breeze + NPM + сборка)
+init: env build composer-install key storage-link breeze-install npm-install-all npm-build migrate fresh-seed ## 🎯 Полная инициализация (Breeze + NPM + сборка)
 	@echo ""
 	@echo "$(GREEN)╔══════════════════════════════════════════════════════════╗$(NC)"
 	@echo "$(GREEN)║       ✅ Проект успешно инициализирован!                ║$(NC)"
@@ -448,8 +448,8 @@ breeze-install: ## 🌬 Установить Laravel Breeze (Vue 3 + Inertia + P
 # =============================================================================
 # FRONTEND (NPM / Vite)
 # =============================================================================
-.PHONY: npm-install
-npm-install: ## 📦 Установить зависимости NPM (быстро, без лишних логов)
+.PHONY: npm-install-all
+npm-install-all: ## 📦 Установить зависимости NPM (быстро, без лишних логов)
 	@echo "$(YELLOW)⏳ Подготовка прав для node_modules...$(NC)"
 	# Создаем папку и меняем права от root, так как именованный том по умолчанию принадлежит root
 	$(DOCKER_COMPOSE) run --rm --user root node sh -c "mkdir -p /var/www/html/node_modules && chown -R ${HOST_UID}:${HOST_GID} /var/www/html/node_modules"
@@ -458,12 +458,20 @@ npm-install: ## 📦 Установить зависимости NPM (быстр
 	$(DOCKER_COMPOSE) run --rm node npm install --no-fund --no-audit --loglevel=error
 	@echo "$(GREEN)✅ Node.js зависимости установлены$(NC)"
 
-.PHONY: npm-require
-npm-require: ## 📦 Установить NPM пакет (make npm-require PACKAGE=@heroicons/vue)
+.PHONY: npm-install
+npm-install: ## 📦 Установить NPM пакет (make npm-install PACKAGE=@heroicons/vue)
 	@echo "$(YELLOW)⏳ Подготовка прав для node_modules...$(NC)"
 	$(DOCKER_COMPOSE) run --rm --user root node sh -c "mkdir -p /var/www/html/node_modules && chown -R ${HOST_UID}:${HOST_GID} /var/www/html/node_modules"
 	@echo "$(YELLOW)⏳ Установка NPM пакета $(PACKAGE)...$(NC)"
 	$(DOCKER_COMPOSE) run --rm node npm install $(PACKAGE)
+	@echo "$(GREEN)✅ Пакет $(PACKAGE) успешно установлен$(NC)"
+
+.PHONY: npm-install-dev
+npm-install-dev: ## 📦 Установить NPM пакет (make npm-install-dev PACKAGE=@heroicons/vue)
+	@echo "$(YELLOW)⏳ Подготовка прав для node_modules...$(NC)"
+	$(DOCKER_COMPOSE) run --rm --user root node sh -c "mkdir -p /var/www/html/node_modules && chown -R ${HOST_UID}:${HOST_GID} /var/www/html/node_modules"
+	@echo "$(YELLOW)⏳ Установка NPM пакета $(PACKAGE)...$(NC)"
+	$(DOCKER_COMPOSE) run --rm node npm install $(PACKAGE) --save-dev
 	@echo "$(GREEN)✅ Пакет $(PACKAGE) успешно установлен$(NC)"
 
 .PHONY: npm-uninstall
