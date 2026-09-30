@@ -24,6 +24,8 @@ watchEffect(() => {
   columns.value = [...store.sortedColumns] 
 })
 
+defineEmits(['add-column'])
+
 //------------------------
 const boardRef = ref(null)
 useDraggable(boardRef, columns, {
