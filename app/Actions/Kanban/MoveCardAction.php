@@ -21,7 +21,7 @@ final class MoveCardAction
 
             $card->update([
                 'column_id' => $targetColumn->id,
-                'order' => $newOrder,
+                'ord' => $newOrder,
             ]);
 
             if ($targetColumn->isOverLimit()) {
@@ -41,15 +41,15 @@ final class MoveCardAction
 
         if ($prev === null) {
             // Вставляем перед первой карточкой
-            return bcsub((string) $next->order, '100000000.0000000000', 10);
+            return bcsub((string) $next->ord, '100000000.0000000000', 10);
         }
 
         if ($next === null) {
             // Вставляем после последней карточки
-            return bcadd((string) $prev->order, '100000000.0000000000', 10);
+            return bcadd((string) $prev->ord, '100000000.0000000000', 10);
         }
 
         // Вставляем между двумя карточками (среднее арифметическое)
-        return bcdiv(bcadd((string) $prev->order, (string) $next->order, 10), '2', 10);
+        return bcdiv(bcadd((string) $prev->ord, (string) $next->ord, 10), '2', 10);
     }
 }

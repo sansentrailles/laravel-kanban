@@ -34,18 +34,31 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   const saveColumnsOrder = async (ids) => {
-    // 1. Оптимистично обновляем локальный state (чтобы UI не ждал ответа сервера)
+    //  Оптимистично обновляем локальный state (чтобы UI не ждал ответа сервера)
     columns.value = columns.value.map((col, index) => {
       const newOrder = ids.indexOf(col.id)
       return { ...col, order: newOrder !== -1 ? newOrder : index }
     })
 
-    // 2. Отправляем на сервер
+    // Отправляем на сервер
     try {
       return await axios.patch(`/columns/orders`, { ids })
     } catch (error) {
       console.error('Ошибка сохранения порядка колонок:', error)
       // Логика отката (перечитывание с сервера) при ошибке
+    }
+  }
+
+  const saveCardOrder = async (cardId, columnId, neighbors) => {
+    try {
+      return await axios.patch(`/cards/orders`, {
+        cardId,
+        columnId,
+        prevCardId: neighbors.prev,
+        nextCardId: neighbors.next
+      })
+    } catch (error) {
+      console.log('error ')
     }
   }
 
@@ -58,6 +71,7 @@ export const useBoardStore = defineStore('board', () => {
     selectCard,
     setFilters,
     setBoardData,
-    saveColumnsOrder
+    saveColumnsOrder,
+    saveCardOrder
   }
 })

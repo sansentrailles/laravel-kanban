@@ -46,7 +46,7 @@ const formatDate = (date) => {
     
     <!-- Заголовок -->
     <h4 class="text-sm font-medium text-gray-900 mb-2 line-clamp-2">
-      {{ card.title }}
+      {{ card.title }} {{ card.id }}
     </h4>
     
     <!-- Превью описания -->

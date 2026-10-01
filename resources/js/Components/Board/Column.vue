@@ -62,10 +62,6 @@ useDraggable(cardsListRef, localCards, {
     emit('update:cards', localCards.value)
   },
 
-  // 3. Карточка УДАЛЕНА из этой колонки (перетащена в другую)
-  // onRemove: (event) => {
-  //   emit('update:cards', localCards.value)
-  // },
   onEnd: (event) => {
     console.log('--- onEnd ---')
     // ВАЖНО: Сбрасываем флаг с микро-задержкой (setTimeout 0).
@@ -121,7 +117,7 @@ const addCard = (data) => {
     <!-- Header колонки -->
     <div class="p-3 flex items-center justify-between column-handle">
       <div class="flex items-center gap-2">
-        <h3 class="font-semibold text-gray-900">{{ column.title }}</h3>
+        <h3 class="font-semibold text-gray-900">{{ column.title }} {{ column.id }}</h3>
         <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
           {{ localCards.length }}
         </span>

@@ -3,10 +3,10 @@
 // use App\Http\Controllers\HomeController;
 
 use App\Http\Controllers\Kanban\BoardController;
+use App\Http\Controllers\Kanban\CardController;
 use App\Http\Controllers\Kanban\ColumnController;
 use App\Http\Controllers\Kanban\WorkspaceController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SortController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Создание колонки
     Route::post('/boards/{board}/columns', [ColumnController::class, 'store'])->name('boards.columns.store');
     Route::patch('/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
+    Route::patch('/cards/orders', [CardController::class, 'orders'])->name('boards.cards.orders');
 
     // Воркспейсы
     // Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');

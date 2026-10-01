@@ -10,7 +10,6 @@ use App\Http\Requests\Kanban\StoreColumnRequest;
 use App\Models\Kanban\Board;
 use App\Models\Kanban\Column;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ColumnController extends Controller
@@ -47,10 +46,10 @@ class ColumnController extends Controller
                     Column::find($id)?->update(['ord' => ($index + 1) * 100]);
                 }
             });
-            
+
             return response()->json([
                 'success' => true,
-                'message' => 'Порядок обновлен'
+                'message' => 'Порядок обновлен',
             ]);
         } catch (\Throwable $e) {
             // Любая ошибка внутри транзакции приведет к откату

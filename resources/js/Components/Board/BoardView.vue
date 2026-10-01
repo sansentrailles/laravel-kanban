@@ -1,6 +1,6 @@
 <script setup>
 import { useBoardStore } from '@/Stores/board'
-import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
+import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import BoardHeader from './BoardHeader.vue'
 import Column from './Column.vue'
 import AddColumnButton from './AddColumnButton.vue'
@@ -52,24 +52,41 @@ useDraggable(boardRef, columns, {
   }
 })
 
-  // 2. ОСНОВНАЯ ЛОГИКА: Отправка на API после дропа
-  const onCardDragEnd = async (event) => {
+function getStrictNeighbors(array, targetId) {
+    const index = array.indexOf(Number(targetId));
+
+    if (index === -1) return { prev: null, next: null };
+
+    const prev = index > 0 ? array[index - 1] : null;
+    const next = index < array.length - 1 ? array[index + 1] : null;
+
+    return { prev, next };
+}
+
+// ОСНОВНАЯ ЛОГИКА: Отправка на API после дропа
+const onCardDragEnd = async (event) => {
   const { item, to, from, oldIndex, newIndex } = event
 
-  // 1. ID перемещенной карточки (с атрибута на <Card>)
+  // ID перемещенной карточки (с атрибута на <Card>)
   const movedCardId = item?.dataset?.cardId
+
   if (!movedCardId) return
 
-  // 2. ID целевой колонки (с атрибута на контейнере списка в Column.vue)
+  // ID целевой колонки (с атрибута на контейнере списка в Column.vue)
   const targetColumnId = to?.dataset?.columnId
-  if (!targetColumnId) return
+  if (!targetColumnId) {
+    return
+  }
 
-  // 3. Если ничего не изменилось (клик без движения или возврат на место)
-  if (from === to && oldIndex === newIndex) return
+  // Если ничего не изменилось (клик без движения или возврат на место)
+  if (from === to && oldIndex === newIndex) {
+    return
+  }
 
-  // 4. Берем АКТУАЛЬНЫЙ порядок карточек в ЦЕЛЕВОЙ колонке из реактивного состояния
+  // Берем АКТУАЛЬНЫЙ порядок карточек в ЦЕЛЕВОЙ колонке из реактивного состояния
   // На этот момент onUpdateCards уже обновил columns.value
-  const targetColumn = columns.value.find(col => col.id === targetColumnId)
+  const targetColumn = columns.value.find(col => col.id === Number(targetColumnId))
+  console.log(columns.value.forEach(col => console.log(col.title, col.id, typeof col.id)))
   if (!targetColumn) {
     console.error('Target column not found in state', targetColumnId)
     columns.value = [...store.sortedColumns] // фоллбэк
@@ -77,18 +94,11 @@ useDraggable(boardRef, columns, {
   }
 
   const orderedCardIds = targetColumn.cards.map(c => c.id)
+  const neighbors = getStrictNeighbors(orderedCardIds, movedCardId)
 
   try {
-    if (from !== to) {
-      // --- МЕЖКОЛОНОЧНОЕ перемещение ---
-      const sourceColumnId = from.dataset.columnId
-      // Пример вызова стора: передаем ID карточки, откуда, куда, и новый порядок в целевой
-      // await store.moveCardBetweenColumns(movedCardId, sourceColumnId, targetColumnId, orderedCardIds)
-    } else {
-      // --- ПЕРЕСОРТИРОВКА ВНУТРИ ОДНОЙ КОЛОНКИ ---
-      // await store.saveCardsOrder(targetColumnId, orderedCardIds)
-    }
-    toast.success('Порядок сохранен')
+    await store.saveCardOrder(movedCardId, targetColumnId, neighbors)
+    toast.success('Порядок карточек сохранен')
   } catch (error) {
     toast.error('Ошибка сохранения позиции')
     // Откат UI к серверному состоянию
@@ -102,25 +112,14 @@ useDraggable(boardRef, columns, {
  * (перетаскивание внутри колонки или перенос из одной в другую)
  */
 const onUpdateCards = (columnId, newCards) => {
-  // 1. Находим нужную колонку в реактивных данных
+  //  Находим нужную колонку в реактивных данных
   const targetColumn = columns.value.find(col => col.id === columnId)
-  console.log(targetColumn?.title)
   
   if (targetColumn) {
-    // 2. Обновляем данные в родительском состоянии
-    targetColumn.cards = newCards
-    
-    console.log(`[update:cards] В колонке "${targetColumn.title}" теперь задач: ${newCards.length}`)
-    // console.log('targetColumn new cards: ', newCards)
-
-    console.log('=== CARDS ===')
-    newCards.forEach(card => console.log(card.title))
-    
-    // 3. Здесь можно добавить логику, которая должна сработать сразу при обновлении массива.
-    // Например, autosave (автосохранение) с debounce.
+    // Обновляем данные в родительском состоянии
+    targetColumn.cards = newCards    
   }
 }
-
 //------------------------
 
 watch(() => props.board, (newBoard) => {
@@ -129,14 +128,10 @@ watch(() => props.board, (newBoard) => {
   }
 }, { immediate: true })
 
-// ==========================================
-// 1. Ссылка на контейнер скролла
-// ==========================================
+// Ссылка на контейнер скролла
 const boardContainerRef = ref(null)
 
-// ==========================================
-// 2. Горизонтальный скролл колесиком мыши
-// ==========================================
+// Горизонтальный скролл колесиком мыши
 const handleWheel = (e) => {
   const container = boardContainerRef.value
   if (!container) return
@@ -148,9 +143,8 @@ const handleWheel = (e) => {
   container.scrollLeft += e.deltaY
   e.preventDefault() // Предотвращаем скролл всей страницы
 }
-// ==========================================
-// 3. Drag-to-Scroll (Перетаскивание фона доски)
-// ==========================================
+
+// Drag-to-Scroll (Перетаскивание фона доски)
 const isDown = ref(false)
 const startX = ref(0)
 const startScrollLeft = ref(0)
