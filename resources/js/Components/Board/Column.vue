@@ -6,7 +6,7 @@ import WipLimitBar from '../UI/WipLimitBar.vue'
 import Card from './Card.vue'
 import AddCardForm from './AddCardForm.vue'
 import { useDraggable } from 'vue-draggable-plus'
-import { PlusIcon } from '@heroicons/vue/24/outline'
+import { EllipsisVerticalIcon, PlusIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   column: {

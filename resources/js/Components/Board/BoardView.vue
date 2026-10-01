@@ -32,14 +32,11 @@ useDraggable(boardRef, columns, {
   group: 'columns',
   animation: 150,
   handle: '.column-handle', // Тянуть можно только за заголовок колонки
-  // --- ДОБАВЛЕННЫЕ ОПЦИИ ---
   forceFallback: true,              // Включаем кастомный рендеринг перетаскивания
   ghostClass: 'ghost-column',       // Класс для области, куда "упадет" колонка
   chosenClass: 'chosen-column',     // Класс для колонки, которую начали тянуть
   dragClass: 'drag-column',         // Класс для самого перемещаемого элемента (cursor)
   fallbackClass: 'fallback-column',
-  // onStart : (event) => {    
-  // },
   onEnd: async (event) => {
     const { oldIndex, newIndex } = event
     if (oldIndex === newIndex) return
@@ -48,19 +45,15 @@ useDraggable(boardRef, columns, {
 
     try {
       const response = await store.saveColumnsOrder(orderedColumnIds)
-      if (response.status === 200) {
-        toast.success('Порядок успешно обновлен')
-      }
     } catch (error) {
       toast.error('Что-то пошло не так.')
       columns.value = [...store.sortedColumns]
     }
-    
   }
 })
 
-// 2. ОСНОВНАЯ ЛОГИКА: Отправка на API после дропа
-const onCardDragEnd = async (event) => {
+  // 2. ОСНОВНАЯ ЛОГИКА: Отправка на API после дропа
+  const onCardDragEnd = async (event) => {
   const { item, to, from, oldIndex, newIndex } = event
 
   // 1. ID перемещенной карточки (с атрибута на <Card>)
@@ -136,7 +129,6 @@ watch(() => props.board, (newBoard) => {
   }
 }, { immediate: true })
 
-// --------------------------
 // ==========================================
 // 1. Ссылка на контейнер скролла
 // ==========================================
