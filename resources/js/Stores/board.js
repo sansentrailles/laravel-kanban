@@ -9,7 +9,7 @@ export const useBoardStore = defineStore('board', () => {
   const filters = ref({})
 
   const sortedColumns = computed(() => {
-    return [...columns.value].sort((a, b) => a.order - b.order)
+    return [...columns.value].sort((a, b) => a.ord - b.ord)
   })
 
   const selectCard = (card) => {
