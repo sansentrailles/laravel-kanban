@@ -10,6 +10,7 @@ import CardDetailDrawer from '@/Components/Card/CardDetailDrawer.vue'
 import ToastContainer from '@/Components/UI/ToastContainer.vue'
 import { useBoardStore } from '@/Stores/board'
 import CreateWorkspaceModal from '@/Components/Workspace/CreateWorkspaceModal.vue'
+import CardEditModal from '@/Components/Card/CardEditModal.vue'
 
 const page = usePage()
 const store = useBoardStore()
@@ -101,7 +102,12 @@ const handleFilterChange = (filters) => {
     </main>
     
     <!-- Global Overlays -->
+    <CardEditModal v-if="selectedCard" :card="selectedCard" />
+
+    <!--
     <CardDetailDrawer v-if="selectedCard" :card="selectedCard" />
+    -->
+    
     <ToastContainer />
     <!-- Модальное окно создания -->
     <CreateWorkspaceModal

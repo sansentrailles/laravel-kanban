@@ -1,73 +1,87 @@
 <script setup>
-import { computed, Teleport, Transition } from 'vue'
-import { useBoardStore } from '@/Stores/board'
+import { useBoardStore } from '@/Stores/board';
 import { useDebounceFn } from '@vueuse/core'
-import { XMarkIcon } from '@heroicons/vue/24/outline'
-import DescriptionEditor from './DescriptionEditor.vue'
-import FormField from '../UI/FormField.vue'
-import StatusDropdown from './StatusDropdown.vue'
-import PrioritySelector from './PrioritySelector.vue'
-import AssigneePicker from './AssigneePicker.vue'
-import DateRangePicker from './DateRangePicker.vue'
-import AttachmentsList from './AttachmentsList.vue'
-import ActivityLog from './ActivityLog.vue'
-import ChecklistSection from './ChecklistSection.vue'
-import CommentsSection from './CommentsSection.vue'
+import { XMarkIcon } from '@heroicons/vue/24/outline';
+import { computed, ref, watch } from 'vue';
+import DescriptionEditor from './DescriptionEditor.vue';
+import ActivityLog from './ActivityLog.vue';
 
 const store = useBoardStore()
-
 const card = computed(() => store.selectedCard)
+const originalDescription = ref('')
 
+defineEmits(['update'])
+
+// ✅ Сохраняем исходное значение при открытии модалки
+watch(card, (newCard) => {
+  if (newCard) {
+    originalDescription.value = newCard.description || ''
+  }
+}, { immediate: true })
 
 const close = () => {
   store.selectCard(null)
 }
 
-// Debounced updates
-const updateDescription = useDebounceFn(async (value) => {
-  console.log("value", value)
-  await axios.patch(`/api/cards/${card.value.id}`, { description: value })
+// ✅ Функция для немедленного обновления UI
+const updateDescription = (value) => {
+  // Обновляем интерфейс сразу
+  card.value.description = value
+
+  // Отправляем запрос на сервер с задержкой
+  debouncedSave(value)
+}
+
+const debouncedSave = useDebounceFn(async (value) => {
+  try {
+    const response = await axios.patch(`/cards/${card.value.id}`, { description: value })
+    
+    if (response.status === 200) {
+      if (response.data?.data?.description !== value) {
+        card.value.description = response.data.data.description
+        originalDescription.value = response.data.data.description
+      }
+    } else {
+      returnBackupedDescription()
+    }
+  } catch (error) {
+    returnBackupedDescription()
+  }
 }, 1000)
 
-const updateStatus = async (status) => {
-  await axios.patch(`/api/cards/${card.value.id}`, { status })
+const returnBackupedDescription = () => {
+    toast.error('Не удалось обновить. Возвращаем значение')
+    card.value.description = originalDescription.value
 }
 
-const updatePriority = async (priority) => {
-  await axios.patch(`/api/cards/${card.value.id}`, { priority })
-}
-
-const updateAssignees = async (assignees) => {
-  await axios.patch(`/api/cards/${card.value.id}`, { assignees })
-}
-
-const updateLabels = async (labels) => {
-  await axios.patch(`/api/cards/${card.value.id}`, { labels })
-}
-
-const updateDates = async (dates) => {
-  await axios.patch(`/api/cards/${card.value.id}`, dates)
-}
 </script>
 
 <template>
   <Teleport to="body">
-    <Transition name="drawer">
-      <div v-if="card" class="fixed inset-0 z-50 flex justify-end">
+    <Transition name="modal">
+      <div v-if="card" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/50" @click="close" />
+        <div 
+          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          @click="close"
+        />
 
-        <!-- Drawer Panel -->
-        <div class="relative w-full max-w-xl bg-white shadow-2xl flex flex-col h-full overflow-hidden">
+        <!-- Modal -->
+        <div class="relative bg-white rounded-md shadow-2xl w-full max-w-4xl overflow-hidden">
           <!-- Header -->
-          <div class="flex items-center justify-between p-6 border-b">
-            <h2 class="text-xl font-semibold">{{ card.title }}</h2>
-            <button @click="close" class="text-gray-400 hover:text-gray-600">
+          <div class="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">
+              {{ card.title }}
+            </h2>
+            <button
+              @click="close"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Закрыть"
+            >
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
 
-          <!-- Content -->
           <div class="flex-1 overflow-y-auto p-6">
             <div class="grid grid-cols-3 gap-6">
               <!-- Основная область (2/3) -->
@@ -133,18 +147,23 @@ const updateDates = async (dates) => {
 </template>
 
 <style scoped>
-.drawer-enter-active,
-.drawer-leave-active {
-  transition: all 0.3s ease;
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.2s ease-out;
 }
 
-.drawer-enter-from,
-.drawer-leave-to {
+.modal-enter-from,
+.modal-leave-to {
   opacity: 0;
 }
 
-.drawer-enter-from .drawer-panel,
-.drawer-leave-to .drawer-panel {
-  transform: translateX(100%);
+.modal-enter-from .modal-content,
+.modal-leave-to .modal-content {
+  transform: scale(0.95) translateY(10px);
+}
+
+.modal-enter-active .modal-content,
+.modal-leave-active .modal-content {
+  transition: all 0.2s ease-out;
 }
 </style>

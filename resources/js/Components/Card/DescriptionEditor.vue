@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 
 const props = defineProps({
   value: {
@@ -12,6 +12,7 @@ const emit = defineEmits(['update'])
 
 const isEditing = ref(false)
 const content = ref('')
+const descInput = ref(null)
 
 const formattedValue = computed(() => {
   // Simple markdown-like formatting
@@ -21,9 +22,12 @@ const formattedValue = computed(() => {
     .replace(/`(.*?)`/g, '<code>$1</code>')
 })
 
-const startEditing = () => {
+const startEditing = async () => {
   content.value = props.value
   isEditing.value = true
+
+  await nextTick()
+  descInput.value?.focus()
 }
 
 const save = () => {
@@ -54,30 +58,34 @@ watch(() => props.value, (newValue) => {
       </button>
     </div>
     
-    <div v-if="isEditing" class="border border-gray-200 rounded-lg overflow-hidden">
+    <div v-if="isEditing" class="">
       <textarea
         v-model="content"
+        ref="descInput"
         @blur="save"
         @keydown.ctrl.enter="save"
         placeholder="Добавьте более подробное описание..."
-        class="w-full p-3 text-sm resize-none focus:outline-none"
+        class="w-full p-3 text-sm resize-none focus:ring-0 border border-gray-200 rounded-lg "
         rows="6"
       ></textarea>
-      <div class="px-3 py-2 bg-gray-50 border-t border-gray-200 flex justify-end">
+
+      <div class="px-3 py-2 flex justify-end">
         <button 
           @click="cancel"
-          class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded mr-2"
+          class="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded mr-2"
         >
           Отмена
         </button>
         <button 
           @click="save"
-          class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+          class="px-2 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
         >
           Сохранить
         </button>
       </div>
     </div>
+
+    
     
     <div 
       v-else-if="value"

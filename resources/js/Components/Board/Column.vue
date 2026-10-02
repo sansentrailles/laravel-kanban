@@ -52,13 +52,11 @@ useDraggable(cardsListRef, localCards, {
   },
   // 1. Карточка ДОБАВЛЕНА в эту колонку (из другой колонки)
   onAdd: (event) => {
-    console.log('--- onAdd ---')
     emit('update:cards', localCards.value)
   },
 
   // 2. Карточка ПЕРЕМЕЩЕНА внутри этой колонки (пересортировка)
   onUpdate: (event) => {
-    console.log('--- onUpdate ---')
     emit('update:cards', localCards.value)
   },
 
@@ -82,7 +80,7 @@ useDraggable(cardsListRef, localCards, {
 const handleCardClick = (card) => {
   // Если только что было перетаскивание - отменяем открытие модалки
   if (isDragging.value) return 
-  
+console.log('set card click')
   // Если перетаскивания не было, триггерим обычный клик
   emit('card-click', card)
 }
@@ -151,7 +149,7 @@ const addCard = (data) => {
         :key="card.id"
         :card="card"
         :data-card-id="card.id"
-        @click="handleCardClick"
+        @click="handleCardClick(card)"
       />
       
     </div>
@@ -178,7 +176,6 @@ const addCard = (data) => {
 
 <style scoped>
 /* Стили для перетаскиваемых карточек (используем :deep) */
-
 /* Плесхолдер - место, куда встанет карточка */
 :deep(.ghost-card) {
   background: rgba(168, 85, 247, 0.1); /* Полупрозрачный фиолетовый фон */

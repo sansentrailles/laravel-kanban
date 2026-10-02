@@ -19,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/boards/{board}/columns', [ColumnController::class, 'store'])->name('boards.columns.store');
     Route::patch('/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
     Route::patch('/cards/orders', [CardController::class, 'orders'])->name('boards.cards.orders');
+    Route::patch('/cards/{id}', [CardController::class, 'update'])->name('boards.cards.update');
 
     // Воркспейсы
     // Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');

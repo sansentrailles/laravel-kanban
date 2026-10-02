@@ -34,7 +34,6 @@ watch(() => props.modelValue, (isOpen) => {
 })
 
 const submit = () => {
-    console.log('submit column create form')
   form.post(route('boards.columns.store', props.boardId), {
     preserveScroll: true,
     onSuccess: () => {
