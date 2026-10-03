@@ -43,7 +43,7 @@ const emitChange = () => {
           v-model="startDate"
           @change="emitChange"
           type="date"
-          class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
       <div>
@@ -52,7 +52,7 @@ const emitChange = () => {
           v-model="endDate"
           @change="emitChange"
           type="date"
-          class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
     </div>

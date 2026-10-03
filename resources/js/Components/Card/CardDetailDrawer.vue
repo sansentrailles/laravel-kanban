@@ -42,6 +42,7 @@ const updateAssignees = async (assignees) => {
 }
 
 const updateLabels = async (labels) => {
+  console.log('labels ', labels)
   await axios.patch(`/api/cards/${card.value.id}`, { labels })
 }
 

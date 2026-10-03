@@ -5,6 +5,14 @@ import { XMarkIcon } from '@heroicons/vue/24/outline';
 import { computed, ref, watch } from 'vue';
 import DescriptionEditor from './DescriptionEditor.vue';
 import ActivityLog from './ActivityLog.vue';
+import FormField from '../UI/FormField.vue';
+import StatusDropdown from './StatusDropdown.vue';
+import PrioritySelector from './PrioritySelector.vue';
+import AssigneePicker from './AssigneePicker.vue';
+import LabelSelector from './LabelSelector.vue';
+import DateRangePicker from './DateRangePicker.vue';
+import AttachmentsList from './AttachmentsList.vue';
+import ChecklistSection from './ChecklistSection.vue';
 
 const store = useBoardStore()
 const card = computed(() => store.selectedCard)
@@ -85,28 +93,9 @@ const returnBackupedDescription = () => {
           <div class="flex-1 overflow-y-auto p-6">
             <div class="grid grid-cols-3 gap-6">
               <!-- Основная область (2/3) -->
-              <div class="col-span-2 space-y-6">
+              <div class="col-span-2 space-y-6 border-r-2 pr-3 border-gray-200">
                 <!-- Описание -->
                 <DescriptionEditor :value="card.description" @update="updateDescription" />
-
-                <!-- Чек-листы -->
-                <ChecklistSection :checklists="card.checklists" />
-
-                <!-- Комментарии -->
-                <CommentsSection :comments="card.comments" />
-
-                <!-- Статус -->
-                <FormField label="Статус">
-                  <StatusDropdown :value="card.status" @change="updateStatus" />
-                </FormField>
-              </div>
-
-              <!-- Сайдбар (1/3) -->
-              <div class="space-y-4">
-                <!-- Статус -->
-                <FormField label="Статус">
-                  <StatusDropdown :value="card.status" @change="updateStatus" />
-                </FormField>
 
                 <!-- Приоритет -->
                 <FormField label="Приоритет">
@@ -133,6 +122,20 @@ const returnBackupedDescription = () => {
                   <AttachmentsList :attachments="card.attachments" />
                 </FormField>
 
+                <!-- Чек-листы -->
+                <ChecklistSection :checklists="card.checklists" />
+
+                <!-- Комментарии -->
+                <CommentsSection :comments="card.comments" />
+
+                <!-- Статус -->
+                <FormField label="Статус">
+                  <StatusDropdown :value="card.status" @change="updateStatus" />
+                </FormField>
+              </div>
+
+              <!-- Сайдбар (1/3) -->
+              <div class="space-y-4">
                 <!-- История -->
                 <FormField label="История">
                   <ActivityLog :activities="card.activities" />

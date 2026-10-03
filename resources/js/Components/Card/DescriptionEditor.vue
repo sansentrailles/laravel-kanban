@@ -65,8 +65,8 @@ watch(() => props.value, (newValue) => {
         @blur="save"
         @keydown.ctrl.enter="save"
         placeholder="Добавьте более подробное описание..."
-        class="w-full p-3 text-sm resize-none focus:ring-0 border border-gray-200 rounded-lg "
-        rows="6"
+        class="w-full p-3 text-sm resize-none focus:ring-0 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-100"
+        rows="4"
       ></textarea>
 
       <div class="px-3 py-2 flex justify-end">
