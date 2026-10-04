@@ -13,10 +13,17 @@ import LabelSelector from './LabelSelector.vue';
 import DateRangePicker from './DateRangePicker.vue';
 import AttachmentsList from './AttachmentsList.vue';
 import ChecklistSection from './ChecklistSection.vue';
+import { usePage } from '@inertiajs/vue3';
 
 const store = useBoardStore()
+const page = usePage()
+
 const card = computed(() => store.selectedCard)
 const originalDescription = ref('')
+
+// Получаем метки воркспейса и его ID для корректной работы LabelSelector
+const workspaceLabels = computed(() => page.props.workspaceLabels?.data || [])
+const workspaceId = computed(() => page.props.currentWorkspace?.id)
 
 defineEmits(['update'])
 
@@ -60,6 +67,49 @@ const debouncedSave = useDebounceFn(async (value) => {
 const returnBackupedDescription = () => {
     toast.error('Не удалось обновить. Возвращаем значение')
     card.value.description = originalDescription.value
+}
+
+// ─────────────────────────────────────────────
+//  Optimistic UI Helpers
+// ─────────────────────────────────────────────
+
+/**
+ * Универсальная функция для обновления полей с откатом при ошибке
+ */
+const updateField = async (fieldName, displayValue, payloadKey = null, payloadValue = null) => {
+  const oldValue = card.value[fieldName]
+  
+  // Мгновенное обновление UI (Optimistic)
+  card.value[fieldName] = displayValue
+
+  try {
+    // Отправка на сервер
+    // Используем payloadKey, если имя поля на бэкенде отличается (например, label_ids)
+     const data = { [payloadKey || fieldName]: payloadValue !== null ? payloadValue : displayValue }
+    await axios.patch(route('boards.cards.update', card.value.id), data)
+  } catch (error) {
+    // Откат при ошибке
+    card.value[fieldName] = oldValue
+    console.error('Update error:', error)
+  }
+}
+
+// const updateLabels = (labels) => {
+//   // Бэкенд обычно ожидает массив ID меток
+//   const labelIds = labels.map(l => l.id)
+//   updateField('labels', labelIds, 'label_ids')
+// }
+
+const updateLabels = (labels) => {
+  // Бэкенд ожидает массив ID меток
+  const labelIds = labels.map(l => l.id)
+  
+  // Передаем:
+  // - fieldName: 'labels'
+  // - displayValue: labels (объекты для UI)
+  // - payloadKey: 'label_ids'
+  // - payloadValue: labelIds (ID для бэкенда)
+  updateField('labels', labels, 'label_ids', labelIds)
 }
 
 </script>
@@ -109,7 +159,12 @@ const returnBackupedDescription = () => {
 
                 <!-- Метки -->
                 <FormField label="Метки">
-                  <LabelSelector :value="card.labels" @change="updateLabels" />
+                  <LabelSelector
+                    :value="card.labels"
+                    :available-labels="workspaceLabels"
+                    :workspace-id="workspaceId"
+                    @change="updateLabels"
+                  />
                 </FormField>
 
                 <!-- Даты -->

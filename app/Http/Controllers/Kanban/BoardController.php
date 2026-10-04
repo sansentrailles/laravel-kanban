@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Kanban;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Kanban\BoardResource;
+use App\Http\Resources\Kanban\LabelResource;
 use App\Http\Resources\Kanban\WorkspaceResource;
 use App\Models\Kanban\Board;
 use App\Models\Kanban\Workspace;
@@ -54,6 +55,7 @@ class BoardController extends Controller
             'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
             'currentWorkspace' => (new WorkspaceResource($currentWorkspace))->resolve(),
             'boards' => BoardResource::collection($boards),
+            'workspaceLabels' => LabelResource::collection($currentWorkspace->labels),
             'unreadNotifications' => 0,
         ]);
     }

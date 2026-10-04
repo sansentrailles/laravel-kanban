@@ -107,7 +107,12 @@ const updateDates = async (dates) => {
 
                 <!-- Метки -->
                 <FormField label="Метки">
-                  <LabelSelector :value="card.labels" @change="updateLabels" />
+                  <LabelSelector 
+                    :value="card.labels"
+                    :available-labels="page.props.workspaceLabels || []"
+                    :workspace-id="workspaceId"
+                    @change="updateLabels"
+                  />
                 </FormField>
 
                 <!-- Даты -->

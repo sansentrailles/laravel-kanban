@@ -5,6 +5,7 @@ namespace App\Models\Kanban;
 use App\Enums\Kanban\CardPriority;
 use App\Models\User;
 use Database\Factories\Kanban\CardFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property CardPriority $priority
@@ -143,6 +145,35 @@ class Card extends Model
     public function checklists(): HasMany
     {
         return $this->hasMany(Checklist::class);
+    }
+
+    /**
+     * Аксессор для получения ID воркспейса.
+     * Избегает N+1 запросов, используя прямой SQL-запрос, если связи не загружены.
+     */
+    protected function workspaceId(): Attribute
+    {
+        return Attribute::make(
+            get: function (mixed $value, array $attributes) {
+                // Если связи уже загружены (через with('column.board')), берем из памяти
+                if ($this->relationLoaded('column') && $this->column->relationLoaded('board')) {
+                    return (int) $this->column->board->workspace_id;
+                }
+
+                // Иначе делаем один оптимизированный запрос с JOIN
+                // Используем $attributes['column_id'] вместо $this->column_id для надежности
+                $columnId = $attributes['column_id'] ?? $this->column_id;
+
+                if (! $columnId) {
+                    return 0;
+                }
+
+                return (int) DB::table('kanban_columns')
+                    ->join('kanban_boards', 'kanban_columns.board_id', '=', 'kanban_boards.id')
+                    ->where('kanban_columns.id', $columnId)
+                    ->value('kanban_boards.workspace_id') ?? 0;
+            }
+        );
     }
 
     // ─────────────────────────────────────────────

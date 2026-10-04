@@ -1,6 +1,7 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { useForm } from '@inertiajs/vue3'
 
 const props = defineProps({
   value: {
@@ -9,13 +10,11 @@ const props = defineProps({
   },
   availableLabels: {
     type: Array,
-    default: () => [
-      { id: 1, name: 'Bug', color: '#ef4444' },
-      { id: 2, name: 'Feature', color: '#3b82f6' },
-      { id: 3, name: 'Design', color: '#a855f7' },
-      { id: 4, name: 'Backend', color: '#10b981' },
-      { id: 5, name: 'Frontend', color: '#f59e0b' }
-    ]
+    default: () => []
+  },
+  workspaceId: {
+    type: [Number, String],
+    required: true
   }
 })
 
@@ -23,35 +22,51 @@ const emit = defineEmits(['change'])
 
 const isOpen = ref(false)
 const newLabelName = ref('')
-const newLabelColor = ref('#6b7280')
 const dropdownRef = ref(null)
 
+const form = useForm({
+  name: '',
+  color: '',
+  description: '',
+})
+
+// ✅ Вычисляем список меток, которые еще НЕ выбраны у этой карточки
+const unselectedLabels = computed(() => {
+  return props.availableLabels.filter(label => {
+    return !props.value.some(selectedLabel => selectedLabel.id === label.id)
+  })
+})
+
 const addLabel = (label) => {
-  console.log(label)
   if (!props.value.find(l => l.id === label.id)) {
     emit('change', [...props.value, label])
   }
 }
 
 const removeLabel = (labelId) => {
-  console.log(labelId)
   emit('change', props.value.filter(l => l.id !== labelId))
 }
 
 const createNewLabel = () => {
-  if (!newLabelName.value.trim()) return
-  
-  const newLabel = {
-    id: Date.now(),
-    name: newLabelName.value.trim(),
-    color: newLabelColor.value
-  }
-  
-  emit('change', [...props.value, newLabel])
-  
-  newLabelName.value = ''
-  newLabelColor.value = '#6b7280'
-  isOpen.value = false
+  if (!form.name.trim()) return
+
+  form.post(route('workspaces.labels.store', props.workspaceId), {
+    preserveScroll: true,
+    onSuccess: (page) => {
+      // Бэкенд возвращает созданную метку
+      const newLabel = page.props.createdLabel
+      
+      // Добавляем её в список выбранных
+      emit('change', [...props.value, newLabel])
+      
+      // Сбрасываем форму
+      form.reset()
+      isOpen.value = false
+      
+      // Родитель должен обновить список availableLabels
+      // (через Inertia это произойдет автоматически, если передать через share)
+    },
+  })
 }
 
 const handleClickOutside = (event) => {
@@ -94,7 +109,7 @@ onUnmounted(() => {
     <div class="flex flex-wrap gap-1.5 justify-between">
       <div>
         <button
-          v-for="label in availableLabels"
+          v-for="label in unselectedLabels"
           :key="label.id"
           @click="addLabel(label)"
           class="px-2 py-1 mr-1 rounded-full text-xs font-medium hover:opacity-80 transition-opacity"
@@ -104,6 +119,7 @@ onUnmounted(() => {
         </button>
       </div>      
 
+      <!-- Кнопка создания новой метки -->
       <div class="relative" ref="dropdownRef">
         <button 
           @click="isOpen = !isOpen"
@@ -120,24 +136,25 @@ onUnmounted(() => {
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Название</label>
             <input
-              v-model="newLabelName"
+              v-model="form.name"
               type="text"
               placeholder="Введите название метки"
               class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-50"
               @keyup.enter="createNewLabel"
             />
+            <p v-if="form.errors.name" class="mt-1 text-xs text-red-600">{{ form.errors.name }}</p>
           </div>
           
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Цвет</label>
             <div class="flex items-center gap-2">
               <input
-                v-model="newLabelColor"
+                v-model="form.color"
                 type="color"
                 class="w-8 h-8 rounded cursor-pointer border border-gray-300"
               />
               <input
-                v-model="newLabelColor"
+                v-model="form.color"
                 type="text"
                 class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-100 font-mono"
                 placeholder="#000000"
@@ -145,18 +162,19 @@ onUnmounted(() => {
             </div>
           </div>
           
-          <div class="flex items-center gap-2 p-2 rounded-full" :style="{ backgroundColor: newLabelColor + '20' }">
-            <span class="text-xs font-medium" :style="{ color: newLabelColor }">
-              {{ newLabelName || 'Пример метки' }}
+          <!-- Превью -->
+          <div class="flex items-center gap-2 p-2 rounded-full" :style="{ backgroundColor: form.color + '20' }">
+            <span class="text-xs font-medium" :style="{ color: form.color }">
+              {{ form.name || 'Пример метки' }}
             </span>
           </div>
           
           <button
             @click="createNewLabel"
-            :disabled="!newLabelName.trim()"
+            :disabled="!form.name.trim() || form.processing"
             class="w-full px-3 py-1.5 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
-            Добавить метку
+            {{ form.processing ? 'Создание...' : 'Создать метку' }}
           </button>
         </div>
       </div>

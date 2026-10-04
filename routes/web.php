@@ -5,6 +5,7 @@
 use App\Http\Controllers\Kanban\BoardController;
 use App\Http\Controllers\Kanban\CardController;
 use App\Http\Controllers\Kanban\ColumnController;
+use App\Http\Controllers\Kanban\LabelController;
 use App\Http\Controllers\Kanban\WorkspaceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -19,9 +20,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/boards/{board}/columns', [ColumnController::class, 'store'])->name('boards.columns.store');
     Route::patch('/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
     Route::patch('/cards/orders', [CardController::class, 'orders'])->name('boards.cards.orders');
-    Route::patch('/cards/{id}', [CardController::class, 'update'])->name('boards.cards.update');
+    Route::patch('/cards/{card}', [CardController::class, 'update'])->name('boards.cards.update');
 
     // Воркспейсы
+    Route::post('/workspaces/{workspace}/labels', [LabelController::class, 'store'])->name('workspaces.labels.store');
     // Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
     // Route::get('/workspaces/{slug}', [WorkspaceController::class, 'show'])->name('workspaces.show');
 });

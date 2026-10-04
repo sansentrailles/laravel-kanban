@@ -22,6 +22,10 @@ const props = defineProps({
     type: Object,
     required: true
   },
+  workspaceLabels: {
+    type: Array,
+    default: () => []
+  },
   unreadNotifications: {
     type: Number,
     default: 0

@@ -34,13 +34,32 @@ class CardController extends Controller
         ]);
     }
 
-    public function update(CardUpdateRequest $request, int $id)
+    public function update(CardUpdateRequest $request, Card $card)
     {
-        $card = Card::findOrFail($id);
+        // $this->authorize('update', $card);
 
+        $data = $request->validated();
         $dto = UpdateCardDTO::fromRequest($request);
 
+        // Обновляем основные поля через Action
         $updatedCard = $this->updateCardAction->execute($card, $dto);
+
+        // Синхронизируем метки (если они были переданы и прошли валидацию)
+        if (isset($data['label_ids'])) {
+            $updatedCard->labels()->syncWithoutDetaching($data['label_ids']);
+        }
+
+        // Синхронизируем исполнителей (по аналогии)
+        if (isset($data['assignee_ids'])) {
+            $updatedCard->assignees()->sync($data['assignee_ids']);
+        }
+
+        // ВОЗВРАЩАЕМ карточку с загруженными связями!
+        // Это позволит фронтенду получить актуальные данные (например, имена исполнителей, цвета меток)
+        $updatedCard->load([
+            'labels',
+            // 'assignees'
+        ]);
 
         return response()->json([
             'success' => true,
