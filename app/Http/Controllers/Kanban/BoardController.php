@@ -23,7 +23,9 @@ class BoardController extends Controller
     {
         $user = Auth::user();
 
-        $currentWorkspace = Workspace::where('slug', $slug)->firstOrFail();
+        $currentWorkspace = Workspace::where('slug', $slug)
+            ->with(['members', 'boards'])
+            ->firstOrFail();
 
         // Находим доску и жадно загружаем все необходимые связи
         $board = Board::where('workspace_id', $currentWorkspace->id)
@@ -38,6 +40,7 @@ class BoardController extends Controller
 
         // TODO: реализовать
         // $this->authorize('view', $board);
+
         app(UpdateLastVisitedAction::class)->execute(
             $user,
             workspaceId: $currentWorkspace->id,

@@ -24,6 +24,9 @@ const originalDescription = ref('')
 // Получаем метки воркспейса и его ID для корректной работы LabelSelector
 const workspaceLabels = computed(() => page.props.workspaceLabels?.data || [])
 const workspaceId = computed(() => page.props.currentWorkspace?.id)
+const availableUsers = computed(() => {
+  return page.props.currentWorkspace?.members?.data || []
+})
 
 defineEmits(['update'])
 
@@ -94,12 +97,6 @@ const updateField = async (fieldName, displayValue, payloadKey = null, payloadVa
   }
 }
 
-// const updateLabels = (labels) => {
-//   // Бэкенд обычно ожидает массив ID меток
-//   const labelIds = labels.map(l => l.id)
-//   updateField('labels', labelIds, 'label_ids')
-// }
-
 const updateLabels = (labels) => {
   // Бэкенд ожидает массив ID меток
   const labelIds = labels.map(l => l.id)
@@ -110,6 +107,18 @@ const updateLabels = (labels) => {
   // - payloadKey: 'label_ids'
   // - payloadValue: labelIds (ID для бэкенда)
   updateField('labels', labels, 'label_ids', labelIds)
+}
+
+const updateAssignees = (users) => {
+  // Бэкенд ожидает массив ID пользователей
+  const assigneeIds = users.map(l => l.id)
+  
+  // Передаем:
+  // - fieldName: 'labels'
+  // - displayValue: labels (объекты для UI)
+  // - payloadKey: 'label_ids'
+  // - payloadValue: labelIds (ID для бэкенда)
+  updateField('assignees', users, 'assignee_ids', assigneeIds)
 }
 
 </script>
@@ -154,7 +163,11 @@ const updateLabels = (labels) => {
 
                 <!-- Исполнители -->
                 <FormField label="Исполнители">
-                  <AssigneePicker :value="card.assignees" @change="updateAssignees" />
+                  <AssigneePicker
+                    :value="card.assignees"
+                    :available-users="availableUsers" 
+                    @change="updateAssignees"
+                  />
                 </FormField>
 
                 <!-- Метки -->

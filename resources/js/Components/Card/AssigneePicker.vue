@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import Avatar from '@/Components/UI/Avatar.vue'
-import { XMarkIcon } from '@heroicons/vue/24/outline'
+import { UserIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   value: {
@@ -18,14 +18,31 @@ const emit = defineEmits(['change'])
 
 const searchQuery = ref('')
 const isOpen = ref(false)
+const dropdownRef = ref(null)
 
+// ✅ Умная фильтрация: ищет по имени или email, исключает уже назначенных
 const filteredUsers = computed(() => {
   const assignedIds = props.value.map(u => u.id)
-  return props.availableUsers.filter(user => 
-    !assignedIds.includes(user.id) &&
-    user.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
+  const query = searchQuery.value.toLowerCase().trim()
+  
+  return props.availableUsers.filter(user => {
+    const isAssigned = assignedIds.includes(user.id)
+    const matchesQuery = query === '' || 
+                         user.name.toLowerCase().includes(query) || 
+                         (user.email && user.email.toLowerCase().includes(query))
+    
+    return !isAssigned && matchesQuery
+  })
 })
+
+
+// const filteredUsers = computed(() => {
+//   const assignedIds = props.value.map(u => u.id)
+//   return props.availableUsers.filter(user => 
+//     !assignedIds.includes(user.id) &&
+//     user.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+//   )
+// })
 
 const addAssignee = (user) => {
   emit('change', [...props.value, user])
@@ -35,6 +52,13 @@ const addAssignee = (user) => {
 
 const removeAssignee = (userId) => {
   emit('change', props.value.filter(u => u.id !== userId))
+}
+
+// Закрытие выпадающего списка при клике вне компонента
+const handleClickOutside = (event) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+    isOpen.value = false
+  }
 }
 </script>
 
@@ -59,13 +83,14 @@ const removeAssignee = (userId) => {
     </div>
     
     <!-- Add assignee -->
-    <div class="relative">
+    <div class="relative" ref="dropdownRef">
+      <UserIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
       <input
         v-model="searchQuery"
         @focus="isOpen = true"
         type="text"
-        placeholder="Добавить исполнителя..."
-        class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-green-50"
+        placeholder="Найти исполнителя..."
+        class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent transition-all"
       />
       
       <div 

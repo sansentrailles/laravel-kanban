@@ -58,7 +58,7 @@ class CardController extends Controller
         // Это позволит фронтенду получить актуальные данные (например, имена исполнителей, цвета меток)
         $updatedCard->load([
             'labels',
-            // 'assignees'
+            'assignees'
         ]);
 
         return response()->json([
