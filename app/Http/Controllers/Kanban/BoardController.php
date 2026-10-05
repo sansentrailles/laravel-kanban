@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Kanban;
 
+use App\Actions\User\UpdateLastVisitedAction;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Kanban\BoardResource;
 use App\Http\Resources\Kanban\LabelResource;
@@ -34,6 +35,14 @@ class BoardController extends Controller
                 'workspace.labels',           // Метки воркспейса (для выпадающих списков)
             ])
             ->firstOrFail();
+
+        // TODO: реализовать
+        // $this->authorize('view', $board);
+        app(UpdateLastVisitedAction::class)->execute(
+            $user,
+            workspaceId: $currentWorkspace->id,
+            boardId: $board->id
+        );
 
         // Собираем данные для сайдбара (ИСПРАВЛЕННЫЙ ЗАПРОС)
         // Получаем все воркспейсы, где пользователь является owner ИЛИ member

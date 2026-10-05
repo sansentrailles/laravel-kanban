@@ -37,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereOrder($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereWorkspaceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Label whereOrd($value)
  *
  * @mixin \Eloquent
  */

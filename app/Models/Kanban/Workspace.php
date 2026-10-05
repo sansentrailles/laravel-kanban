@@ -49,6 +49,11 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereSlug($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereUpdatedAt($value)
  *
+ * @property-read Collection<int, Board> $boards
+ * @property-read int|null $boards_count
+ * @property-read Collection<int, Label> $labels
+ * @property-read int|null $labels_count
+ *
  * @mixin \Eloquent
  */
 #[Table('kanban_workspaces')]

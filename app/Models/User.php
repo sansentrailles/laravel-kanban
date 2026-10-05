@@ -4,11 +4,13 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\Kanban\Board;
 use App\Models\Kanban\Workspace;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -47,9 +49,19 @@ use Illuminate\Support\Collection;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  *
+ * @property int|null $last_visited_workspace_id
+ * @property int|null $last_visited_board_id
+ * @property-read Board|null $lastVisitedBoard
+ * @property-read Workspace|null $lastVisitedWorkspace
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Workspace> $ownedWorkspaces
+ * @property-read int|null $owned_workspaces_count
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastVisitedBoardId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastVisitedWorkspaceId($value)
+ *
  * @mixin \Eloquent
  */
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'last_visited_workspace_id', 'last_visited_board_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -69,6 +81,10 @@ class User extends Authenticatable
         ];
     }
 
+    // ─────────────────────────────────────────────
+    //  Relationships для последних посещений
+    // ─────────────────────────────────────────────
+
     public function ownedWorkspaces(): HasMany
     {
         return $this->hasMany(Workspace::class, 'owner_id');
@@ -87,5 +103,15 @@ class User extends Authenticatable
     public function allWorkspaces(): Collection
     {
         return $this->ownedWorkspaces->merge($this->workspaces);
+    }
+
+    public function lastVisitedWorkspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class, 'last_visited_workspace_id');
+    }
+
+    public function lastVisitedBoard(): BelongsTo
+    {
+        return $this->belongsTo(Board::class, 'last_visited_board_id');
     }
 }

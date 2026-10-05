@@ -69,6 +69,9 @@ use Illuminate\Support\Facades\DB;
  *
  * @property-read Collection<int, User> $assignees
  * @property-read int|null $assignees_count
+ * @property-read mixed $workspace_id
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Card whereOrd($value)
  *
  * @mixin \Eloquent
  */

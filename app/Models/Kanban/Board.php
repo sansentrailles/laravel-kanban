@@ -61,6 +61,11 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board whereVisibility($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Board whereWorkspaceId($value)
  *
+ * @property-read Collection<int, Card> $cards
+ * @property-read int|null $cards_count
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Board whereOrd($value)
+ *
  * @mixin \Eloquent
  */
 #[Table('kanban_boards')]

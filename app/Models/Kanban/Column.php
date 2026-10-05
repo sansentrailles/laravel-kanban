@@ -3,6 +3,7 @@
 namespace App\Models\Kanban;
 
 use Database\Factories\Kanban\ColumnFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -46,6 +47,11 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereWipLimit($value)
+ *
+ * @property-read Collection<int, Card> $cards
+ * @property-read int|null $cards_count
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Column whereOrd($value)
  *
  * @mixin \Eloquent
  */

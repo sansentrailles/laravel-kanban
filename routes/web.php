@@ -5,13 +5,15 @@
 use App\Http\Controllers\Kanban\BoardController;
 use App\Http\Controllers\Kanban\CardController;
 use App\Http\Controllers\Kanban\ColumnController;
+use App\Http\Controllers\Kanban\DashboardController;
 use App\Http\Controllers\Kanban\LabelController;
 use App\Http\Controllers\Kanban\WorkspaceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/', [WorkspaceController::class, 'index'])->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('home');
+    Route::get('/workspaces}', [WorkspaceController::class, 'list'])->name('kanban.workspaces.index');
     Route::get('/workspaces/{slug}', [WorkspaceController::class, 'show'])->name('kanban.workspace');
     Route::get('/workspaces/{slug}/boards/{uuid}', [BoardController::class, 'show'])->name('kanban.board');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('kanban.workspaces.store');

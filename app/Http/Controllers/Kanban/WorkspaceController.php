@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Kanban;
 
 use App\Actions\Kanban\CreateWorkspaceAction;
+use App\Actions\User\UpdateLastVisitedAction;
 use App\DTO\Kanban\CreateWorkspaceDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kanban\StoreWorkspaceRequest;
@@ -24,7 +25,7 @@ class WorkspaceController extends Controller
     ) {}
 
     // Отображаем список воркспейсов пользоваеля
-    public function index(): Response
+    public function list(): Response
     {
         $user = Auth::user();
 
@@ -66,6 +67,11 @@ class WorkspaceController extends Controller
             ->values();
 
         Gate::authorize('view', $workspace);
+
+        app(UpdateLastVisitedAction::class)->execute(
+            $user,
+            workspaceId: $workspace->id,
+        );
 
         return Inertia::render('Workspaces/Index', [
             'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
