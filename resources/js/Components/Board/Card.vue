@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { 
   CheckCircleIcon, 
   PaperClipIcon, 
@@ -26,6 +26,32 @@ const formatDate = (date) => {
     day: 'numeric',
     month: 'short'
   })
+}
+
+// --- Логика для тултипа ---
+const isTooltipVisible = ref(false)
+const tooltipStyle = ref({})
+const tooltipUser = ref(null)
+
+const showTooltip = (user, event) => {
+  tooltipUser.value = user
+  const rect = event.currentTarget.getBoundingClientRect()
+  
+  tooltipStyle.value = {
+    // Верхний край тултипа на 8px выше аватара
+    top: `${rect.top - 8}px`,
+    // По центру аватара по горизонтали
+    left: `${rect.left + (rect.width / 2)}px`,
+    // Сдвигаем ВЛЕВО на 50% ширины и ВВЕРХ на 100% высоты тултипа
+    transform: 'translate(-50%, -100%)',
+    position: 'fixed'
+  }
+  isTooltipVisible.value = true
+}
+
+const hideTooltip = () => {
+  isTooltipVisible.value = false
+  tooltipUser.value = null
 }
 </script>
 
@@ -72,13 +98,25 @@ const formatDate = (date) => {
     <div class="flex items-center justify-between text-xs text-gray-500">
       <div class="flex items-center gap-2">
         <!-- Исполнители -->
-        <div v-if="card.assignees.length" class="flex -space-x-1">
-          <Avatar 
+        <div v-if="card.assignees?.length" class="flex -space-x-1">
+          <div 
             v-for="assignee in card.assignees.slice(0, 3)"
             :key="assignee.id"
-            :user="assignee"
-            size="xs"
-          />
+            class="relative cursor-pointer"
+            @mouseenter="showTooltip(assignee, $event)"
+            @mouseleave="hideTooltip"
+          >
+            <Avatar :user="assignee" size="xs" />
+          </div>
+
+          <!-- Индикатор, если исполнителей больше 3 -->
+          <div 
+            v-if="card.assignees.length > 3"
+            class="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-medium text-gray-600 border border-white"
+            title="И еще {{ card.assignees.length - 3 }}"
+          >
+            +{{ card.assignees.length - 3 }}
+          </div>
         </div>
         
         <!-- Комментарии -->
@@ -105,4 +143,23 @@ const formatDate = (date) => {
       </div>
     </div>
   </div>
+
+  <!-- TELEPORT: Тултип вынесен в <body> -->
+  <Teleport to="body">
+    <div 
+      v-if="isTooltipVisible && tooltipUser"
+      class="z-[100] bg-gray-900 text-white text-xs rounded-lg shadow-2xl p-2.5 whitespace-nowrap pointer-events-none"
+      :style="tooltipStyle"
+    >
+      <div class="flex items-center gap-2.5">
+        <Avatar :user="tooltipUser" size="sm" />
+        <div class="flex flex-col">
+          <span class="font-semibold text-sm">{{ tooltipUser.name }}</span>
+          <span class="text-gray-300 text-xs">{{ tooltipUser.email }}</span>
+        </div>
+      </div>
+      <!-- Стрелочка вниз (указывает на аватар) -->
+      <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+    </div>
+  </Teleport>
 </template>
