@@ -125,7 +125,7 @@ const updateLabels = (labels) => {
         />
 
         <!-- Modal -->
-        <div class="relative bg-white rounded-md shadow-2xl w-full max-w-4xl overflow-hidden">
+        <div class="relative bg-white rounded-md shadow-2xl w-full max-w-4xl overflow-hidden h-[80vh] flex flex-col">
           <!-- Header -->
           <div class="flex items-center justify-between px-4 py-2 border-b border-gray-200">
             <h2 class="text-xl font-semibold text-gray-900">
