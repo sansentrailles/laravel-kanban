@@ -29,7 +29,7 @@ class BoardFactory extends Factory
             'description' => fake()->optional()->sentence(),
             'color' => fake()->hexColor(),
             'icon' => fake()->randomElement(['🚀', '🎨', '💻', '📊', '']),
-            'order' => fake()->numberBetween(1, 100),
+            'ord' => fake()->numberBetween(1, 100),
             'visibility' => fake()->randomElement(BoardVisibility::cases()),
             'settings' => [
                 'hide_completed_cards' => false,
