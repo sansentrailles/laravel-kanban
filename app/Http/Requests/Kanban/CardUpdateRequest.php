@@ -36,6 +36,8 @@ class CardUpdateRequest extends FormRequest
             // 'cardId' => 'required|integer|exists:kanban_cards,id',
             'description' => 'string|nullable',
             'title' => 'string|nullable',
+            'start_date' => ['nullable', 'date'],
+            'due_date' => ['nullable', 'date'],
             'label_ids' => ['nullable', 'array'],
             'label_ids.*' => [
                 'integer',

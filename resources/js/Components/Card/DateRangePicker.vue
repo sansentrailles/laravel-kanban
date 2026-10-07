@@ -28,8 +28,8 @@ const isOverdue = computed(() => {
 
 const emitChange = () => {
   emit('change', {
-    start_date: startDate.value,
-    due_date: endDate.value
+    start_date: startDate.value === '' ? null : startDate.value,
+    due_date: endDate.value === '' ? null : endDate.value
   })
 }
 </script>

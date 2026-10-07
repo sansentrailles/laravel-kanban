@@ -41,37 +41,6 @@ const close = () => {
   store.selectCard(null)
 }
 
-// ✅ Функция для немедленного обновления UI
-const updateDescription = (value) => {
-  // Обновляем интерфейс сразу
-  card.value.description = value
-
-  // Отправляем запрос на сервер с задержкой
-  debouncedSave(value)
-}
-
-const debouncedSave = useDebounceFn(async (value) => {
-  try {
-    const response = await axios.patch(`/cards/${card.value.id}`, { description: value })
-    
-    if (response.status === 200) {
-      if (response.data?.data?.description !== value) {
-        card.value.description = response.data.data.description
-        originalDescription.value = response.data.data.description
-      }
-    } else {
-      returnBackupedDescription()
-    }
-  } catch (error) {
-    returnBackupedDescription()
-  }
-}, 1000)
-
-const returnBackupedDescription = () => {
-    toast.error('Не удалось обновить. Возвращаем значение')
-    card.value.description = originalDescription.value
-}
-
 // ─────────────────────────────────────────────
 //  Optimistic UI Helpers
 // ─────────────────────────────────────────────
@@ -121,6 +90,33 @@ const updateAssignees = (users) => {
   updateField('assignees', users, 'assignee_ids', assigneeIds)
 }
 
+const updateDescription = (description) => {
+  updateField('description', description)
+}
+
+const updateDates = async (dates) => {
+  // Сохраняем старые значения для возможного отката
+  const oldStartDate = card.value.start_date
+  const oldDueDate = card.value.due_date
+  
+  // Мгновенно обновляем UI (Optimistic Update)
+  // Преобразуем пустые строки в null, чтобы бэкенд корректно очистил поле
+  card.value.start_date = dates.start_date || null
+  card.value.due_date = dates.due_date || null
+
+  try {
+    await axios.patch(route('boards.cards.update', card.value.id), {
+      start_date: card.value.start_date,
+      due_date: card.value.due_date
+    })
+  } catch (error) {
+    // 4. Откатываем ОБА поля при ошибке
+    card.value.start_date = oldStartDate
+    card.value.due_date = oldDueDate
+    
+    console.error('Ошибка обновления дат:', error)
+  }
+}
 </script>
 
 <template>
@@ -154,7 +150,10 @@ const updateAssignees = (users) => {
               <!-- Основная область (2/3) -->
               <div class="col-span-2 space-y-6 border-r-2 pr-3 border-gray-200">
                 <!-- Описание -->
-                <DescriptionEditor :value="card.description" @update="updateDescription" />
+                <DescriptionEditor
+                  :value="card.description"
+                  @update="updateDescription"
+                />
 
                 <!-- Приоритет -->
                 <FormField label="Приоритет">
@@ -182,7 +181,11 @@ const updateAssignees = (users) => {
 
                 <!-- Даты -->
                 <FormField label="Сроки">
-                  <DateRangePicker :start="card.start_date" :end="card.due_date" @change="updateDates" />
+                  <DateRangePicker
+                    :start="card.start_date"
+                    :end="card.due_date"
+                    @change="updateDates"
+                  />
                 </FormField>
 
                 <!-- Вложения -->
