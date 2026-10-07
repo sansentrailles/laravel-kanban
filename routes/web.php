@@ -2,6 +2,7 @@
 
 // use App\Http\Controllers\HomeController;
 
+use App\Events\TestReverbEvent;
 use App\Http\Controllers\Kanban\BoardController;
 use App\Http\Controllers\Kanban\CardController;
 use App\Http\Controllers\Kanban\ColumnController;
@@ -34,6 +35,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::get('/test-reverb', function () {
+    TestReverbEvent::dispatch();
+    return 'Событие отправлено в очередь! Проверьте консоль браузера.';
 });
 
 require __DIR__.'/auth.php';

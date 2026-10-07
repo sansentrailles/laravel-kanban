@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     autoconf \
     build-essential \
-    && docker-php-ext-install pdo_pgsql pgsql bcmath gd intl mbstring xml zip \
+    && docker-php-ext-install pdo_pgsql pgsql bcmath gd intl mbstring xml zip pcntl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 2. Установка Redis из исходного кода (GitHub master)

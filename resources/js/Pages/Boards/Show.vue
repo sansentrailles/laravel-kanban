@@ -1,8 +1,20 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import BoardView from '@/Components/Board/BoardView.vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
+
+onMounted(() => {
+    window.Echo.channel('test-channel')
+        .listen('TestReverbEvent', (e) => {
+            console.log('Получено сообщение от Reverb:', e.message);
+            alert(e.message);
+        });
+});
+
+onUnmounted(() => {
+    window.Echo.leave('test-channel');
+});
 
 // Получаем данные от Laravel через Inertia
 const props = defineProps({

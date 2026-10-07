@@ -30,7 +30,9 @@
         "@vueuse/core": "^14.4.0",
         "axios": "^1.20.0",
         "days": "^1.1.1",
+        "laravel-echo": "^2.6.1",
         "pinia": "^4.0.3",
+        "pusher-js": "^8.6.0",
         "vue-draggable-plus": "^0.6.1",
         "vue-virtual-scroller": "^3.0.5"
     }

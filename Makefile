@@ -276,7 +276,7 @@ key: ## 🔑 Сгенерировать APP_KEY (безопасно, если к
 
 .PHONY: tinker
 tinker: ## 🔧 Запустить Tinker (интерактивная консоль)
-	$(EXEC) php artisan tinker
+	$(DOCKER_COMPOSE) exec -e HOME=/tmp $(APP_CONTAINER) php artisan tinker
 
 .PHONY: routes
 routes: ## 🛣 Показать список маршрутов
@@ -504,3 +504,15 @@ npm-clean: ## 🧹 Полная очистка node_modules (том Docker + х�
 	@docker volume rm $(docker volume ls -q | grep node_modules) 2>/dev/null || true
 	@docker run --rm -v $(pwd):/host alpine rm -rf /host/node_modules /host/package-lock.json 2>/dev/null || true
 	@echo "$(GREEN)✅ node_modules полностью очищены$(NC)"
+
+# =============================================================================
+# REVERB (WEBSOCKETS)
+# =============================================================================
+
+.PHONY: logs-reverb
+logs-reverb: ## 📜 Показать логи Reverb (WebSockets)
+	$(DOCKER_COMPOSE) logs -f reverb
+
+.PHONY: reverb-restart
+reverb-restart: ## 🔄 Перезапустить сервер Reverb
+	$(DOCKER_COMPOSE) restart reverb
