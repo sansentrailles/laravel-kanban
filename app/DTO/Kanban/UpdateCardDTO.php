@@ -23,7 +23,7 @@ readonly class UpdateCardDTO
         // safe()->only вернет только те поля, которые были переданы в запросе и прошли валидацию
         // Например, если пришел только title, вернется ['title' => 'Новое название']
         return new self(
-            $request->safe()->only(['title', 'description'])
+            $request->safe()->only(['title', 'description', 'start_date', 'due_date'])
         );
     }
 }
