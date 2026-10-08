@@ -47,7 +47,7 @@ class CardController extends Controller
 
         // Синхронизируем метки (если они были переданы и прошли валидацию)
         if (isset($data['label_ids'])) {
-            $updatedCard->labels()->syncWithoutDetaching($data['label_ids']);
+            $updatedCard->labels()->sync($data['label_ids']);
         }
 
         // Синхронизируем исполнителей (по аналогии)
@@ -68,6 +68,7 @@ class CardController extends Controller
             'success' => true,
             'message' => 'Обновлено',
             'data' => $updatedCard,
+            'labels' => $updatedCard->labels,
         ]);
     }
 }
