@@ -1,11 +1,13 @@
 <script setup>
 import { useBoardStore } from '@/Stores/board'
-import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
+import { usePage } from "@inertiajs/vue3";
+import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import BoardHeader from './BoardHeader.vue'
 import Column from './Column.vue'
 import AddColumnButton from './AddColumnButton.vue'
 import CreateColumnModal from './CreateColumnModal.vue'
 import { useDraggable } from 'vue-draggable-plus'
+import { useBoardRealtime } from '@/Composables/useBoardRealtime'
 
 const props = defineProps({
   board: {
@@ -18,6 +20,33 @@ const isShowCreateColumnModal = ref(false)
 
 const store = useBoardStore()
 const columns = ref([])
+const page = usePage()
+const workspaceId = computed(() => page.props.currentWorkspace?.id)
+console.log('workspace id: ', workspaceId.value)
+
+onMounted(() => {
+  // Подписываемся на приватный канал воркспейса
+  window.Echo.private(`board.${workspaceId.value}`)
+    .listen('.card.updated', (e) => {
+      console.log('🔔 Получено обновление карточки:', e.card)
+      
+      // Обновляем карточку в Pinia Store (или локальном стейте)
+      // Тебе нужно добавить метод updateCardInStore в твой board.js store
+      store.updateCard(e.card)
+      
+      // Если карточка сейчас открыта в модалке, обновляем и её
+      if (store.selectedCard && store.selectedCard.id === e.card.id) {
+        store.selectedCard = e.card
+      }
+    })
+})
+
+// КРИТИЧЕСКИ ВАЖНО: Отписываемся при уничтожении компонента, 
+// иначе будут утечки памяти и дублирование событий при переходе между страницами
+onUnmounted(() => {
+  window.Echo.leave(`board.${workspaceId.value}`)
+})
+
 watchEffect(() => {
   // Важно: создаем новую копию массива, чтобы разорвать ссылку
   // и SortableJS мутировал локальный ref, а не массив из стора

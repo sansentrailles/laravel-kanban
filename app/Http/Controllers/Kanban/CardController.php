@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Kanban;
 use App\Actions\Kanban\MoveCardAction;
 use App\Actions\Kanban\UpdateCardAction;
 use App\DTO\Kanban\UpdateCardDTO;
+use App\Events\Kanban\CardUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kanban\CardOrderRequest;
 use App\Http\Requests\Kanban\CardUpdateRequest;
@@ -60,6 +61,8 @@ class CardController extends Controller
             'labels',
             'assignees',
         ]);
+
+        event(new CardUpdated($updatedCard));
 
         return response()->json([
             'success' => true,

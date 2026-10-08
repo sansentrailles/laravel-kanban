@@ -62,6 +62,32 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+const updateCard = (updatedCard) => {
+  // Находим старую карточку в любой из колонок
+  for (const column of columns.value) {
+    const cardIndex = column.cards.findIndex(c => c.id === updatedCard.id)
+    
+    if (cardIndex !== -1) {
+      // Если карточка сменила колонку (например, перетащили в другую)
+      if (column.id !== updatedCard.column_id) {
+        // Удаляем из старой колонки
+        column.cards.splice(cardIndex, 1)
+        
+        // Находим новую колонку и добавляем туда (упрощенно - в конец)
+        // В идеале тут должна быть логика вставки по order
+        const newColumn = columns.value.find(c => c.id === updatedCard.column_id)
+        if (newColumn) {
+          newColumn.cards.push(updatedCard)
+        }
+      } else {
+        // Просто обновляем данные карточки в той же колонке
+        column.cards[cardIndex] = updatedCard
+      }
+      break // Карточка найдена и обновлена, выходим из цикла
+    }
+  }
+}
+
   return {
     currentBoard,
     columns,
@@ -72,6 +98,7 @@ export const useBoardStore = defineStore('board', () => {
     setFilters,
     setBoardData,
     saveColumnsOrder,
-    saveCardOrder
+    saveCardOrder,
+    updateCard
   }
 })
