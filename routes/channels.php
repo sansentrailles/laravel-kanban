@@ -11,6 +11,6 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('board.{workspaceId}', function (User $user, int $workspaceId) {
     // Проверяем, является ли пользователь участником этого воркспейса
     $workspace = Workspace::find($workspaceId);
-    
+
     return $workspace ? $workspace->hasMember($user) : false;
 });

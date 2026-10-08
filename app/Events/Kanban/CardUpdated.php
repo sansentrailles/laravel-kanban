@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Events\Kanban;
 
+use App\Http\Resources\Kanban\CardResource;
 use App\Models\Kanban\Card;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -26,7 +27,7 @@ final class CardUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('board.' . $this->card->column->board->workspace_id),
+            new PrivateChannel('board.'.$this->card->column->board->workspace_id),
         ];
     }
 
@@ -46,9 +47,9 @@ final class CardUpdated implements ShouldBroadcast
     {
         // Загружаем связи, чтобы фронтенд получил полные данные (метки, исполнители)
         $this->card->load(['labels', 'assignees']);
-        
+
         return [
-            'card' => \App\Http\Resources\Kanban\CardResource::make($this->card),
+            'card' => CardResource::make($this->card),
         ];
     }
 }

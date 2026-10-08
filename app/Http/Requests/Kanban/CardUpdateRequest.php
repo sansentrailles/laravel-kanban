@@ -49,7 +49,7 @@ class CardUpdateRequest extends FormRequest
             'assignee_ids.*' => [
                 'integer',
                 // КРИТИЧЕСКИ ВАЖНО: Пользователь должен существовать И быть участником этого воркспейсу
-                Rule::exists('kanban_workspace_user', 'id')
+                Rule::exists('kanban_workspace_user', 'user_id')
                     ->where('workspace_id', $workspaceId),
             ],
         ];

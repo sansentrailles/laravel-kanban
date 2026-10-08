@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/test-reverb', function () {
     TestReverbEvent::dispatch();
+
     return 'Событие отправлено в очередь! Проверьте консоль браузера.';
 });
 
