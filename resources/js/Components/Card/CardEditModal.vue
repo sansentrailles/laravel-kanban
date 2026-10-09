@@ -160,6 +160,14 @@ const updateChecklists = (newChecklists) => {
                   :value="card.description"
                   @update="updateDescription"
                 />
+<<<<<<< HEAD
+=======
+
+                <!-- Приоритет -->
+                <FormField label="Приоритет">
+                  <PrioritySelector :value="card.priority" @change="updatePriority" />
+                </FormField>
+>>>>>>> 7297091d05a6a37ffae70a411c52ae1c0ce223a6
 
                 <!-- Исполнители -->
                 <FormField label="Исполнители">
