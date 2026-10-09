@@ -30,6 +30,10 @@ return new class extends Migration
         Schema::table('kanban_checklists', function (Blueprint $table) {
             $table->renameColumn('order', 'ord');
         });
+
+        Schema::table('kanban_checklist_items', function (Blueprint $table) {
+            $table->renameColumn('order', 'ord');
+        });
     }
 
     /**
@@ -54,6 +58,10 @@ return new class extends Migration
         });
 
         Schema::table('kanban_checklists', function (Blueprint $table) {
+            $table->renameColumn('ord', 'order');
+        });
+
+        Schema::table('kanban_checklist_items', function (Blueprint $table) {
             $table->renameColumn('ord', 'order');
         });
     }
