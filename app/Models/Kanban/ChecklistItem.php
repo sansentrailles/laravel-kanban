@@ -2,9 +2,9 @@
 
 namespace App\Models\Kanban;
 
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Attributes\Table;
 
 /**
  * @property-read Checklist|null $checklist
@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Attributes\Table;
  *
  * @mixin \Eloquent
  */
-
 #[Table('kanban_checklist_items')]
 class ChecklistItem extends Model
 {

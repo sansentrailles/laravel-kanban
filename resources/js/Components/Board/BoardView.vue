@@ -7,7 +7,6 @@ import Column from './Column.vue'
 import AddColumnButton from './AddColumnButton.vue'
 import CreateColumnModal from './CreateColumnModal.vue'
 import { useDraggable } from 'vue-draggable-plus'
-import { useBoardRealtime } from '@/Composables/useBoardRealtime'
 
 const props = defineProps({
   board: {

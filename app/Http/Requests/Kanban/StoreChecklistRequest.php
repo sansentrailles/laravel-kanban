@@ -25,7 +25,7 @@ class StoreChecklistRequest extends FormRequest
      */
     public function rules(): array
     {
-        $tableName = (new Checklist())->getTable();
+        $tableName = (new Checklist)->getTable();
 
         return [
             'title' => [

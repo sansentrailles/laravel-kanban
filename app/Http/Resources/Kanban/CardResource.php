@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Http\Resources\Kanban;
 
 use App\Http\Resources\Auth\UserResource;
-use App\Http\Resources\Kanban\ChecklistResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,7 +23,7 @@ final class CardResource extends JsonResource
             'due_date' => $this->due_date?->format('Y-m-d'),
             'start_date' => $this->start_date?->format('Y-m-d'),
             'order' => (string) $this->order, // Строка для точности decimal в JS
-            'testField' => "TEST FIELD",
+            'testField' => 'TEST FIELD',
 
             // Связи
             'labels' => LabelResource::collection($this->whenLoaded('labels')),

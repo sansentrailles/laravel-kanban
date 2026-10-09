@@ -25,7 +25,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
     Route::patch('/cards/orders', [CardController::class, 'orders'])->name('boards.cards.orders');
     Route::patch('/cards/{card}', [CardController::class, 'update'])->name('boards.cards.update');
+
     Route::post('/card/{card}/checklist', [ChecklistController::class, 'store'])->name('cards.checklist.store');
+    Route::delete('/card/checklist/{checklist}', [ChecklistController::class, 'delete'])->name('cards.checklist.delete');
 
     // Воркспейсы
     Route::post('/workspaces/{workspace}/labels', [LabelController::class, 'store'])->name('workspaces.labels.store');
