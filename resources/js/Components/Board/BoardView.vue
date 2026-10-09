@@ -25,18 +25,31 @@ const workspaceId = computed(() => page.props.currentWorkspace?.id)
 console.log('workspace id: ', workspaceId.value)
 
 onMounted(() => {
-  // Подписываемся на приватный канал воркспейса
   window.Echo.private(`board.${workspaceId.value}`)
     .listen('.card.updated', (e) => {
+      console.log(e)
       console.log('🔔 Получено обновление карточки:', e.card)
       
-      // Обновляем карточку в Pinia Store (или локальном стейте)
-      // Тебе нужно добавить метод updateCardInStore в твой board.js store
+      // Обновляем карточку в колонках доски
       store.updateCard(e.card)
       
-      // Если карточка сейчас открыта в модалке, обновляем и её
+      // Если карточка сейчас открыта в модалке у второго пользователя
       if (store.selectedCard && store.selectedCard.id === e.card.id) {
-        store.selectedCard = e.card
+        
+        // Мержим скалярные поля (название, описание и т.д.)
+        Object.assign(store.selectedCard, e.card)
+        
+        // ВАЖНО: Массивы и объекты нужно переназначать явно, 
+        // иначе Vue может не увидеть глубоких изменений
+        if (e.card.checklists !== undefined) {
+          store.selectedCard.checklists = e.card.checklists
+        }
+        if (e.card.labels !== undefined) {
+          store.selectedCard.labels = e.card.labels
+        }
+        if (e.card.assignees !== undefined) {
+          store.selectedCard.assignees = e.card.assignees
+        }
       }
     })
 })

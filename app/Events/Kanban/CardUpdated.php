@@ -18,7 +18,9 @@ final class CardUpdated implements ShouldBroadcast
 
     public function __construct(
         public Card $card
-    ) {}
+    ) {
+        $this->card->load(['checklists.items', 'labels', 'assignees']);
+    }
 
     /**
      * Определяем, на какой канал отправлять событие.
@@ -45,11 +47,8 @@ final class CardUpdated implements ShouldBroadcast
      */
     public function broadcastWith(): array
     {
-        // Загружаем связи, чтобы фронтенд получил полные данные (метки, исполнители)
-        $this->card->load(['labels', 'assignees']);
-
         return [
-            'card' => CardResource::make($this->card),
+            'card' => CardResource::make($this->card)->resolve(),
         ];
     }
 }

@@ -5,6 +5,7 @@
 use App\Events\TestReverbEvent;
 use App\Http\Controllers\Kanban\BoardController;
 use App\Http\Controllers\Kanban\CardController;
+use App\Http\Controllers\Kanban\ChecklistController;
 use App\Http\Controllers\Kanban\ColumnController;
 use App\Http\Controllers\Kanban\DashboardController;
 use App\Http\Controllers\Kanban\LabelController;
@@ -24,6 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
     Route::patch('/cards/orders', [CardController::class, 'orders'])->name('boards.cards.orders');
     Route::patch('/cards/{card}', [CardController::class, 'update'])->name('boards.cards.update');
+    Route::post('/card/{card}/checklist', [ChecklistController::class, 'store'])->name('cards.checklist.store');
 
     // Воркспейсы
     Route::post('/workspaces/{workspace}/labels', [LabelController::class, 'store'])->name('workspaces.labels.store');

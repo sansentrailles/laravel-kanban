@@ -23,6 +23,7 @@ const originalDescription = ref('')
 
 // Получаем метки воркспейса и его ID для корректной работы LabelSelector
 const workspaceLabels = computed(() => page.props.workspaceLabels?.data || [])
+const cardChecklists = computed(() => card.value?.checklists || [])
 const workspaceId = computed(() => page.props.currentWorkspace?.id)
 const availableUsers = computed(() => {
   return page.props.currentWorkspace?.members?.data || []
@@ -117,6 +118,11 @@ const updateDates = async (dates) => {
     console.error('Ошибка обновления дат:', error)
   }
 }
+
+const updateChecklists = (newChecklists) => {
+  // Обновляем чек-листы в реактивном объекте карточки
+  card.value.checklists = newChecklists
+}
 </script>
 
 <template>
@@ -155,11 +161,6 @@ const updateDates = async (dates) => {
                   @update="updateDescription"
                 />
 
-                <!-- Приоритет -->
-                <FormField label="Приоритет">
-                  <PrioritySelector :value="card.priority" @change="updatePriority" />
-                </FormField>
-
                 <!-- Исполнители -->
                 <FormField label="Исполнители">
                   <AssigneePicker
@@ -179,6 +180,13 @@ const updateDates = async (dates) => {
                   />
                 </FormField>
 
+                <!-- Чек-листы -->
+                <ChecklistSection
+                  :card-id="card.id"
+                  :checklists="cardChecklists"
+                  @change="updateChecklists"
+                />
+
                 <!-- Даты -->
                 <FormField label="Сроки">
                   <DateRangePicker
@@ -193,16 +201,8 @@ const updateDates = async (dates) => {
                   <AttachmentsList :attachments="card.attachments" />
                 </FormField>
 
-                <!-- Чек-листы -->
-                <ChecklistSection :checklists="card.checklists" />
-
                 <!-- Комментарии -->
                 <CommentsSection :comments="card.comments" />
-
-                <!-- Статус -->
-                <FormField label="Статус">
-                  <StatusDropdown :value="card.status" @change="updateStatus" />
-                </FormField>
               </div>
 
               <!-- Сайдбар (1/3) -->

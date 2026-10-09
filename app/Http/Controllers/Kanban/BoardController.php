@@ -33,6 +33,7 @@ class BoardController extends Controller
             ->with([
                 'columns.cards',
                 'columns.cards.labels',       // Колонки -> Карточки -> Метки
+                'columns.cards.checklists',   // Колонки -> Карточки -> Чеклисты
                 'columns.cards.assignees',    // Колонки -> Карточки -> Исполнители
                 'workspace.labels',           // Метки воркспейса (для выпадающих списков)
             ])
