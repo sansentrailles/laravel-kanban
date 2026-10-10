@@ -1,10 +1,11 @@
 <script setup>
 import { TrashIcon } from '@heroicons/vue/24/outline'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import ChecklistItem from './ChecklistItem.vue'
 
 const props = defineProps({
   checklist: {
-    type: Array,
+    type: Object,
     required: true
   },
 })
@@ -13,7 +14,13 @@ const newItemContent = ref({})
 const isOpen = ref(false)
 const itemConfirmDeleteRef = ref(null)
 
-const emit = defineEmits(['delete'])
+const sortedItems = computed(() => {
+  return [...props.checklist.items].sort(
+    (a, b) => Number(a.completed) - Number(b.completed)
+  )
+})
+
+const emit = defineEmits(['delete', 'toggle', 'to-card'])
 
 const deleteChecklist = (id) => {  
   // ваша логика удаления
@@ -26,6 +33,49 @@ const handleClickOutside = (event) => {
   if (itemConfirmDeleteRef.value && !itemConfirmDeleteRef.value.contains(event.target)) {
     isOpen.value = false
   }
+}
+
+const addItem = async (checklistId) => {
+  const content = newItemContent.value[checklistId]
+  if (!content?.trim()) return
+
+  try {
+    const response = await axios.post(route('cards.checklist.items.store', checklistId), {
+      content: content
+    })
+
+    const newChecklistItem = response.data.createdChecklistItem
+
+    // TODO: Переделать - изменять пропсы в родителе
+    if (newChecklistItem) {
+      props.checklist.items = [...props.checklist.items, newChecklistItem]
+      newItemContent.value[checklistId] = ''
+    }
+  } catch (error) {
+    console.error('Ошибка создания пункт чеклиста:', error)
+  }
+}
+
+const toggleItem = async (checklistId, itemId) => {
+  try {
+    const response = await axios.patch(route('cards.checklist.item.toggle', { 
+      checklist: checklistId, 
+      item: itemId 
+  }))
+
+    const updatedChecklistItems = response.data.updatedChecklistItems
+    if (updatedChecklistItems) {
+      props.checklist.items = [...updatedChecklistItems]
+    }
+  } catch (error) {
+    console.error('Ошибка переключения пункта чеклиста:', error)
+  }
+}
+
+const convertToCard = (checklistId, itemId) => {
+  console.log('convert to card: ', checklistId, itemId);
+  
+  // Toggle item logic
 }
 
 onMounted(() => {
@@ -62,17 +112,20 @@ onUnmounted(() => {
       </div>
 
       <div class="space-y-1">
-        <div v-for="item in props.checklist.items" :key="item.id" class="flex items-center gap-2">
-          <input type="checkbox" :checked="item.completed" @change="toggleItem(props.checklist.id, item.id)"
-            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-          <span :class="{ 'line-through text-gray-400': item.completed }" class="text-sm text-gray-700 flex-1">
-            {{ item.content }}
-          </span>
-        </div>
+        <ChecklistItem
+          v-for="item in sortedItems"
+          :item="item"
+          :key="item.id"
+          :checklist-id="props.checklist.id"
+          @toggle="toggleItem"
+          @to-card="convertToCard"
+        />
       </div>
 
       <div class="mt-2 flex items-center gap-2">
-        <input v-model="newItemContent[props.checklist.id]" @keyup.enter="addItem(props.checklist.id)" type="text"
+        <input 
+          v-model="newItemContent[props.checklist.id]"
+          @keyup.enter="addItem(props.checklist.id)" type="text"
           placeholder="Добавить пункт..."
           class="flex-1 px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-100" />
         <button @click="addItem(props.checklist.id)"

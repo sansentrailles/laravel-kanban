@@ -19,7 +19,7 @@ watch(() => props.checklists, (newVal) => {
   console.log('📦 Checklists в дочернем компоненте обновлены:', newVal)
 }, { immediate: true, deep: true })
 
-const emit = defineEmits(['change'])
+const emit = defineEmits(['change', 'update-items'])
 
 const newItemContent = ref({})
 const isOpen = ref(false)
@@ -69,22 +69,9 @@ const deleteChecklist = async (id) => {
   }  
 }
 
-const addChecklist = () => {
-  // Add checklist logic
+const updateItems = (items) => {
+  console.log('updted items: ', items)
 }
-
-const addItem = (checklistId) => {
-  const content = newItemContent.value[checklistId]
-  if (!content?.trim()) return
-
-  // Add item logic
-  newItemContent.value[checklistId] = ''
-}
-
-const toggleItem = (checklistId, itemId) => {
-  // Toggle item logic
-}
-
 
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
@@ -134,6 +121,7 @@ onUnmounted(() => {
         v-for="checklist in checklists"
         :key="checklist.id"
         :checklist="checklist"
+        @update-items="updateItems"
         @delete="deleteChecklist"
       />
     </div>

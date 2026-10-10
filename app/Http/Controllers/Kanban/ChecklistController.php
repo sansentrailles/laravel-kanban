@@ -42,4 +42,20 @@ class ChecklistController extends Controller
             'checklists' => $card->checklists,
         ]);
     }
+
+    public function itemStore(Checklist $checklist)
+    {
+        $item = $checklist->items()->create(request()->validate([
+            'content' => 'required|string|max:255', 
+        ]));
+
+        $card = $checklist->card;
+        $card->fresh()->load(['checklists.items', 'labels', 'assignees']);
+
+        broadcast(new CardUpdated($checklist->card))->toOthers();
+
+        return response()->json([
+            'createdChecklistItem' => $item,
+        ]);
+    }
 }

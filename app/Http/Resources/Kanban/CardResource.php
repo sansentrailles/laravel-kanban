@@ -28,23 +28,22 @@ final class CardResource extends JsonResource
             // Связи
             'labels' => LabelResource::collection($this->whenLoaded('labels')),
             'assignees' => UserResource::collection($this->whenLoaded('assignees')),
-            'checklists' => ChecklistResource::collection($this->whenLoaded('checklists')),
 
-            // 'checklists' => $this->whenLoaded('checklists', function () {
-            //     return $this->checklists->map(function ($checklist) {
-            //         return [
-            //             'id' => $checklist->id,
-            //             'title' => $checklist->title,
-            //             'items' => $checklist->items->map(function ($item) {
-            //                 return [
-            //                     'id' => $item->id,
-            //                     'content' => $item->content,
-            //                     'completed' => (bool) $item->is_completed,
-            //                 ];
-            //             })->values()->all(), // <--- Добавлено values()->all()
-            //         ];
-            //     })->values()->all(); // <--- Добавлено values()->all()
-            // }),
+            'checklists' => $this->whenLoaded('checklists', function () {
+                return $this->checklists->map(function ($checklist) {
+                    return [
+                        'id' => $checklist->id,
+                        'title' => $checklist->title,
+                        'items' => $checklist->items->map(function ($item) {
+                            return [
+                                'id' => $item->id,
+                                'content' => $item->content,
+                                'completed' => (bool) $item->is_completed,
+                            ];
+                        })->values()->all(), // <--- Добавлено values()->all()
+                    ];
+                })->values()->all(); // <--- Добавлено values()->all()
+            }),
 
             // Агрегации
             'comments_count' => $this->whenCounted('comments'),

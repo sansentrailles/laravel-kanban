@@ -6,6 +6,7 @@ use App\Events\TestReverbEvent;
 use App\Http\Controllers\Kanban\BoardController;
 use App\Http\Controllers\Kanban\CardController;
 use App\Http\Controllers\Kanban\ChecklistController;
+use App\Http\Controllers\Kanban\ChecklistItemController;
 use App\Http\Controllers\Kanban\ColumnController;
 use App\Http\Controllers\Kanban\DashboardController;
 use App\Http\Controllers\Kanban\LabelController;
@@ -28,6 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/card/{card}/checklist', [ChecklistController::class, 'store'])->name('cards.checklist.store');
     Route::delete('/card/checklist/{checklist}', [ChecklistController::class, 'delete'])->name('cards.checklist.delete');
+
+    Route::post('/card/checklist/{checklist}/items', [ChecklistItemController::class, 'store'])->name('cards.checklist.items.store');
+    // TODO: Переделать на patch
+    Route::patch('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'toggle'])->name('cards.checklist.item.toggle');
 
     // Воркспейсы
     Route::post('/workspaces/{workspace}/labels', [LabelController::class, 'store'])->name('workspaces.labels.store');
