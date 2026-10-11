@@ -36,6 +36,8 @@ class ChecklistItemController extends Controller
         $card = $checklist->card;
         $card->fresh()->load(['checklists.items', 'labels', 'assignees']);
 
+        broadcast(new CardUpdated($checklist->card))->toOthers();
+
         return response()->json([
             'updatedChecklistItems' => ChecklistItemResource::collection($checklist->items),
         ]);

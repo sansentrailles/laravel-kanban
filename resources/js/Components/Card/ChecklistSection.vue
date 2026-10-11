@@ -1,6 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref, watch } from 'vue'
-import { TrashIcon } from '@heroicons/vue/24/outline'
+import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import Checklist from './Checklist.vue'
 
@@ -15,25 +14,14 @@ const props = defineProps({
   }
 })
 
-watch(() => props.checklists, (newVal) => {
-  console.log('📦 Checklists в дочернем компоненте обновлены:', newVal)
-}, { immediate: true, deep: true })
+const emit = defineEmits(['change', 'to-card'])
 
-const emit = defineEmits(['change', 'update-items'])
-
-const newItemContent = ref({})
 const isOpen = ref(false)
-const newChecklistName = ref('')
-const dropdownRef = ref(null)
-
-const form = useForm({
-  title: '',
-})
+const form = useForm({ title: '' })
 
 const createChecklist = async () => {
   if (!form.title.trim()) return
 
-  // Используем axios напрямую для полного контроля над JSON-ответом
   try {
     const response = await axios.post(route('cards.checklist.store', props.cardId), {
       title: form.title
@@ -43,11 +31,10 @@ const createChecklist = async () => {
 
     if (newChecklist) {
       emit('change', [...props.checklists, newChecklist])
-      form.reset() // Сбрасываем нашу локальную форму
+      form.reset()
       isOpen.value = false
     }
   } catch (error) {
-    // Обработка ошибок валидации (если вернется 422)
     if (error.response && error.response.status === 422) {
       form.errors = error.response.data.errors
     } else {
@@ -59,7 +46,6 @@ const createChecklist = async () => {
 const deleteChecklist = async (id) => {
   try {
     const response = await axios.delete(route('cards.checklist.delete', id))
-
     const newChecklists = response.data.checklists
     if (newChecklists) {
       emit('change', newChecklists)
@@ -69,50 +55,54 @@ const deleteChecklist = async (id) => {
   }  
 }
 
-const updateItems = (items) => {
-  console.log('updted items: ', items)
+// Обновляем конкретный чеклист в массиве
+const updateChecklist = (updatedChecklist) => {
+  const newChecklists = props.checklists.map(c => 
+    c.id === updatedChecklist.id ? updatedChecklist : c
+  )
+  emit('change', newChecklists)
 }
 
-const handleClickOutside = (event) => {
-  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
-    isOpen.value = false
-    newChecklistName.value = ''
-  }
+const handleToCard = (checklistId, itemId) => {
+  emit('to-card', checklistId, itemId)
 }
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
-
 </script>
 
 <template>
   <div class="space-y-3">
     <div class="flex items-center justify-between">
       <h3 class="text-sm font-semibold text-gray-900">Чек-листы</h3>
-      <div class="relative" ref="dropdownRef">
+      <div class="relative">
         <button @click="isOpen = !isOpen" class="text-sm text-blue-600 hover:text-blue-700">
           Добавить +
         </button>
-        <div v-if="isOpen"
-          class="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-3 space-y-3 min-w-[250px] z-10">
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">Название</label>
-            <input v-model="form.title" type="text" placeholder="Введите название чеклиста"
-              class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-50"
-              @keyup.enter="createChecklist" />
-            <p v-if="form.errors.title" class="mt-1 text-xs text-red-600">{{ form.errors.title }}</p>
-          </div>
+        
+        <template v-if="isOpen">
+          <!-- Overlay для закрытия по клику вне -->
+          <div class="fixed inset-0 z-10" @click="isOpen = false"></div>
+          
+          <div class="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-3 space-y-3 min-w-[250px] z-20">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Название</label>
+              <input 
+                v-model="form.title" 
+                type="text" 
+                placeholder="Введите название чеклиста"
+                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-100"
+                @keyup.enter="createChecklist" 
+              />
+              <p v-if="form.errors.title" class="mt-1 text-xs text-red-600">{{ form.errors.title }}</p>
+            </div>
 
-          <button @click="createChecklist" :disabled="!form.title.trim() || form.processing"
-            class="w-full px-3 py-1.5 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
-            {{ form.processing ? 'Создание...' : 'Создать чеклист' }}
-          </button>
-        </div>
+            <button 
+              @click="createChecklist" 
+              :disabled="!form.title.trim() || form.processing"
+              class="w-full px-3 py-1.5 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            >
+              {{ form.processing ? 'Создание...' : 'Создать чеклист' }}
+            </button>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -121,8 +111,9 @@ onUnmounted(() => {
         v-for="checklist in checklists"
         :key="checklist.id"
         :checklist="checklist"
-        @update-items="updateItems"
+        @update="updateChecklist"
         @delete="deleteChecklist"
+        @to-card="handleToCard"
       />
     </div>
 

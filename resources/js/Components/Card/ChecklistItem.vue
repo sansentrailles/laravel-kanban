@@ -4,7 +4,7 @@ import { EllipsisVerticalIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   item: {
-    type: Object, // Исправлено: должен быть Object, а не Array
+    type: Object,
     required: true
   },
   checklistId: {
@@ -13,7 +13,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['delete'])
+const emit = defineEmits(['toggle', 'delete', 'to-card', 'edit'])
 
 // Состояние выпадающего меню
 const isMenuOpen = ref(false)
@@ -26,7 +26,6 @@ const closeMenu = () => {
   isMenuOpen.value = false
 }
 
-// Действия меню (просто закрываем меню и эмитим событие наверх)
 const handleEdit = () => {
   closeMenu()
   emit('edit', props.item.id)
@@ -39,35 +38,37 @@ const handleDelete = () => {
 </script>
 
 <template>
-  <!-- Добавлен class relative для позиционирования меню -->
   <div class="relative flex items-center gap-2 group">
     <input
       type="checkbox"
       :checked="props.item.completed"
-      @change="emit('toggle', props.checklistId, props.item.id)"
-      class="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400 focus:ring-1"
+      @change="emit('toggle', props.item.id)"
+      class="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-400 focus:ring-1 cursor-pointer"
     />
-    <span :class="{ 'line-through text-gray-400': props.item.completed }" class="text-sm text-gray-700 flex-1">
-      {{ props.item.content }} {{ props.item.id }}
+    <span 
+      :class="{ 'line-through text-gray-400': props.item.completed }" 
+      class="text-sm text-gray-700 flex-1"
+    >
+      {{ props.item.content }}
     </span>
 
     <!-- Кнопка открытия меню -->
     <button 
       @click="toggleMenu" 
-      class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none"
+      class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none opacity-0 group-hover:opacity-100 transition-opacity"
     >
       <EllipsisVerticalIcon class="w-5 h-5" />
     </button>
 
     <!-- Всплывающее меню -->
     <template v-if="isMenuOpen">
-      <!-- Прозрачный фон для перехвата кликов вне меню (закрывает меню) -->
+      <!-- Прозрачный фон для перехвата кликов вне меню -->
       <div class="fixed inset-0 z-10" @click="closeMenu"></div>
 
       <!-- Само меню -->
-      <div class="absolute right-0 top-full mt-1 w-50 bg-white rounded-md shadow-lg border border-gray-100 z-20">
+      <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-100 z-20 py-1">
         <button 
-          @click="emit('to-card', props.checklistId, props.item.id)" 
+          @click="emit('to-card', props.item.id)" 
           class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
         >
           Переделать в карточку
