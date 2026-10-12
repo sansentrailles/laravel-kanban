@@ -44,16 +44,18 @@ const updateDates = (dates) => {
   store.updateCardDates(card.value.id, dates)
 }
 
-const addComment = (comment) => {
-  store.addCommentForCard(card.value.id, comment)
-}
-
 // Прокси-методы для чеклистов
 const handleCreateChecklist = (title) => store.createChecklist(card.value.id, title)
 const handleDeleteChecklist = (checklistId) => store.deleteChecklist(card.value.id, checklistId)
 const handleAddItem = (checklistId, content) => store.addChecklistItem(card.value.id, checklistId, content)
 const handleToggleItem = (checklistId, itemId) => store.toggleChecklistItem(card.value.id, checklistId, itemId)
 const handleDeleteItem = (checklistId, itemId) => store.deleteChecklistItem(card.value.id, checklistId, itemId)
+
+// Прокси методы для комментариев
+const handleCreateComment = (comment) => store.addComment(card.value.id, comment)
+const handleDeleteComment = (commentId) => store.deleteComment(card.value.id, commentId);
+const handleEditComment = (params) => store.editComment(card.value.id, params);
+
 
 const convertItemToCard = (checklistId, itemId) => {
   console.log('Конвертация в карточку:', checklistId, itemId)
@@ -109,7 +111,9 @@ const convertItemToCard = (checklistId, itemId) => {
 
                 <CommentsSection
                   :comments="card.comments"
-                  @change="addComment"
+                  @change="handleCreateComment"
+                  @delete-comment="handleDeleteComment"
+                  @edit-comment="handleEditComment"
                 />
               </div>
 
