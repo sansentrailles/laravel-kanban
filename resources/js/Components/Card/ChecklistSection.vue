@@ -4,67 +4,20 @@ import { useForm } from '@inertiajs/vue3'
 import Checklist from './Checklist.vue'
 
 const props = defineProps({
-  checklists: {
-    type: Array,
-    default: () => []
-  },
-  cardId: {
-    type: [Number, String],
-    required: true
-  }
+  checklists: { type: Array, default: () => [] },
+  cardId: { type: [Number, String], required: true }
 })
 
-const emit = defineEmits(['change', 'to-card'])
+const emit = defineEmits(['create-checklist', 'delete-checklist', 'add-item', 'toggle-item', 'delete-item', 'to-card'])
 
 const isOpen = ref(false)
 const form = useForm({ title: '' })
 
-const createChecklist = async () => {
+const createChecklist = () => {
   if (!form.title.trim()) return
-
-  try {
-    const response = await axios.post(route('cards.checklist.store', props.cardId), {
-      title: form.title
-    })
-
-    const newChecklist = response.data.createdChecklist
-
-    if (newChecklist) {
-      emit('change', [...props.checklists, newChecklist])
-      form.reset()
-      isOpen.value = false
-    }
-  } catch (error) {
-    if (error.response && error.response.status === 422) {
-      form.errors = error.response.data.errors
-    } else {
-      console.error('Ошибка создания чеклиста:', error)
-    }
-  }
-}
-
-const deleteChecklist = async (id) => {
-  try {
-    const response = await axios.delete(route('cards.checklist.delete', id))
-    const newChecklists = response.data.checklists
-    if (newChecklists) {
-      emit('change', newChecklists)
-    }
-  } catch (error) {
-    console.error('Ошибка удаления чеклиста:', error)
-  }  
-}
-
-// Обновляем конкретный чеклист в массиве
-const updateChecklist = (updatedChecklist) => {
-  const newChecklists = props.checklists.map(c => 
-    c.id === updatedChecklist.id ? updatedChecklist : c
-  )
-  emit('change', newChecklists)
-}
-
-const handleToCard = (checklistId, itemId) => {
-  emit('to-card', checklistId, itemId)
+  emit('create-checklist', form.title)
+  form.reset()
+  isOpen.value = false
 }
 </script>
 
@@ -111,12 +64,13 @@ const handleToCard = (checklistId, itemId) => {
         v-for="checklist in checklists"
         :key="checklist.id"
         :checklist="checklist"
-        @update="updateChecklist"
-        @delete="deleteChecklist"
-        @to-card="handleToCard"
+        @delete="(id) => emit('delete-checklist', id)"
+        @add-item="(content) => emit('add-item', checklist.id, content)"
+        @toggle-item="(itemId) => emit('toggle-item', checklist.id, itemId)"
+        @delete-item="(itemId) => emit('delete-item', checklist.id, itemId)"
+        @to-card="(itemId) => emit('to-card', checklist.id, itemId)"
       />
     </div>
-
     <div v-else class="p-3 text-sm text-gray-400 bg-gray-50 rounded-lg border border-dashed border-gray-200">
       Чек-листы отсутствуют
     </div>

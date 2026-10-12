@@ -1,3 +1,4 @@
+// Stores/board.js
 import axios from 'axios'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
@@ -8,90 +9,225 @@ export const useBoardStore = defineStore('board', () => {
   const selectedCard = ref(null)
   const filters = ref({})
 
+  // Геттер для отсортированных колонок (используем order)
   const sortedColumns = computed(() => {
     return [...columns.value].sort((a, b) => a.ord - b.ord)
   })
 
-  const selectCard = (card) => {
-    selectedCard.value = card
-  }
-
-  const setFilters = (newFilters) => {
-    filters.value = newFilters
-  }
-
+  const selectCard = (card) => { selectedCard.value = card }
+  const setFilters = (newFilters) => { filters.value = newFilters }
   const findCard = (cardId) => {
     for (const column of columns.value) {
-      const card = column.cards.find(c => c.id === cardId)
+      const card = column.cards.find(c => c.id === Number(cardId))
       if (card) return card
     }
     return null
   }
 
-  const setBoardData = (boardData, columnsData) => {
+
+  const setBoardData = (boardData) => {
     currentBoard.value = boardData
-    columns.value = columnsData
+    // Сохраняем колонки и сразу сортируем
+    columns.value = (boardData.columns?.data || []).sort((a, b) => a.ord - b.ord)
   }
 
-  const saveColumnsOrder = async (ids) => {
-    //  Оптимистично обновляем локальный state (чтобы UI не ждал ответа сервера)
-    columns.value = columns.value.map((col, index) => {
-      const newOrder = ids.indexOf(col.id)
-      return { ...col, order: newOrder !== -1 ? newOrder : index }
-    })
-
-    // Отправляем на сервер
-    try {
-      return await axios.patch(`/columns/orders`, { ids })
-    } catch (error) {
-      console.error('Ошибка сохранения порядка колонок:', error)
-      // Логика отката (перечитывание с сервера) при ошибке
-    }
-  }
-
-  const saveCardOrder = async (cardId, columnId, neighbors) => {
-    try {
-      return await axios.patch(`/cards/orders`, {
-        cardId,
-        columnId,
-        prevCardId: neighbors.prev,
-        nextCardId: neighbors.next
+  // --- Realtime (Echo) ---
+  const connectRealtime = (workspaceId) => {
+    window.Echo.private(`board.${workspaceId}`)
+      .listen('.card.updated', (e) => {
+        updateCard(e.card, true) // true = пришло по WS
       })
-    } catch (error) {
-      console.log('error ')
-    }
   }
 
-  const updateCard = (updatedCard) => {
-    console.log('updateCard via WS')
+  const disconnectRealtime = (workspaceId) => {
+    window.Echo.leave(`board.${workspaceId}`)
+  }
+
+  // --- Обновление карточки ---
+  const updateCard = (updatedCard, fromRealtime = false) => {
     for (const column of columns.value) {
       const cardIndex = column.cards.findIndex(c => c.id === updatedCard.id)
-
       if (cardIndex !== -1) {
-        // Мержим скалярные поля
-        Object.assign(column.cards[cardIndex], updatedCard)
-
-        // Явно обновляем массивы для реактивности Vue
-        if (updatedCard.checklists !== undefined) {
-          column.cards[cardIndex].checklists = updatedCard.checklists
+        // Если карточка открыта в модалке у текущего юзера
+        if (selectedCard.value && selectedCard.value.id === updatedCard.id && !fromRealtime) {
+          Object.assign(selectedCard.value, updatedCard)
+        } else if (fromRealtime) {
+           // При обновлении по WS просто мержим данные
+          Object.assign(column.cards[cardIndex], updatedCard)
         }
-
-        break
+        return
       }
     }
   }
 
+  // --- Drag & Drop Колонок ---
+  const saveColumnsOrder = async (ids) => {
+    // Оптимистично обновляем order
+    columns.value.forEach((col, index) => {
+      col.order = ids.indexOf(col.id)
+    })
+
+    try {
+      await axios.patch(`/columns/orders`, { ids })
+    } catch (error) {
+      console.error('Ошибка сохранения порядка колонок:', error)
+      // TODO: Откат на предыдущий порядок
+    }
+  }
+
+  // --- Drag & Drop Карточек ---
+  // VueDraggable сам поменяет массивы внутри columns.value при перемещении.
+  // В onEnd мы просто берем актуальное состояние и шлем на сервер.
+  const saveCardOrder = async (movedCardId, targetColumnId, targetCards) => {
+    const orderedCardIds = targetCards.map(c => c.id)
+    const index = orderedCardIds.indexOf(Number(movedCardId))
+    
+    const prev = index > 0 ? orderedCardIds[index - 1] : null
+    const next = index < orderedCardIds.length - 1 ? orderedCardIds[index + 1] : null
+
+    try {
+      await axios.patch(`/cards/orders`, {
+        cardId: movedCardId,
+        columnId: targetColumnId,
+        prevCardId: prev,
+        nextCardId: next
+      })
+    } catch (error) {
+      console.error('Ошибка сохранения позиции карточки:', error)
+      // TODO: Откат (перечитывание доски с сервера)
+    }
+  }
+
+  // --- Обновление полей карточки (Optimistic UI) ---
+  const updateCardField = async (cardId, fieldName, displayValue, payloadKey = null, payloadValue = null) => {
+    const card = findCard(cardId)
+    if (!card) return
+
+    const oldValue = card[fieldName]
+    // 1. Оптимистично обновляем UI (и на доске, и в модалке, так как ссылка одна)
+    card[fieldName] = displayValue
+
+    try {
+      // 2. Отправляем на сервер
+      const data = { [payloadKey || fieldName]: payloadValue !== null ? payloadValue : displayValue }
+      await axios.patch(route('boards.cards.update', cardId), data)
+    } catch (error) {
+      // 3. Откат при ошибке
+      card[fieldName] = oldValue
+      console.error('Update error:', error)
+    }
+  }
+
+  // Обновление дат (т.к. два поля сразу)
+  const updateCardDates = async (cardId, dates) => {
+    const card = findCard(cardId)
+    if (!card) return
+
+    const oldStart = card.start_date
+    const oldDue = card.due_date
+
+    card.start_date = dates.start_date || null
+    card.due_date = dates.due_date || null
+
+    try {
+      await axios.patch(route('boards.cards.update', cardId), {
+        start_date: card.start_date,
+        due_date: card.due_date
+      })
+    } catch (error) {
+      card.start_date = oldStart
+      card.due_date = oldDue
+      console.error('Ошибка обновления дат:', error)
+    }
+  }
+
+  // --- Логика Чеклистов ---
+  const createChecklist = async (cardId, title) => {
+    try {
+      const response = await axios.post(route('cards.checklist.store', cardId), { title })
+      const newChecklist = response.data.createdChecklist
+      if (newChecklist) {
+        const card = findCard(cardId)
+        if (card) card.checklists.push(newChecklist)
+      }
+    } catch (error) {
+      console.error('Ошибка создания чеклиста:', error)
+    }
+  }
+
+  const deleteChecklist = async (cardId, checklistId) => {
+    const card = findCard(cardId)
+    if (!card) return
+    const oldChecklists = [...card.checklists]
+    
+    // Оптимистичное удаление
+    card.checklists = card.checklists.filter(c => c.id !== checklistId)
+
+    try {
+      await axios.delete(route('cards.checklist.delete', checklistId))
+    } catch (error) {
+      card.checklists = oldChecklists // Откат
+      console.error('Ошибка удаления чеклиста:', error)
+    }
+  }
+
+  const addChecklistItem = async (cardId, checklistId, content) => {
+    try {
+      const response = await axios.post(route('cards.checklist.items.store', checklistId), { content })
+      const newItem = response.data.createdChecklistItem
+      
+      const card = findCard(cardId)
+      if (card) {
+        const checklist = card.checklists.find(c => c.id === checklistId)
+        if (checklist) checklist.items.push(newItem)
+      }
+    } catch (error) {
+      console.error('Ошибка создания пункта:', error)
+    }
+  }
+
+  const toggleChecklistItem = async (cardId, checklistId, itemId) => {
+    const card = findCard(cardId)
+    if (!card) return
+    const checklist = card.checklists.find(c => c.id === checklistId)
+    if (!checklist) return
+    
+    const item = checklist.items.find(i => i.id === itemId)
+    if (!item) return
+
+    const oldValue = item.completed
+    item.completed = !oldValue // Оптимистично меняем статус
+
+    try {
+      await axios.patch(route('cards.checklist.item.toggle', { checklist: checklistId, item: itemId }))
+    } catch (error) {
+      item.completed = oldValue // Откат
+      console.error('Ошибка переключения пункта:', error)
+    }
+  }
+
+  const deleteChecklistItem = async (cardId, checklistId, itemId) => {
+    const card = findCard(cardId)
+    if (!card) return
+    const checklist = card.checklists.find(c => c.id === checklistId)
+    if (!checklist) return
+
+    const oldItems = [...checklist.items]
+    checklist.items = checklist.items.filter(i => i.id !== itemId)
+
+    try {
+      await axios.delete(route('cards.checklist.item.delete', { checklist: checklistId, item: itemId }))
+    } catch (error) {
+      checklist.items = oldItems // Откат
+      console.error('Ошибка удаления пункта:', error)
+    }
+  }
+
   return {
-    currentBoard,
-    columns,
-    selectedCard,
-    filters,
-    sortedColumns,
-    selectCard,
-    setFilters,
-    setBoardData,
-    saveColumnsOrder,
-    saveCardOrder,
-    updateCard
+    currentBoard, columns, selectedCard, filters, sortedColumns,
+    selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
+    saveColumnsOrder, saveCardOrder, findCard, updateCard,
+    updateCardField, updateCardDates,
+    createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem
   }
 })

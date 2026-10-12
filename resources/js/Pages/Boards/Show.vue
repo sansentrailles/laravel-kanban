@@ -19,7 +19,7 @@ onUnmounted(() => {
 // Получаем данные от Laravel через Inertia
 const props = defineProps({
   board: {
-    type: Array,
+    type: Object,
     required: true
   },
   workspaces: {

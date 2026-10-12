@@ -42,7 +42,7 @@ watch(filteredUsers, () => {
   highlightedIndex.value = -1
 })
 
-const clearSeach = () => {
+const clearSearch = () => {
   searchQuery.value = ''
   isOpen.value = false
   highlightedIndex.value = -1
@@ -103,7 +103,7 @@ const removeAssignee = (userId) => {
 // Закрытие выпадающего списка при клике вне компонента
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
-    clearSeach()
+    clearSearch()
   }
 }
 
@@ -150,7 +150,7 @@ onUnmounted(() => {
 
       <button
         v-if="searchQuery"
-        @click="clearSeach"
+        @click="clearSearch"
         class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
 
       >
