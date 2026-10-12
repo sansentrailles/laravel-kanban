@@ -43,19 +43,19 @@ class ChecklistController extends Controller
         ]);
     }
 
-    public function itemStore(Checklist $checklist)
-    {
-        $item = $checklist->items()->create(request()->validate([
-            'content' => 'required|string|max:255', 
-        ]));
+    // public function itemStore(Checklist $checklist)
+    // {
+    //     $item = $checklist->items()->create(request()->validate([
+    //         'content' => 'required|string|max:255', 
+    //     ]));
 
-        $card = $checklist->card;
-        $card->fresh()->load(['checklists.items', 'labels', 'assignees', 'comments']);
+    //     $card = $checklist->card;
+    //     $card->fresh()->load(['checklists.items', 'labels', 'assignees', 'comments']);
 
-        broadcast(new CardUpdated($checklist->card))->toOthers();
+    //     broadcast(new CardUpdated($checklist->card))->toOthers();
 
-        return response()->json([
-            'createdChecklistItem' => $item,
-        ]);
-    }
+    //     return response()->json([
+    //         'createdChecklistItem' => $item,
+    //     ]);
+    // }
 }

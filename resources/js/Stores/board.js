@@ -104,15 +104,14 @@ export const useBoardStore = defineStore('board', () => {
     if (!card) return
 
     const oldValue = card[fieldName]
-    // 1. Оптимистично обновляем UI (и на доске, и в модалке, так как ссылка одна)
+    // Оптимистично обновляем UI (и на доске, и в модалке, так как ссылка одна)
     card[fieldName] = displayValue
 
     try {
-      // 2. Отправляем на сервер
       const data = { [payloadKey || fieldName]: payloadValue !== null ? payloadValue : displayValue }
       await axios.patch(route('boards.cards.update', cardId), data)
     } catch (error) {
-      // 3. Откат при ошибке
+      // Откат при ошибке
       card[fieldName] = oldValue
       console.error('Update error:', error)
     }
@@ -141,8 +140,8 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  // Обновление дат (т.к. два поля сразу)
-  const addCommentForCard = async (cardId, comment) => {
+  // Логика комментариев
+  const addComment = async (cardId, comment) => {
     const card = findCard(cardId)
     if (!card) return
     
@@ -160,6 +159,50 @@ export const useBoardStore = defineStore('board', () => {
       }
     } catch (error) {
       console.error('Ошибка создания чеклиста:', error)
+    }
+  }
+
+  const deleteComment = async (cardId, commentId) => {
+    const card = findCard(cardId)
+    if (!card) return
+    const oldComments = [...card.comments]
+    
+    card.comments = card.comments.filter(c => c.id !== commentId)
+
+    try {
+      await axios.delete(route('cards.comments.delete', { card: card.id, comment: commentId }))
+    } catch (error) {
+      card.comments = oldComments // Откат
+      console.error('Ошибка удаления комментария:', error)
+    }
+  }
+
+  const editComment = async (cardId, params) => {
+    const card = findCard(cardId)
+    if (!card) return
+    const { id, content } = params
+
+    const comment = card.comments.find(c => c.id === id)
+    if (!comment) return
+
+    const oldContent = comment.content
+    const oldIsEdited = comment.is_edited // Сохраняем старый фла
+
+    // 1. Оптимистично обновляем текст в UI
+    comment.content = content
+    comment.is_edited = true
+
+    try {
+      await axios.patch(route('cards.comments.edit', { 
+        card: cardId, 
+        comment: id 
+      }), {
+        content: content
+      })
+    } catch (error) {
+      comment.content = oldContent
+      comment.is_edited = oldIsEdited // Возвращаем старый флаг
+      console.error('Ошибка редактирования комментария:', error)
     }
   }
 
@@ -251,6 +294,6 @@ export const useBoardStore = defineStore('board', () => {
     saveColumnsOrder, saveCardOrder, findCard, updateCard,
     updateCardField, updateCardDates,
     createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem,
-    addCommentForCard
+    addComment, deleteComment, editComment
   }
 })

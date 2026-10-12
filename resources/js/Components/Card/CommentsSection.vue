@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import Avatar from '@/Components/UI/Avatar.vue'
+import Comment from './Comment.vue'
 
 const props = defineProps({
   comments: {
@@ -13,23 +14,13 @@ const props = defineProps({
 const page = usePage()
 const currentUser = computed(() => page.props.auth.user)
 const newComment = ref('')
-const emit = defineEmits(['change'])
-
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+const emit = defineEmits(['change', 'comment-edit', 'delete-comment', 'edit-comment'])
 
 const addComment = () => {
   if (!newComment.value.trim()) return
 
   emit('change',newComment.value)
   
-  // Add comment logic
   newComment.value = ''
 }
 </script>
@@ -40,22 +31,13 @@ const addComment = () => {
     
     <!-- Comments list -->
     <div class="space-y-3">
-      <div 
+      <Comment
         v-for="comment in comments"
+        :comment="comment"
         :key="comment.id"
-        class="flex gap-3"
-      >
-        <Avatar :user="comment.user" size="sm" />
-        <div class="flex-1">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-medium text-gray-900">{{ comment.user.name }}</span>
-            <span class="text-xs text-gray-500">{{ formatDate(comment.created_at) }}</span>
-          </div>
-          <div class="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
-            {{ comment.content }}
-          </div>
-        </div>
-      </div>
+        @delete="(id) => emit('delete-comment', id)"
+        @edit="(params) => emit('edit-comment', params)"
+      />
     </div>
     
     <!-- Add comment -->
