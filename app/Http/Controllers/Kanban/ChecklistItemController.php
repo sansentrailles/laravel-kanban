@@ -18,7 +18,7 @@ class ChecklistItemController extends Controller
         ]));
 
         $card = $checklist->card;
-        $card->fresh()->load(['checklists.items', 'labels', 'assignees']);
+        $card->fresh()->load(['checklists.items', 'labels', 'assignees', 'comments']);
 
         broadcast(new CardUpdated($checklist->card))->toOthers();
 
@@ -34,12 +34,26 @@ class ChecklistItemController extends Controller
         ]);
 
         $card = $checklist->card;
-        $card->fresh()->load(['checklists.items', 'labels', 'assignees']);
+        $card->fresh()->load(['checklists.items', 'labels', 'assignees', 'comments']);
 
         broadcast(new CardUpdated($checklist->card))->toOthers();
 
         return response()->json([
             'updatedChecklistItems' => ChecklistItemResource::collection($checklist->items),
+        ]);
+    }
+
+    public function delete(Checklist $checklist, ChecklistItem $item)
+    {
+        $card = $checklist->card;
+        $item->delete();
+
+        $card->fresh()->load(['checklists.items', 'labels', 'assignees', 'comments']);
+
+        broadcast(new CardUpdated($card))->toOthers();
+
+        return response()->json([
+            'success' => true,
         ]);
     }
 }
