@@ -19,7 +19,7 @@ final class CardUpdated implements ShouldBroadcast
     public function __construct(
         public Card $card
     ) {
-        $this->card->load(['checklists.items', 'labels', 'assignees']);
+        $this->card->load(['checklists.items', 'labels', 'assignees', 'comments.user']);
     }
 
     /**

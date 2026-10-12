@@ -50,7 +50,7 @@ class ChecklistController extends Controller
         ]));
 
         $card = $checklist->card;
-        $card->fresh()->load(['checklists.items', 'labels', 'assignees']);
+        $card->fresh()->load(['checklists.items', 'labels', 'assignees', 'comments']);
 
         broadcast(new CardUpdated($checklist->card))->toOthers();
 

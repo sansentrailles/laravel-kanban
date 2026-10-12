@@ -44,6 +44,10 @@ const updateDates = (dates) => {
   store.updateCardDates(card.value.id, dates)
 }
 
+const addComment = (comment) => {
+  store.addCommentForCard(card.value.id, comment)
+}
+
 // Прокси-методы для чеклистов
 const handleCreateChecklist = (title) => store.createChecklist(card.value.id, title)
 const handleDeleteChecklist = (checklistId) => store.deleteChecklist(card.value.id, checklistId)
@@ -103,7 +107,10 @@ const convertItemToCard = (checklistId, itemId) => {
                   <AttachmentsList :attachments="card.attachments" />
                 </FormField>
 
-                <CommentsSection :comments="card.comments" />
+                <CommentsSection
+                  :comments="card.comments"
+                  @change="addComment"
+                />
               </div>
 
               <div class="space-y-4">

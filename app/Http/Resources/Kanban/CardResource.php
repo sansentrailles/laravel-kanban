@@ -23,7 +23,6 @@ final class CardResource extends JsonResource
             'due_date' => $this->due_date?->format('Y-m-d'),
             'start_date' => $this->start_date?->format('Y-m-d'),
             'order' => (string) $this->order, // Строка для точности decimal в JS
-            'testField' => 'TEST FIELD',
 
             // Связи
             'labels' => LabelResource::collection($this->whenLoaded('labels')),
@@ -44,6 +43,8 @@ final class CardResource extends JsonResource
                     ];
                 })->values()->all(); // <--- Добавлено values()->all()
             }),
+
+            'comments' => CommentResource::collection($this->whenLoaded('comments')),
 
             // Агрегации
             'comments_count' => $this->whenCounted('comments'),

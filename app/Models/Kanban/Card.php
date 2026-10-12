@@ -135,10 +135,10 @@ class Card extends Model
             ->withTimestamps();
     }
 
-    // public function comments(): HasMany
-    // {
-    //     return $this->hasMany(Comment::class);
-    // }
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class)->chronological();
+    }
 
     public function attachments(): HasMany
     {

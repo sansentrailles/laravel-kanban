@@ -145,7 +145,7 @@ onUnmounted(() => {
         @keydown="handleKeydown"
         type="text"
         placeholder="Найти исполнителя..."
-        class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent transition-all"
+        class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-100"
       />
 
       <button
@@ -168,7 +168,7 @@ onUnmounted(() => {
             v-for="(user, index) in filteredUsers"
             :key="user.id"
             @click="addAssignee(user)"
-            class="w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left border-b border-gray-50 last:border-0"
+            class="w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left border-b border-gray-50 last:border-0 hover:bg-blue-50"
             :class="{ 'bg-blue-50': index === highlightedIndex }"
           >
             <Avatar :user="user" size="sm" />

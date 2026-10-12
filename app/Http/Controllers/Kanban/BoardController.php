@@ -35,6 +35,7 @@ class BoardController extends Controller
                 'columns.cards.labels',       // Колонки -> Карточки -> Метки
                 'columns.cards.checklists',   // Колонки -> Карточки -> Чеклисты
                 'columns.cards.assignees',    // Колонки -> Карточки -> Исполнители
+                'columns.cards.comments.user',     // Колонки -> Карточки -> Комментарии
                 'workspace.labels',           // Метки воркспейса (для выпадающих списков)
             ])
             ->firstOrFail();

@@ -8,6 +8,7 @@ use App\Http\Controllers\Kanban\CardController;
 use App\Http\Controllers\Kanban\ChecklistController;
 use App\Http\Controllers\Kanban\ChecklistItemController;
 use App\Http\Controllers\Kanban\ColumnController;
+use App\Http\Controllers\Kanban\CommentController;
 use App\Http\Controllers\Kanban\DashboardController;
 use App\Http\Controllers\Kanban\LabelController;
 use App\Http\Controllers\Kanban\WorkspaceController;
@@ -31,8 +32,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/card/checklist/{checklist}', [ChecklistController::class, 'delete'])->name('cards.checklist.delete');
 
     Route::post('/card/checklist/{checklist}/items', [ChecklistItemController::class, 'store'])->name('cards.checklist.items.store');
-    // TODO: Переделать на patch
     Route::patch('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'toggle'])->name('cards.checklist.item.toggle');
+
+    Route::post('/cards/{card}/comments', [CommentController::class, 'store'])->name('cards.comments.store');
 
     // Воркспейсы
     Route::post('/workspaces/{workspace}/labels', [LabelController::class, 'store'])->name('workspaces.labels.store');

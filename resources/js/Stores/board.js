@@ -141,6 +141,28 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  // Обновление дат (т.к. два поля сразу)
+  const addCommentForCard = async (cardId, comment) => {
+    const card = findCard(cardId)
+    if (!card) return
+    
+    try {
+      const response = await axios.post(route('cards.comments.store', cardId), {
+        content: comment
+      })
+
+      const newComment = response.data.createdComment
+
+      if (newComment) {
+
+        const card = findCard(cardId)
+        if (card) card.comments.push(newComment)
+      }
+    } catch (error) {
+      console.error('Ошибка создания чеклиста:', error)
+    }
+  }
+
   // --- Логика Чеклистов ---
   const createChecklist = async (cardId, title) => {
     try {
@@ -228,6 +250,7 @@ export const useBoardStore = defineStore('board', () => {
     selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
     saveColumnsOrder, saveCardOrder, findCard, updateCard,
     updateCardField, updateCardDates,
-    createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem
+    createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem,
+    addCommentForCard
   }
 })

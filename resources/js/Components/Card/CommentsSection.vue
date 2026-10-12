@@ -13,6 +13,7 @@ const props = defineProps({
 const page = usePage()
 const currentUser = computed(() => page.props.auth.user)
 const newComment = ref('')
+const emit = defineEmits(['change'])
 
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString('ru-RU', {
@@ -25,6 +26,8 @@ const formatDate = (date) => {
 
 const addComment = () => {
   if (!newComment.value.trim()) return
+
+  emit('change',newComment.value)
   
   // Add comment logic
   newComment.value = ''
@@ -63,14 +66,14 @@ const addComment = () => {
           v-model="newComment"
           @keydown.ctrl.enter="addComment"
           placeholder="Написать комментарий..."
-          class="w-full p-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          class="w-full p-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-100 resize-none"
           rows="3"
         ></textarea>
         <div class="mt-2 flex justify-end">
           <button 
             @click="addComment"
             :disabled="!newComment.trim()"
-            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+            class="px-2 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
           >
             Отправить
           </button>
