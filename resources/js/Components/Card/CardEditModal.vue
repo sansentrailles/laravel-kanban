@@ -50,6 +50,10 @@ const handleDeleteChecklist = (checklistId) => store.deleteChecklist(card.value.
 const handleAddItem = (checklistId, content) => store.addChecklistItem(card.value.id, checklistId, content)
 const handleToggleItem = (checklistId, itemId) => store.toggleChecklistItem(card.value.id, checklistId, itemId)
 const handleDeleteItem = (checklistId, itemId) => store.deleteChecklistItem(card.value.id, checklistId, itemId)
+const convertItemToCard = (checklistId, itemId) => {
+  store.convertItemToCard(card.value.id, itemId)
+  console.log('Конвертация в карточку:', checklistId, itemId)
+}
 
 // Прокси методы для комментариев
 const handleCreateComment = (comment) => store.addComment(card.value.id, comment)
@@ -57,9 +61,7 @@ const handleDeleteComment = (commentId) => store.deleteComment(card.value.id, co
 const handleEditComment = (params) => store.editComment(card.value.id, params);
 
 
-const convertItemToCard = (checklistId, itemId) => {
-  console.log('Конвертация в карточку:', checklistId, itemId)
-}
+
 </script>
 
 <template>

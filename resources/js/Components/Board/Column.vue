@@ -6,15 +6,19 @@ import WipLimitBar from '../UI/WipLimitBar.vue'
 import Card from './Card.vue'
 import AddCardForm from './AddCardForm.vue'
 import { useDraggable } from 'vue-draggable-plus'
-import { EllipsisVerticalIcon, PlusIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon } from '@heroicons/vue/24/outline'
+import { useBoardStore } from '@/Stores/board'
 
 const props = defineProps({
   column: { type: Object, required: true }
 })
 
+const store = useBoardStore()
+
 const emit = defineEmits(['card-click', 'card-drag-end'])
 const isDragging = ref(false)
 const cardsListRef = ref(null)
+const showAddCard = ref(false)
 
 // МАГИЯ ЗДЕСЬ: Привязываем Draggable напрямую к массиву карточек в Pinia!
 // props.column - это реактивный объект из стора. 
@@ -36,8 +40,11 @@ const handleCardClick = (card) => {
   emit('card-click', card)
 }
 
-const showAddCard = ref(false)
-// ... остальной UI код без изменений
+const addCard = (title) => {
+  // Вызываем экшен в сторе, передаем ID колонки и название
+  store.createCard(props.column.id, title)
+  showAddCard.value = false
+}
 </script>
 
 <template>
@@ -45,7 +52,7 @@ const showAddCard = ref(false)
     <!-- Header -->
     <div class="p-3 flex items-center justify-between column-handle">
       <div class="flex items-center gap-2">
-        <h3 class="font-semibold text-gray-900">{{ column.title }}</h3>
+        <h3 class="font-semibold text-gray-900">{{ column.title }} - {{ column.id }}</h3>
         <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
           {{ column.cards.length }}
         </span>
@@ -82,6 +89,21 @@ const showAddCard = ref(false)
       />
     </div>
     
-    <!-- Кнопка добавить -->
+    <div class="p-2">
+      <button 
+        @click="showAddCard = !showAddCard"
+        class="w-full text-left text-gray-600 hover:bg-gray-200 rounded px-2 py-1.5 text-sm flex items-center gap-2"
+      >
+        <PlusIcon class="w-4 h-4" />
+        Добавить карточку
+      </button>
+      
+      <AddCardForm 
+        v-if="showAddCard"
+        :column-id="column.id"
+        @submit="addCard"
+        @cancel="showAddCard = false"
+      />
+    </div>
   </div>
 </template>

@@ -1,6 +1,6 @@
+<!-- Components/Board/AddCardForm.vue -->
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { DocumentTextIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
+import { ref, onMounted, nextTick } from 'vue'
 
 const props = defineProps({
   columnId: {
@@ -11,80 +11,49 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-const form = reactive({
-  title: ''
-})
-
+const title = ref('')
 const titleInput = ref(null)
 
-onMounted(() => {
+onMounted(async () => {
+  await nextTick()
   titleInput.value?.focus()
 })
 
 const submit = () => {
-  if (!form.title.trim()) return
+  if (!title.value.trim()) return
   
-  emit('submit', {
-    title: form.title,
-    column_id: props.columnId
-  })
-  
-  form.title = ''
+  // Отправляем только название
+  emit('submit', title.value)
+  title.value = ''
 }
 </script>
 
 <template>
-  <form @submit.prevent="submit" class="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
-    <input type="text" 
-      v-model="form.title"
+  <form @submit.prevent="submit" class="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+    <input 
+      type="text" 
+      v-model="title"
       ref="titleInput"
       placeholder="Введите название карточки..."
-      class="w-full p-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 resize-none mb-2"
-      autofocus
+      class="w-full p-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-100 resize-none mb-2"
+      @keydown.esc="$emit('cancel')"
     />
-
-    <textarea
-      v-model="form.description"
-      placeholder="Введите описание карточки..."
-      class="w-full p-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-gray-500 resize-none"
-      rows="3"
-    ></textarea> 
     
-   
-    <div class="mt-3 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <button 
-          type="button"
-          class="p-1.5 text-gray-500 hover:bg-gray-100 rounded"
-          title="Добавить описание"
-        >
-          <DocumentTextIcon class="w-4 h-4" />
-        </button>
-        <button 
-          type="button"
-          class="p-1.5 text-gray-500 hover:bg-gray-100 rounded"
-          title="Добавить чек-лист"
-        >
-          <CheckCircleIcon class="w-4 h-4" />
-        </button>
-      </div>
-      
-      <div class="flex items-center gap-2">
-        <button 
-          type="button"
-          @click="$emit('cancel')"
-          class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded"
-        >
-          Отмена
-        </button>
-        <button 
-          type="submit"
-          :disabled="!form.title.trim()"
-          class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Добавить
-        </button>
-      </div>
+    <div class="flex items-center justify-end gap-2">
+      <button 
+        type="button"
+        @click="$emit('cancel')"
+        class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded"
+      >
+        Отмена
+      </button>
+      <button 
+        type="submit"
+        :disabled="!title.trim()"
+        class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Добавить
+      </button>
     </div>
   </form>
 </template>

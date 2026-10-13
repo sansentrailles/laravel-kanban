@@ -37,10 +37,30 @@ export const useBoardStore = defineStore('board', () => {
       .listen('.card.updated', (e) => {
         updateCard(e.card, true) // true = пришло по WS
       })
+      .listen('.card.created', (e) => {
+        const column = columns.value.find(c => c.id === e.card.column_id)
+        if (column) {
+          const exists = column.cards.some(c => c.id === e.card.id)
+          if (!exists) {
+            column.cards.push(e.card)
+          }
+        }
+      })
+      .listen('.column.updated', (e) => {
+        updateColumn(e.column, true) // true = пришло по WS
+      })
   }
 
   const disconnectRealtime = (workspaceId) => {
     window.Echo.leave(`board.${workspaceId}`)
+  }
+
+  const updateColumn = (updatedColumn, fromRealtime = false) => {
+    const index = columns.value.findIndex(c => c.id === updatedColumn.id)
+    if (index !== -1) {
+      // Мержим данные (например, если изменилось название колонки или WIP-лимит)
+      Object.assign(columns.value[index], updatedColumn)
+    }
   }
 
   // --- Обновление карточки ---
@@ -72,6 +92,32 @@ export const useBoardStore = defineStore('board', () => {
     } catch (error) {
       console.error('Ошибка сохранения порядка колонок:', error)
       // TODO: Откат на предыдущий порядок
+    }
+  }
+
+  // --- Создание карточки ---
+  const createCard = async (columnId, title) => {
+    // Находим колонку, в которую добавляем карточку
+    const column = columns.value.find(c => c.id === Number(columnId))
+    if (!column) return
+
+    try {
+      // Отправляем запрос на создание карточки
+      const response = await axios.post(route('boards.cards.store', columnId), {
+        title: title
+      })
+
+      const newCard = response.data.card // Предполагаем, что бэкенд вернет объект карточки
+
+      console.log('response: ', response)
+      console.log('response.data: ', response.data)
+
+      if (newCard) {
+        // Добавляем карточку в конец массива этой колонки
+        column.cards.push(newCard)
+      }
+    } catch (error) {
+      console.error('Ошибка создания карточки:', error)
     }
   }
 
@@ -281,16 +327,20 @@ export const useBoardStore = defineStore('board', () => {
     checklist.items = checklist.items.filter(i => i.id !== itemId)
 
     try {
-      await axios.delete(route('cards.checklist.item.delete', { checklist: checklistId, item: itemId }))
+      await axios.delete(route('cards.checklists.items.delete', { checklist: checklistId, item: itemId }))
     } catch (error) {
       checklist.items = oldItems // Откат
       console.error('Ошибка удаления пункта:', error)
     }
   }
 
+  const convertItemToCard = async (cardId, itemId) => {
+
+  }
+
   return {
     currentBoard, columns, selectedCard, filters, sortedColumns,
-    selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
+    createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
     saveColumnsOrder, saveCardOrder, findCard, updateCard,
     updateCardField, updateCardDates,
     createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem,

@@ -25,14 +25,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Создание колонки
     Route::post('/boards/{board}/columns', [ColumnController::class, 'store'])->name('boards.columns.store');
     Route::patch('/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
+
+    // Карточки
+    Route::post('/columns/{column}/cards/', [CardController::class, 'store'])->name('boards.cards.store');
     Route::patch('/cards/orders', [CardController::class, 'orders'])->name('boards.cards.orders');
     Route::patch('/cards/{card}', [CardController::class, 'update'])->name('boards.cards.update');
 
+    // Чеклисты
     Route::post('/card/{card}/checklist', [ChecklistController::class, 'store'])->name('cards.checklist.store');
     Route::delete('/card/checklist/{checklist}', [ChecklistController::class, 'delete'])->name('cards.checklist.delete');
-
     Route::post('/card/checklist/{checklist}/items', [ChecklistItemController::class, 'store'])->name('cards.checklist.items.store');
-    Route::patch('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'toggle'])->name('cards.checklist.item.toggle');
+    Route::patch('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'toggle'])->name('cards.checklists.items.toggle');
+    Route::delete('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'delete'])->name('cards.checklists.items.delete');
 
     Route::post('/cards/{card}/comments', [CommentController::class, 'store'])->name('cards.comments.store');
     Route::patch('/cards/{card}/comments/{comment}', [CommentController::class, 'update'])->name('cards.comments.edit');

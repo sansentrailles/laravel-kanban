@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers\Kanban;
 
+use App\Actions\Kanban\CreateCardAction;
 use App\Actions\Kanban\MoveCardAction;
 use App\Actions\Kanban\UpdateCardAction;
+use App\DTO\Kanban\CreateCardDTO;
 use App\DTO\Kanban\UpdateCardDTO;
+use App\Events\Kanban\CardCreated;
 use App\Events\Kanban\CardUpdated;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Kanban\CardCreateRequest;
 use App\Http\Requests\Kanban\CardOrderRequest;
 use App\Http\Requests\Kanban\CardUpdateRequest;
+use App\Http\Resources\Kanban\CardResource;
+use App\Http\Resources\Kanban\ColumnResource;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Column;
 use Illuminate\Http\JsonResponse;
@@ -16,9 +22,33 @@ use Illuminate\Http\JsonResponse;
 class CardController extends Controller
 {
     public function __construct(
-        private MoveCardAction $moveCardAction,
-        private UpdateCardAction $updateCardAction
+        private readonly MoveCardAction $moveCardAction,
+        private readonly UpdateCardAction $updateCardAction,
+        private readonly CreateCardAction $createCardAction
     ) {}
+
+    public function store(CardCreateRequest $reqeust, Column $column)
+    {
+        $dto = new CreateCardDTO(
+            title: $reqeust->validated('title'),
+            columnId: $column->id,
+        );
+
+        $lastCard = $column->cards()->reorder('ord', 'desc')->first();
+
+        $card = $this->createCardAction->execute($dto);
+        // Перемещаем в конец
+        // TODO: Возможно лучше вычислить ORD и передевать в экшн
+        $this->moveCardAction->execute($card, $column, $lastCard, null);
+
+        $card->fresh(['labels', 'checklists', 'assignees', 'comments.user']);
+
+        broadcast(new CardCreated($card))->toOthers();
+
+        return response()->json([
+            'card' => new CardResource($card),
+        ]);
+    }
 
     public function orders(CardOrderRequest $request): JsonResponse
     {
