@@ -7,14 +7,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Kanban\ChecklistItemResource;
 use App\Models\Kanban\Checklist;
 use App\Models\Kanban\ChecklistItem;
-use Illuminate\Support\Facades\Gate;
 
 class ChecklistItemController extends Controller
 {
     public function store(Checklist $checklist)
     {
         $item = $checklist->items()->create(request()->validate([
-            'content' => 'required|string|max:255', 
+            'content' => 'required|string|max:255',
         ]));
 
         $card = $checklist->card;

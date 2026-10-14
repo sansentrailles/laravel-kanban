@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Kanban;
 
-use App\Http\Controllers\Controller;
 use App\Actions\Kanban\CreateCommentAction;
 use App\DTO\Kanban\CreateCommentDTO;
 use App\Events\Kanban\CardUpdated;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Kanban\StoreCommentRequest;
 use App\Http\Requests\Kanban\UpdateCommentRequest;
 use App\Http\Resources\Kanban\CommentResource;

@@ -37,7 +37,7 @@ useDraggable(boardRef, store.columns, { // Привязываем напряму
   onEnd: (event) => {
     if (event.oldIndex === event.newIndex) return
     const orderedColumnIds = store.columns.map(col => col.id)
-    store.saveColumnsOrder(orderedColumnIds)
+    store.saveColumnsOrder(orderedColumnIds, props.board.id)
   }
 })
 

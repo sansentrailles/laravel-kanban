@@ -35,7 +35,7 @@ class StoreCommentRequest extends FormRequest
         ];
     }
 
-     /**
+    /**
      * Кастомные сообщения об ошибках валидации.
      */
     public function messages(): array

@@ -24,7 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Создание колонки
     Route::post('/boards/{board}/columns', [ColumnController::class, 'store'])->name('boards.columns.store');
-    Route::patch('/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
+    Route::patch('/boards/{board}/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
 
     // Карточки
     Route::post('/columns/{column}/cards/', [CardController::class, 'store'])->name('boards.cards.store');

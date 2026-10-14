@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Kanban;
 
 use App\Actions\Kanban\CreateColumnAction;
 use App\DTO\Kanban\CreateColumnDTO;
+use App\Events\Kanban\ColumnReordered;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kanban\ColumnOrderRequest;
 use App\Http\Requests\Kanban\StoreColumnRequest;
@@ -35,7 +36,7 @@ class ColumnController extends Controller
         return redirect()->back()->with('success', 'Колонка успешно создана');
     }
 
-    public function orders(ColumnOrderRequest $request)
+    public function orders(ColumnOrderRequest $request, Board $board)
     {
         $orders = $request->validated('ids');
 
@@ -46,6 +47,9 @@ class ColumnController extends Controller
                     Column::find($id)?->update(['ord' => ($index + 1) * 100]);
                 }
             });
+
+            $board->load(['columns']);
+            broadcast(new ColumnReordered($board))->toOthers();
 
             return response()->json([
                 'success' => true,

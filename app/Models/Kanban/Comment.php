@@ -3,17 +3,17 @@
 namespace App\Models\Kanban;
 
 use App\Models\User;
+use Database\Factories\Kanban\CommentFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 
 #[Table('kanban_comments')]
 class Comment extends Model
 {
-    /** @use HasFactory<\Database\Factories\Kanban\CommentFactory> */
+    /** @use HasFactory<CommentFactory> */
     use HasFactory;
 
     protected $fillable = [

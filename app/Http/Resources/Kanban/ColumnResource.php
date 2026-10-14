@@ -19,7 +19,7 @@ class ColumnResource extends JsonResource
             'board_id' => $this->board_id,
             'title' => $this->title,
             'color' => $this->color,
-            'order' => $this->order,
+            'ord' => $this->ord,
             'is_hidden' => $this->is_hidden,
             'wip_limit' => $this->wip_limit,
             'settings' => $this->settings ?? [],

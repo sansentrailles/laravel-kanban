@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Events\Kanban;
 
-use App\Http\Resources\Kanban\CardResource;
 use App\Http\Resources\Kanban\ColumnResource;
 use App\Models\Kanban\Column;
 use Illuminate\Broadcasting\InteractsWithSockets;

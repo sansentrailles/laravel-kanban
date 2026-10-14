@@ -47,7 +47,11 @@ export const useBoardStore = defineStore('board', () => {
         }
       })
       .listen('.column.updated', (e) => {
-        updateColumn(e.column, true) // true = пришло по WS
+        updateColumn(e.column)
+      })
+      .listen('.column.reordered', (e) => {
+        toast.info('Порядок колонок перестроен')
+        reorderColumns(e.columns)
       })
   }
 
@@ -60,6 +64,15 @@ export const useBoardStore = defineStore('board', () => {
     if (index !== -1) {
       // Мержим данные (например, если изменилось название колонки или WIP-лимит)
       Object.assign(columns.value[index], updatedColumn)
+    }
+  }
+
+  const reorderColumns = (cols) => {
+    for (const col of cols) {
+      const column = columns.value.find(c => c.id === Number(col.id))
+      if (column)  {
+        column.ord = col.ord
+      }
     }
   }
 
@@ -81,14 +94,14 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   // --- Drag & Drop Колонок ---
-  const saveColumnsOrder = async (ids) => {
+  const saveColumnsOrder = async (ids, boardId) => {
     // Оптимистично обновляем order
     columns.value.forEach((col, index) => {
       col.order = ids.indexOf(col.id)
     })
 
     try {
-      await axios.patch(`/columns/orders`, { ids })
+      await axios.patch(route('boards.columns.orders', boardId), { ids })
     } catch (error) {
       console.error('Ошибка сохранения порядка колонок:', error)
       // TODO: Откат на предыдущий порядок
@@ -108,9 +121,6 @@ export const useBoardStore = defineStore('board', () => {
       })
 
       const newCard = response.data.card // Предполагаем, что бэкенд вернет объект карточки
-
-      console.log('response: ', response)
-      console.log('response.data: ', response.data)
 
       if (newCard) {
         // Добавляем карточку в конец массива этой колонки
@@ -199,7 +209,6 @@ export const useBoardStore = defineStore('board', () => {
       const newComment = response.data.createdComment
 
       if (newComment) {
-
         const card = findCard(cardId)
         if (card) card.comments.push(newComment)
       }

@@ -14,7 +14,6 @@ use App\Http\Requests\Kanban\CardCreateRequest;
 use App\Http\Requests\Kanban\CardOrderRequest;
 use App\Http\Requests\Kanban\CardUpdateRequest;
 use App\Http\Resources\Kanban\CardResource;
-use App\Http\Resources\Kanban\ColumnResource;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Column;
 use Illuminate\Http\JsonResponse;
