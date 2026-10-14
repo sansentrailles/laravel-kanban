@@ -24,7 +24,7 @@ class BoardController extends Controller
         $user = Auth::user();
 
         $currentWorkspace = Workspace::where('slug', $slug)
-            ->with(['members', 'boards'])
+            ->with(['members', 'boards', 'labels'])
             ->firstOrFail();
 
         // Находим доску и жадно загружаем все необходимые связи

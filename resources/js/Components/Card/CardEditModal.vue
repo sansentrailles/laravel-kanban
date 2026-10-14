@@ -19,7 +19,8 @@ const page = usePage()
 
 const card = computed(() => store.selectedCard)
 
-const workspaceLabels = computed(() => page.props.workspaceLabels?.data || [])
+// const workspaceLabels = computed(() => page.props.workspaceLabels?.data || [])
+const workspaceLabels = computed(() => store.labels || [])
 const workspaceId = computed(() => page.props.currentWorkspace?.id)
 const availableUsers = computed(() => page.props.currentWorkspace?.members?.data || [])
 
@@ -55,12 +56,13 @@ const convertItemToCard = (checklistId, itemId) => {
   console.log('Конвертация в карточку:', checklistId, itemId)
 }
 
+// Методы методк
+const handleCreateLabel = (title, color) => store.createLabel(workspaceId.value, title, color)
+
 // Прокси методы для комментариев
 const handleCreateComment = (comment) => store.addComment(card.value.id, comment)
 const handleDeleteComment = (commentId) => store.deleteComment(card.value.id, commentId);
 const handleEditComment = (params) => store.editComment(card.value.id, params);
-
-
 
 </script>
 
@@ -88,7 +90,13 @@ const handleEditComment = (params) => store.editComment(card.value.id, params);
                 </FormField>
 
                 <FormField label="Метки">
-                  <LabelSelector :value="card.labels" :available-labels="workspaceLabels" :workspace-id="workspaceId" @change="updateLabels" />
+                  <LabelSelector
+                    :value="card.labels"
+                    :available-labels="workspaceLabels"
+                    :workspace-id="workspaceId"
+                    @change="updateLabels"
+                    @create-label="handleCreateLabel"
+                  />
                 </FormField>
 
                 <!-- Передаем card.id и колбэки для чеклистов -->

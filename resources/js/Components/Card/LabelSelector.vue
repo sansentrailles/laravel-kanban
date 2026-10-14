@@ -18,17 +18,14 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['change'])
+const emit = defineEmits(['change', 'create-label'])
 
 const isOpen = ref(false)
 const newLabelName = ref('')
+const newLabelColor = ref('#f3da4a')
+const isCreating = ref(false)
+const errorMessage = ref('')
 const dropdownRef = ref(null)
-
-const form = useForm({
-  name: '',
-  color: '',
-  description: '',
-})
 
 // ✅ Вычисляем список меток, которые еще НЕ выбраны у этой карточки
 const unselectedLabels = computed(() => {
@@ -47,27 +44,59 @@ const removeLabel = (labelId) => {
   emit('change', props.value.filter(l => l.id !== labelId))
 }
 
-const createNewLabel = () => {
-  if (!form.name.trim()) return
+const createNewLabel = async () => {
+  if (!newLabelName.value.trim()) return
+  
+  isCreating.value = true
+  errorMessage.value = ''
 
-  form.post(route('workspaces.labels.store', props.workspaceId), {
-    preserveScroll: true,
-    onSuccess: (page) => {
-      // Бэкенд возвращает созданную метку
-      const newLabel = page.props.createdLabel
+  try {
+    emit('create-label', newLabelName.value.trim(), newLabelColor.value)
+    // Вызываем действие из Pinia store
+    // const createdLabel = await boardStore.createLabel(props.workspaceId, {
+    //   name: newLabelName.value.trim(),
+    //   color: newLabelColor.value,
+    //   description: '',
+    // })
+
+    // if (createdLabel) {
+    //   emit('label-created', createdLabel)
       
-      // Добавляем её в список выбранных
-      emit('change', [...props.value, newLabel])
-      
-      // Сбрасываем форму
-      form.reset()
+      // Сброс формы
+      newLabelName.value = ''
+      newLabelColor.value = '#f3da4a'
       isOpen.value = false
-      
-      // Родитель должен обновить список availableLabels
-      // (через Inertia это произойдет автоматически, если передать через share)
-    },
-  })
+    // }
+  } catch (error) {
+    console.log(error);
+    
+    errorMessage.value = error.response?.data?.message || 'Не удалось создать метку'
+  } finally {
+    isCreating.value = false
+  }
 }
+
+// const createNewLabel = () => {
+//   if (!form.name.trim()) return
+
+//   form.post(route('workspaces.labels.store', props.workspaceId), {
+//     preserveScroll: true,
+//     onSuccess: (page) => {
+//       // Бэкенд возвращает созданную метку
+//       const newLabel = page.props.createdLabel
+      
+//       // Добавляем её в список выбранных
+//       emit('change', [...props.value, newLabel])
+      
+//       // Сбрасываем форму
+//       form.reset()
+//       isOpen.value = false
+      
+//       // Родитель должен обновить список availableLabels
+//       // (через Inertia это произойдет автоматически, если передать через share)
+//     },
+//   })
+// }
 
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
@@ -119,14 +148,10 @@ onUnmounted(() => {
         </button>
       </div>      
 
-      <!-- Кнопка создания новой метки -->
+        <!-- Дропдаун создания -->
       <div class="relative" ref="dropdownRef">
-        <button 
-          @click="isOpen = !isOpen"
-          class="border-2 border-transparent hover:border-gray-300 px-2 py-2 rounded-2xl" 
-          title="Добавить метку"
-        >
-          <PlusIcon class="w-3 h-3"/>
+        <button @click="isOpen = !isOpen" class="text-sm text-blue-600 hover:text-blue-700">
+          Добавить +
         </button>
         
         <div 
@@ -136,45 +161,48 @@ onUnmounted(() => {
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Название</label>
             <input
-              v-model="form.name"
+              v-model="newLabelName"
               type="text"
-              placeholder="Введите название метки"
-              class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-50"
+              placeholder="Название метки"
+              class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               @keyup.enter="createNewLabel"
+              :disabled="isCreating"
             />
-            <p v-if="form.errors.name" class="mt-1 text-xs text-red-600">{{ form.errors.name }}</p>
+            <p v-if="errorMessage" class="mt-1 text-xs text-red-600">{{ errorMessage }}</p>
           </div>
           
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Цвет</label>
             <div class="flex items-center gap-2">
               <input
-                v-model="form.color"
+                v-model="newLabelColor"
                 type="color"
-                class="w-8 h-8 rounded cursor-pointer border border-gray-300"
+                class="w-8 h-8 rounded cursor-pointer border border-gray-300 p-0"
+                :disabled="isCreating"
               />
               <input
-                v-model="form.color"
+                v-model="newLabelColor"
                 type="text"
                 class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-100 font-mono"
-                placeholder="#000000"
+                :disabled="isCreating"
               />
             </div>
           </div>
           
           <!-- Превью -->
-          <div class="flex items-center gap-2 p-2 rounded-full" :style="{ backgroundColor: form.color + '20' }">
-            <span class="text-xs font-medium" :style="{ color: form.color }">
-              {{ form.name || 'Пример метки' }}
+          <div class="flex items-center gap-2 p-2 rounded-full" :style="{ backgroundColor: newLabelColor + '20' }">
+            <span class="text-xs font-medium" :style="{ color: newLabelColor }">
+              {{ newLabelName.trim() || 'Пример метки' }}
             </span>
           </div>
           
           <button
             @click="createNewLabel"
-            :disabled="!form.name.trim() || form.processing"
-            class="w-full px-3 py-1.5 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            :disabled="!newLabelName.trim() || isCreating"
+            class="w-full px-3 py-1.5 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
-            {{ form.processing ? 'Создание...' : 'Создать метку' }}
+            <span v-if="isCreating" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            {{ isCreating ? 'Создание...' : 'Создать метку' }}
           </button>
         </div>
       </div>

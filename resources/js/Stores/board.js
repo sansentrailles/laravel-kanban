@@ -8,6 +8,7 @@ export const useBoardStore = defineStore('board', () => {
   const columns = ref([])
   const selectedCard = ref(null)
   const filters = ref({})
+  const labels = ref([])
 
   // Геттер для отсортированных колонок (используем order)
   const sortedColumns = computed(() => {
@@ -24,11 +25,14 @@ export const useBoardStore = defineStore('board', () => {
     return null
   }
 
-
   const setBoardData = (boardData) => {
     currentBoard.value = boardData
     // Сохраняем колонки и сразу сортируем
     columns.value = (boardData.columns?.data || []).sort((a, b) => a.ord - b.ord)
+  }
+
+  const setLabels = (workspaceLabels) => {
+    labels.value = workspaceLabels || []
   }
 
   // --- Realtime (Echo) ---
@@ -344,15 +348,37 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   const convertItemToCard = async (cardId, itemId) => {
+  }
 
+  const createLabel = async (workspaceId, title, color) => {
+    console.log(workspaceId, title, color)
+    try {
+      // const response = await axios.post(route('cards.checklist.items.store', checklistId), { content })
+      const response = await axios.post(route('workspaces.labels.store', workspaceId), {
+        name: title,
+        color: color,
+      })
+
+      const newLabel = response.data?.createdLabel
+      console.log('newLabel: ', newLabel)
+      if (newLabel) {
+        labels.value.push(newLabel)        
+      }
+
+    } catch (error) {
+      console.error('Ошибка переключения пункта:', error)
+      throw(error)
+    }
+    
   }
 
   return {
-    currentBoard, columns, selectedCard, filters, sortedColumns,
+    currentBoard, columns, selectedCard, filters, sortedColumns, labels,
     createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
     saveColumnsOrder, saveCardOrder, findCard, updateCard,
     updateCardField, updateCardDates,
     createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem,
-    addComment, deleteComment, editComment
+    addComment, deleteComment, editComment,
+    setLabels, createLabel
   }
 })

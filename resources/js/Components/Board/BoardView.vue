@@ -142,6 +142,7 @@ onUnmounted(() => {
     el.removeEventListener('wheel', handleWheel)
   }
 })
+
 // --------------------------
 </script>
 
@@ -152,7 +153,7 @@ onUnmounted(() => {
       @filter-change="applyFilters"
       @add-column="isShowCreateColumnModal = true"
     />
-    
+
     <div 
       ref="boardContainerRef"
       class="flex-1 overflow-x-auto overflow-y-hidden p-6 board-scroll cursor-grab"

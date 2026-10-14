@@ -26,7 +26,9 @@ class WorkspaceResource extends JsonResource
             // Отношения - загружаются только при жадной загрузке
             'owner' => new UserResource($this->whenLoaded('owner')),
             'members' => UserResource::collection($this->whenLoaded('members')),
-            'members_count' => $this->whenCounted('members'),
+            'labels' => LabelResource::collection($this->whenLoaded('labels')),
+
+            'members_count' => $this->whenCounted('members'),            
 
             'created_at' => $this->created_at->toIso8601String(),
         ];

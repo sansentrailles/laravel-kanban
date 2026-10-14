@@ -42,7 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/cards/{card}/comments/{comment}', [CommentController::class, 'update'])->name('cards.comments.edit');
     Route::delete('/cards/{card}/comments/{comment}', [CommentController::class, 'destroy'])->name('cards.comments.delete');
 
-    // Воркспейсы
+    // Метки
     Route::post('/workspaces/{workspace}/labels', [LabelController::class, 'store'])->name('workspaces.labels.store');
     // Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
     // Route::get('/workspaces/{slug}', [WorkspaceController::class, 'show'])->name('workspaces.show');
