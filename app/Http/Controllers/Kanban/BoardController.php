@@ -31,14 +31,28 @@ class BoardController extends Controller
         $board = Board::where('workspace_id', $currentWorkspace->id)
             ->where('uuid', $uuid)
             ->with([
-                'columns.cards',
-                'columns.cards.labels',       // Колонки -> Карточки -> Метки
-                'columns.cards.checklists',   // Колонки -> Карточки -> Чеклисты
-                'columns.cards.assignees',    // Колонки -> Карточки -> Исполнители
-                'columns.cards.comments.user',     // Колонки -> Карточки -> Комментарии
-                'workspace.labels',           // Метки воркспейса (для выпадающих списков)
+                // Группируем все действия для модели Card
+                'columns.cards' => function ($query) {
+                    $query->withCount([
+                        'comments',
+                        // 'attachments',
+                        'checklists'
+                        ]) // Добавляет атрибут comments_count
+                        ->with([
+                            'labels',
+                            'checklists',
+                            'attachments',
+                            'assignees',
+                            'comments.user'
+                        ]);
+                },
+                // Связи верхнего уровня
+                'workspace.labels',
             ])
             ->firstOrFail();
+
+        // dd(new BoardResource($board->columns[3]->cards[0]));
+        // dd(new BoardResource($board));
 
         // TODO: реализовать
         // $this->authorize('view', $board);

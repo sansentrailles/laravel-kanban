@@ -3,6 +3,7 @@
 namespace App\Models\Kanban;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * @mixin \Eloquent
  */
+#[Table('kanban_attachments')]
 class Attachment extends Model
 {
     protected $fillable = [

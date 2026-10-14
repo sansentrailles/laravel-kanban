@@ -28,6 +28,7 @@ final class CardResource extends JsonResource
             'labels' => LabelResource::collection($this->whenLoaded('labels')),
             'assignees' => UserResource::collection($this->whenLoaded('assignees')),
 
+            // TODO: Переделать на ресурс
             'checklists' => $this->whenLoaded('checklists', function () {
                 return $this->checklists->map(function ($checklist) {
                     return [
@@ -49,6 +50,7 @@ final class CardResource extends JsonResource
             // Агрегации
             'comments_count' => $this->whenCounted('comments'),
             'attachments_count' => $this->whenCounted('attachments'),
+            'checklists_count' => $this->whenCounted('checklists'),
 
             // Форматируем чек-листы в удобный для Vue формат { total: X, completed: Y }
             // 'checklist' => $this->whenLoaded('checklists', function () {

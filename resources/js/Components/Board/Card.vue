@@ -6,6 +6,8 @@ import {
   CalendarIcon, 
   ChatBubbleBottomCenterIcon
 } from '@heroicons/vue/24/outline'
+import { SquareCheckBig } from '@lucide/vue';
+
 import Avatar from '@/Components/UI/Avatar.vue'
 import LabelBadge from '@/Components/UI/LabelBadge.vue'
 
@@ -79,7 +81,7 @@ const hideTooltip = () => {
     <p v-if="card.description" class="text-xs text-gray-500 mb-2 line-clamp-2">
       {{ card.description }}
     </p>
-    
+
     <!-- Чек-лист прогресс -->
     <div v-if="card.checklist" class="mb-2">
       <div class="flex items-center gap-2 text-xs text-gray-600">
@@ -123,6 +125,14 @@ const hideTooltip = () => {
         <div v-if="card.comments_count" class="flex items-center gap-1">
           <ChatBubbleBottomCenterIcon class="w-3 h-3" />
           <span>{{ card.comments_count }}</span>
+        </div>
+
+        <!-- Чеклисты -->
+        <div v-if="card.checklists_count" class="flex items-center gap-1">
+          <SquareCheckBig
+            size="12"
+          />
+          <span>{{ card.checklists_count }}</span>
         </div>
         
         <!-- Вложения -->
