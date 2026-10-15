@@ -3,6 +3,7 @@
 // use App\Http\Controllers\HomeController;
 
 use App\Events\TestReverbEvent;
+use App\Http\Controllers\Kanban\AttachmentController;
 use App\Http\Controllers\Kanban\BoardController;
 use App\Http\Controllers\Kanban\CardController;
 use App\Http\Controllers\Kanban\ChecklistController;
@@ -46,6 +47,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/workspaces/{workspace}/labels', [LabelController::class, 'store'])->name('workspaces.labels.store');
     // Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
     // Route::get('/workspaces/{slug}', [WorkspaceController::class, 'show'])->name('workspaces.show');
+
+    // Вложения
+    Route::post('/cards/{card}/attachments', [AttachmentController::class, 'store'])->name('cards.attachments.store');
+    Route::delete('/cards/{card}/attachments', [AttachmentController::class, 'destroy'])->name('cards.attachments.destroy');
 });
 
 Route::middleware('auth')->group(function () {

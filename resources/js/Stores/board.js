@@ -365,6 +365,46 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  // Вложения
+  const uploadAttachment = async (cardId, files) => {
+
+    const card = findCard(cardId)
+    if (!card || !files.length) return
+
+    if (!card.attachments) card.attachments = []
+
+    for (const file of files) {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      try {
+        const response = await axios.post(route('cards.attachments.store', cardId), formData)
+
+        if (response.data.attachment) {
+          card.attachments.push(response.data.attachment)
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки файла: ', error)
+      }
+    }
+  }
+
+  const deleteAttachment = async (cardId, attachmentId) => {
+    const card = findCard(cardId)
+    if (!card) return
+
+    const oldAttachments = [...card.attachments]
+
+    card.attachments = card.attachmens.filter(a => a.id !== attachmentId)
+
+    try {
+      await axios.delete(route('cards.attachments.destroy', {card: cardId, attachment: attachmentId}))
+    } catch (error) {
+      card.attachments = oldAttachments
+      console.error('Ошибка удаления вложения:', error)
+    }
+  }
+
   return {
     currentBoard, columns, selectedCard, filters, sortedColumns, labels,
     createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
@@ -372,6 +412,7 @@ export const useBoardStore = defineStore('board', () => {
     updateCardField, updateCardDates,
     createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem,
     addComment, deleteComment, editComment,
-    setLabels, createLabel
+    setLabels, createLabel,
+    uploadAttachment, deleteAttachment
   }
 })

@@ -35,15 +35,15 @@ class BoardController extends Controller
                 'columns.cards' => function ($query) {
                     $query->withCount([
                         'comments',
-                        // 'attachments',
-                        'checklists'
-                        ]) // Добавляет атрибут comments_count
+                        'attachments',
+                        'checklists',
+                    ]) // Добавляет атрибут comments_count
                         ->with([
                             'labels',
                             'checklists',
                             'attachments',
                             'assignees',
-                            'comments.user'
+                            'comments.user',
                         ]);
                 },
                 // Связи верхнего уровня

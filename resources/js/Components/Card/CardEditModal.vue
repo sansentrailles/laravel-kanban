@@ -112,7 +112,11 @@ const handleEditComment = (params) => store.editComment(card.value.id, params);
                 </FormField>
 
                 <FormField label="Вложения">
-                  <AttachmentsList :attachments="card.attachments" />
+                  <AttachmentsList
+                    :attachments="card.attachments"
+                    @upload="(files) => store.uploadAttachment(card.id, files)"
+                    @delete="(attachemtId) => store.deleteAttacment(card.id, attachemtId)"
+                  />
                 </FormField>
 
                 <CommentsSection

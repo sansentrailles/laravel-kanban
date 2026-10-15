@@ -17,7 +17,7 @@ class LabelController extends Controller
         $label = $workspace->labels()->create($request->validated());
 
         // Возвращаем назад с созданной меткой
-       return response()->json([
+        return response()->json([
             'createdLabel' => new LabelResource($label),
         ]);
     }

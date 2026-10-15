@@ -34,6 +34,7 @@ const formatSize = (bytes) => {
 
 const handleFileSelect = (event) => {
   const files = Array.from(event.target.files)
+  console.log('handleFileSelect: ', files)
   emit('upload', files)
   event.target.value = ''
 }

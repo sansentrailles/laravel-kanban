@@ -28,7 +28,7 @@ class WorkspaceResource extends JsonResource
             'members' => UserResource::collection($this->whenLoaded('members')),
             'labels' => LabelResource::collection($this->whenLoaded('labels')),
 
-            'members_count' => $this->whenCounted('members'),            
+            'members_count' => $this->whenCounted('members'),
 
             'created_at' => $this->created_at->toIso8601String(),
         ];

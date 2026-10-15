@@ -71,7 +71,7 @@ const hideTooltip = () => {
         :label="label"
       />
     </div>
-    
+
     <!-- Заголовок -->
     <h4 class="text-sm font-medium text-gray-900 mb-2 line-clamp-2">
       {{ card.title }} {{ card.id }}
@@ -122,13 +122,21 @@ const hideTooltip = () => {
         </div>
         
         <!-- Комментарии -->
-        <div v-if="card.comments_count" class="flex items-center gap-1">
+        <div
+          v-if="card.comments_count"
+          class="flex items-center gap-1"
+          title="Комментарии"
+        >
           <ChatBubbleBottomCenterIcon class="w-3 h-3" />
           <span>{{ card.comments_count }}</span>
         </div>
 
         <!-- Чеклисты -->
-        <div v-if="card.checklists_count" class="flex items-center gap-1">
+        <div
+          v-if="card.checklists_count"
+          class="flex items-center gap-1"
+          title="Чеклисты"
+        >
           <SquareCheckBig
             size="12"
           />
@@ -147,6 +155,7 @@ const hideTooltip = () => {
         v-if="card.due_date"
         class="flex items-center gap-1"
         :class="{ 'text-red-600 font-medium': isOverdue }"
+        title="Дедлайн"
       >
         <CalendarIcon class="w-3 h-3" />
         <span>{{ formatDate(card.due_date) }}</span>

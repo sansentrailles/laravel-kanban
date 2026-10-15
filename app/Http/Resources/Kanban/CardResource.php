@@ -27,6 +27,7 @@ final class CardResource extends JsonResource
             // Связи
             'labels' => LabelResource::collection($this->whenLoaded('labels')),
             'assignees' => UserResource::collection($this->whenLoaded('assignees')),
+            'attachments' => AttachmentResource::collection($this->whenLoaded('attachments')),
 
             // TODO: Переделать на ресурс
             'checklists' => $this->whenLoaded('checklists', function () {
