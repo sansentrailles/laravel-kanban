@@ -323,7 +323,7 @@ export const useBoardStore = defineStore('board', () => {
     item.completed = !oldValue // Оптимистично меняем статус
 
     try {
-      await axios.patch(route('cards.checklist.item.toggle', { checklist: checklistId, item: itemId }))
+      await axios.patch(route('cards.checklists.items.toggle', { checklist: checklistId, item: itemId }))
     } catch (error) {
       item.completed = oldValue // Откат
       console.error('Ошибка переключения пункта:', error)
