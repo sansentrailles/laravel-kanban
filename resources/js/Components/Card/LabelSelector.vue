@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
-import { useForm } from '@inertiajs/vue3'
+import { XMarkIcon } from '@heroicons/vue/24/outline'
+import { useBoardStore } from '@/Stores/board';
 
 const props = defineProps({
   value: {
@@ -18,7 +18,9 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['change', 'create-label'])
+const store = useBoardStore()
+
+const emit = defineEmits(['change'])
 
 const isOpen = ref(false)
 const newLabelName = ref('')
@@ -51,22 +53,16 @@ const createNewLabel = async () => {
   errorMessage.value = ''
 
   try {
-    emit('create-label', newLabelName.value.trim(), newLabelColor.value)
-    // Вызываем действие из Pinia store
-    // const createdLabel = await boardStore.createLabel(props.workspaceId, {
-    //   name: newLabelName.value.trim(),
-    //   color: newLabelColor.value,
-    //   description: '',
-    // })
-
-    // if (createdLabel) {
-    //   emit('label-created', createdLabel)
+    const createdLabel = await store.createLabel(props.workspaceId, {
+      name: newLabelName.value.trim(),
+      color: newLabelColor.value,
+      description: '',
+    })
       
-      // Сброс формы
-      newLabelName.value = ''
-      newLabelColor.value = '#f3da4a'
-      isOpen.value = false
-    // }
+    // Сброс формы
+    newLabelName.value = ''
+    newLabelColor.value = '#f3da4a'
+    isOpen.value = false
   } catch (error) {
     console.log(error);
     
@@ -76,32 +72,11 @@ const createNewLabel = async () => {
   }
 }
 
-// const createNewLabel = () => {
-//   if (!form.name.trim()) return
-
-//   form.post(route('workspaces.labels.store', props.workspaceId), {
-//     preserveScroll: true,
-//     onSuccess: (page) => {
-//       // Бэкенд возвращает созданную метку
-//       const newLabel = page.props.createdLabel
-      
-//       // Добавляем её в список выбранных
-//       emit('change', [...props.value, newLabel])
-      
-//       // Сбрасываем форму
-//       form.reset()
-//       isOpen.value = false
-      
-//       // Родитель должен обновить список availableLabels
-//       // (через Inertia это произойдет автоматически, если передать через share)
-//     },
-//   })
-// }
-
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
     isOpen.value = false
     newLabelName.value = ''
+    errorMessage.value = ''
   }
 }
 
@@ -121,7 +96,7 @@ onUnmounted(() => {
       <div 
         v-for="label in value"
         :key="label.id"
-        class="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
+        class="flex items-center gap-1 px-2 py-1 mb-2 rounded-full text-xs font-medium"
         :style="{ backgroundColor: label.color + '20', color: label.color }"
       >
         {{ label.name }}
@@ -135,8 +110,8 @@ onUnmounted(() => {
     </div>
     
     <!-- Available labels -->
-    <div class="flex flex-wrap gap-1.5 justify-between">
-      <div>
+    <div class="flex items-start gap-3">
+      <div class="flex flex-wrap gap-1.5 flex-1">
         <button
           v-for="label in unselectedLabels"
           :key="label.id"
@@ -149,7 +124,7 @@ onUnmounted(() => {
       </div>      
 
         <!-- Дропдаун создания -->
-      <div class="relative" ref="dropdownRef">
+      <div class="relative shrink-0" ref="dropdownRef">
         <button @click="isOpen = !isOpen" class="text-sm text-blue-600 hover:text-blue-700">
           Добавить +
         </button>

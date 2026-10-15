@@ -350,26 +350,19 @@ export const useBoardStore = defineStore('board', () => {
   const convertItemToCard = async (cardId, itemId) => {
   }
 
-  const createLabel = async (workspaceId, title, color) => {
-    console.log(workspaceId, title, color)
+  const createLabel = async (workspaceId, labelData) => {
     try {
-      // const response = await axios.post(route('cards.checklist.items.store', checklistId), { content })
-      const response = await axios.post(route('workspaces.labels.store', workspaceId), {
-        name: title,
-        color: color,
-      })
-
-      const newLabel = response.data?.createdLabel
-      console.log('newLabel: ', newLabel)
+      const response = await axios.post(route('workspaces.labels.store', workspaceId), labelData)
+      const newLabel = response.data.createdLabel || response.data
+      
       if (newLabel) {
-        labels.value.push(newLabel)        
+        labels.value.push(newLabel)
+        return newLabel
       }
-
     } catch (error) {
-      console.error('Ошибка переключения пункта:', error)
-      throw(error)
+      console.error('Ошибка создания метки:', error)
+      throw error // Пробрасываем ошибку для обработки в компоненте
     }
-    
   }
 
   return {
