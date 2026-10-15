@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { TrashIcon } from '@heroicons/vue/24/outline'
 import ChecklistItem from './ChecklistItem.vue'
+import ChecklistProgress from './ChecklistProgress.vue'
 
 const props = defineProps({
   checklist: { type: Object, required: true }
@@ -60,6 +61,11 @@ const convertToCard = (itemId) => emit('to-card', itemId)
         </template>
       </div>
     </div>
+
+    <ChecklistProgress
+      v-if="checklist.items.length > 0"
+      :items="checklist.items"
+    />
 
     <div class="space-y-1 mb-2">
       <ChecklistItem
