@@ -56,9 +56,6 @@ const convertItemToCard = (checklistId, itemId) => {
   console.log('Конвертация в карточку:', checklistId, itemId)
 }
 
-// Методы методк
-const handleCreateLabel = (title, color) => store.createLabel(workspaceId.value, title, color)
-
 // Прокси методы для комментариев
 const handleCreateComment = (comment) => store.addComment(card.value.id, comment)
 const handleDeleteComment = (commentId) => store.deleteComment(card.value.id, commentId);
@@ -95,7 +92,6 @@ const handleEditComment = (params) => store.editComment(card.value.id, params);
                     :available-labels="workspaceLabels"
                     :workspace-id="workspaceId"
                     @change="updateLabels"
-                    @create-label="handleCreateLabel"
                   />
                 </FormField>
 

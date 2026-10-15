@@ -35,7 +35,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/card/{card}/checklist', [ChecklistController::class, 'store'])->name('cards.checklist.store');
     Route::delete('/card/checklist/{checklist}', [ChecklistController::class, 'delete'])->name('cards.checklist.delete');
     Route::post('/card/checklist/{checklist}/items', [ChecklistItemController::class, 'store'])->name('cards.checklist.items.store');
-    Route::patch('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'toggle'])->name('cards.checklists.items.toggle');
+    Route::patch('/card/checklist/{checklist}/items/{item}/toggle', [ChecklistItemController::class, 'toggle'])->name('cards.checklists.items.toggle');
     Route::delete('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'delete'])->name('cards.checklists.items.delete');
 
     Route::post('/cards/{card}/comments', [CommentController::class, 'store'])->name('cards.comments.store');
