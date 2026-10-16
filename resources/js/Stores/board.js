@@ -99,9 +99,10 @@ export const useBoardStore = defineStore('board', () => {
 
   // --- Drag & Drop Колонок ---
   const saveColumnsOrder = async (ids, boardId) => {
+    console.log(ids)
     // Оптимистично обновляем order
     columns.value.forEach((col, index) => {
-      col.order = ids.indexOf(col.id)
+      col.ord = ids.indexOf(col.id)
     })
 
     try {

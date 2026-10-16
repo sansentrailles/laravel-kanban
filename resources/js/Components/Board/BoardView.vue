@@ -31,9 +31,12 @@ const boardRef = ref(null)
 useDraggable(boardRef, store.columns, { // Привязываем напрямую к стору!
   group: 'columns',
   animation: 150,
-  handle: '.column-handle',
-  forceFallback: true,
-  ghostClass: 'ghost-column',
+  handle: '.column-handle', // Тянуть можно только за заголовок колонки
+  forceFallback: true,              // Включаем кастомный рендеринг перетаскивания
+  ghostClass: 'ghost-column',       // Класс для области, куда "упадет" колонка
+  chosenClass: 'chosen-column',     // Класс для колонки, которую начали тянуть
+  dragClass: 'drag-column',         // Класс для самого перемещаемого элемента (cursor)
+  fallbackClass: 'fallback-column',
   onEnd: (event) => {
     if (event.oldIndex === event.newIndex) return
     const orderedColumnIds = store.columns.map(col => col.id)
@@ -178,3 +181,55 @@ onUnmounted(() => {
     <CreateColumnModal v-model="isShowCreateColumnModal" :board-id="board.id" />
   </div>
 </template>
+
+<style scoped>
+
+/* Стилизация горизонтального скроллбара (для WebKit браузеров) */
+.board-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.board-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.board-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5); /* gray-400 с прозрачностью */
+  border-radius: 4px;
+}
+.board-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.8);
+}
+
+/* Базовые настройки контейнера скролла */
+.board-scroll {
+  overscroll-behavior-x: contain; /* Предотвращает "отскок" скролла на macOS */
+}
+
+/* Стили во время перетаскивания фона */
+.board-scroll.is-dragging {
+  cursor: grabbing !important;
+  user-select: none; /* Запрещаем выделение текста пока тянем фон */
+}
+
+/* Если стили scoped, используем :deep() */
+:deep(.ghost-column) {
+  background: rgba(59, 130, 246, 0.1); /* Полупрозрачный синий фон */
+  border: 2px dashed #3b82f6;          /* Пунктирная граница */
+  opacity: 0.7 !important;
+  border-radius: 8px;
+}
+
+:deep(.chosen-column) {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+/* Стиль для элемента, который висит под курсором мыши */
+:deep(.drag-column),
+:deep(.fallback-column) {
+  background: #ffffff !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: rotate(2deg); /* Легкий наклон для эффекта "взял карточку" */
+  opacity: 1 !important;
+  cursor: grabbing !important;
+}
+</style>

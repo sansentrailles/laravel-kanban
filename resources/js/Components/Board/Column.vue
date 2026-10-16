@@ -27,7 +27,12 @@ useDraggable(cardsListRef, props.column.cards, {
   group: 'cards',
   animation: 150,
   forceFallback: true,
-  ghostClass: 'ghost-card',
+  // --- ДОБАВЛЕННЫЕ ОПЦИИ ДЛЯ КАРТОЧЕК ---
+  forceFallback: true,             
+  ghostClass: 'ghost-card',         // Класс для плейсхолдера (куда упадет карточка)
+  chosenClass: 'chosen-card2',       // Класс для карточки, которую начали тянуть
+  dragClass: 'drag-card2',           // Класс для перемещаемой карточки
+  fallbackClass: 'fallback-card2',   // Кла
   onStart: () => { isDragging.value = true },
   onEnd: (event) => {
     setTimeout(() => { isDragging.value = false }, 0)
@@ -107,3 +112,35 @@ const addCard = (title) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Стили для перетаскиваемых карточек (используем :deep) */
+/* Плесхолдер - место, куда встанет карточка */
+:deep(.ghost-card) {
+  background: rgba(168, 85, 247, 0.1); /* Полупрозрачный фиолетовый фон */
+  border: 2px dashed #a855f7;          /* Пунктирная граница */
+  border-radius: 8px;
+  opacity: 0.2;
+  /* Можно задать фиксированную высоту, чтобы плейсхолдер не "прыгал" */
+  /* height: 60px; */
+}
+
+/* Элемент в момент клика до начала движения */
+:deep(.chosen-card2) {
+  cursor: grabbing;
+  opacity: 0.5 !important;
+  /* transform: rotate(1deg); */
+}
+
+/* "Призрак" карточки, который висит под курсором мыши */
+:deep(.drag-card2),
+:deep(.fallback-card2) 
+{
+  background: #ffffff !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  transform: rotate(2deg); /* Легкий наклон, как у Trello */
+  opacity: 0.85 !important;
+  cursor: grabbing !important;
+  border-radius: 8px;
+}
+</style>
