@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
-    Route::get('/workspaces}', [WorkspaceController::class, 'list'])->name('kanban.workspaces.index');
+    Route::get('/workspaces', [WorkspaceController::class, 'list'])->name('kanban.workspaces.index');
     Route::get('/workspaces/{slug}', [WorkspaceController::class, 'show'])->name('kanban.workspace');
     Route::get('/workspaces/{slug}/boards/{uuid}', [BoardController::class, 'show'])->name('kanban.board');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('kanban.workspaces.store');
@@ -28,7 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/boards/{board}/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
 
     // Карточки
-    Route::post('/columns/{column}/cards/', [CardController::class, 'store'])->name('boards.cards.store');
+    Route::post('/columns/{column}/cards', [CardController::class, 'store'])->name('boards.cards.store');
     Route::patch('/cards/orders', [CardController::class, 'orders'])->name('boards.cards.orders');
     Route::patch('/cards/{card}', [CardController::class, 'update'])->name('boards.cards.update');
 
