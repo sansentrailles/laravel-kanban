@@ -19,7 +19,9 @@
 ## Domain & data model
 - Hierarchy: Workspace → Board → Column → Card; Card has Comments, Checklists (+items), Attachments, Labels (per workspace). Authorization via `App\Policies\WorkspacePolicy` + pivot `workspace_user`.
 - Card/column ordering uses string decimal `ord` values (e.g. `'1000000000.0000000000'`) so cards can be inserted between neighbors without reordering the rest.
-- Mutations go through Actions (`app/Actions/**`); realtime updates broadcast Laravel events from `app/Events/Kanban` (CardCreated/Updated, Column*) via Reverb + Echo into the Pinia store `resources/js/Stores/board.js`.
+- Mutations go through Actions (`app/Actions/**`); realtime updates broadcast Laravel events from `app/Events/Kanban` (CardCreated/Updated/Moved, Column*) via Reverb + Echo into the Pinia store `resources/js/Stores/board.js`.
+- Realtime card move: `CardController@orders` broadcasts `CardMoved` with `->toOthers()`; it relies on the `X-Socket-Id` axios interceptor in `resources/js/bootstrap.js` — every axios request must keep sending it or the mover starts receiving its own events. Remote clients relocate the card via `moveCardRemote` (insert-by-`ord` in target column).
+- DnD architecture (frontend): `useDraggable` binds to a local copy (`localCards`) in `Column.vue`; the single source of truth is the store `applyCardMove`, after which `cardsRenderTick` forces a keyed full re-render of the card containers (SortableJS moves DOM nodes itself — without the tick the dragged card renders in both columns) and `draggable.start()` re-binds Sortable to the new DOM node.
 - Seeders: `DatabaseSeeder` + `KanbanSeeder`.
 
 ## Local host workflow (no Docker)
