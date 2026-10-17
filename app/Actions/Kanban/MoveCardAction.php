@@ -7,6 +7,7 @@ namespace App\Actions\Kanban;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Column;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 final class MoveCardAction
 {
@@ -16,6 +17,14 @@ final class MoveCardAction
     //  public function execute(Card $card, Column $targetColumn, ?Card $previousCard, ?Card $nextCard): Card
     public function execute(Card $card, Column $targetColumn, ?Card $prevCard, ?Card $nextCard): Card
     {
+        $isCrossColumnMove = (int) $card->column_id !== (int) $targetColumn->id;
+
+        if ($isCrossColumnMove && $targetColumn->isOverLimit()) {
+            throw ValidationException::withMessages([
+                'wip_limit' => "WIP-лимит колонки «{$targetColumn->title}» достигнут ({$targetColumn->wip_limit}). Карточка не может быть перенесена.",
+            ]);
+        }
+
         return DB::transaction(function () use ($card, $targetColumn, $prevCard, $nextCard) {
             $newOrder = $this->calculateOrder($prevCard, $nextCard);
 
@@ -23,10 +32,6 @@ final class MoveCardAction
                 'column_id' => $targetColumn->id,
                 'ord' => $newOrder,
             ]);
-
-            if ($targetColumn->isOverLimit()) {
-                // Логика обработки превышения лимита
-            }
 
             return $card->fresh();
         });

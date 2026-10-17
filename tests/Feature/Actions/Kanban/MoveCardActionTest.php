@@ -3,6 +3,7 @@
 use App\Actions\Kanban\MoveCardAction;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Column;
+use Illuminate\Validation\ValidationException;
 
 it('moves a card to an empty column with the base order', function () {
     $targetColumn = Column::factory()->create();
@@ -44,4 +45,46 @@ it('inserts a card between two neighbors with their midpoint order', function ()
 
     expect(bccomp((string) $result->ord, (string) $prev->ord))->toBe(1)
         ->and(bccomp((string) $result->ord, (string) $next->ord))->toBe(-1);
+});
+
+it('rejects moving a card into a column that is at its WIP limit', function () {
+    $limited = Column::factory()->create(['wip_limit' => 1]);
+    Card::factory()->create(['column_id' => $limited->id]);
+    $card = Card::factory()->create(); // another column
+
+    (new MoveCardAction)->execute($card, $limited, null, null);
+})->throws(ValidationException::class);
+
+it('keeps the card in its source column when the WIP limit blocks the move', function () {
+    $limited = Column::factory()->create(['wip_limit' => 1]);
+    $existing = Card::factory()->create(['column_id' => $limited->id]);
+    $card = Card::factory()->create();
+
+    try {
+        (new MoveCardAction)->execute($card, $limited, null, null);
+        $this->fail('ValidationException was not thrown.');
+    } catch (ValidationException $e) {
+        expect($card->fresh())
+            ->column_id->not->toBe($limited->id)
+            ->and($existing->fresh()->column_id)->toBe($limited->id);
+    }
+});
+
+it('allows reordering within a column that is at its WIP limit', function () {
+    $limited = Column::factory()->create(['wip_limit' => 1]);
+    $card = Card::factory()->create(['column_id' => $limited->id]);
+
+    $reordered = (new MoveCardAction)->execute($card, $limited, null, null);
+
+    expect($reordered->refresh()->column_id)->toBe($limited->id);
+});
+
+it('allows moving into a column that has free WIP capacity', function () {
+    $limited = Column::factory()->create(['wip_limit' => 2]);
+    Card::factory()->create(['column_id' => $limited->id]);
+    $card = Card::factory()->create();
+
+    $moved = (new MoveCardAction)->execute($card, $limited, null, null);
+
+    expect($moved->refresh()->column_id)->toBe($limited->id);
 });

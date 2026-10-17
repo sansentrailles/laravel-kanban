@@ -57,7 +57,6 @@ export const useBoardStore = defineStore('board', () => {
         updateColumn(e.column)
       })
       .listen('.column.reordered', (e) => {
-        toast.info('Порядок колонок перестроен')
         reorderColumns(e.columns)
       })
   }

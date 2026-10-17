@@ -7,6 +7,25 @@ use App\Models\User;
 use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Support\Facades\Queue;
 
+it('does not move a card into a column that is at its WIP limit', function () {
+    $user = User::factory()->create();
+    $limited = Column::factory()->create(['wip_limit' => 1]);
+    $card = Card::factory()->create(); // другой столбец без лимита
+
+    Card::factory()->create(['column_id' => $limited->id]);
+
+    $this->actingAs($user)
+        ->withHeaders(['Accept' => 'application/json']) // как реальный axios
+        ->patch(route('boards.cards.orders'), [
+            'cardId' => $card->id,
+            'columnId' => $limited->id,
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('wip_limit');
+
+    expect($card->refresh()->column_id)->not->toBe($limited->id);
+});
+
 it('moves a card between columns and queues a broadcast so other clients can sync', function () {
     Queue::fake();
 
