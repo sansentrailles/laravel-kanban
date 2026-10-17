@@ -80,6 +80,10 @@ export const useBoardStore = defineStore('board', () => {
         column.ord = col.ord
       }
     }
+    // Массив тоже держим отсортированным по ord: он напрямую привязан к SortableJS
+    // в BoardView, и при расхождении массива с DOM-порядком локальный драг после
+    // чужого reorder запишет перестановку в неверные индексы массива.
+    columns.value.sort((a, b) => a.ord - b.ord)
   }
 
   // --- Обновление карточки ---
@@ -100,18 +104,30 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   // --- Drag & Drop Колонок ---
+  // Формула ord на бэкенде — (index + 1) * 100; оптимистичное значение должно совпадать,
+  // иначе ord в сторе расходится с БД до перезагрузки страницы.
   const saveColumnsOrder = async (ids, boardId) => {
-    console.log(ids)
-    // Оптимистично обновляем order
-    columns.value.forEach((col, index) => {
-      col.ord = ids.indexOf(col.id)
+    // Снимок прежних ord для отката при ошибке (снимок делаем ДО оптимистичной записи,
+    // но AFTER SortableJS уже переставил массив columns в новый порядок)
+    const previousOrds = columns.value.map((col) => ({ id: col.id, ord: col.ord }))
+
+    ids.forEach((id, index) => {
+      const column = columns.value.find((col) => col.id === id)
+      if (column) column.ord = (index + 1) * 100
     })
 
     try {
       await axios.patch(route('boards.columns.orders', boardId), { ids })
     } catch (error) {
-      console.error('Ошибка сохранения порядка колонок:', error)
-      // TODO: Откат на предыдущий порядок
+      console.warn('Не удалось сохранить порядок колонок', {
+        response: error?.response?.data?.message,
+      })
+      // Откат: возвращаем прежние ord и пересортировываем массив под них
+      for (const { id, ord } of previousOrds) {
+        const column = columns.value.find((col) => col.id === id)
+        if (column) column.ord = ord
+      }
+      columns.value.sort((a, b) => a.ord - b.ord)
     }
   }
 
