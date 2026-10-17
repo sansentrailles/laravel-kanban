@@ -41,6 +41,9 @@ export const useBoardStore = defineStore('board', () => {
       .listen('.card.updated', (e) => {
         updateCard(e.card, true) // true = пришло по WS
       })
+      .listen('.card.moved', (e) => {
+        moveCardRemote(e.card)
+      })
       .listen('.card.created', (e) => {
         const column = columns.value.find(c => c.id === e.card.column_id)
         if (column) {
@@ -136,26 +139,155 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  // --- Перенос карточки, пришедший по realtime ---
+  // Карточка у нас уже есть (доска полная), в payload приходит ее новая колонка и ord.
+  // Убираем карточку из текущей колонки и вставляем в целевую по порядку ord.
+  const moveCardRemote = (updatedCard) => {
+    const cardId = updatedCard?.id
+    const targetColumnId = updatedCard?.column_id
+    if (!cardId || targetColumnId == null) return
+
+    // Находим, где карточка сейчас на этой доске
+    let ownerColumn = null
+    for (const column of columns.value) {
+      if (column.cards.some((c) => c.id === cardId)) {
+        ownerColumn = column
+        break
+      }
+    }
+
+    if (!ownerColumn) return // карточки нет на доске — двигать нечего
+
+    const card = ownerColumn.cards.find((c) => c.id === cardId)
+    Object.assign(card, updatedCard)
+
+    if (ownerColumn.id === targetColumnId) {
+      // Перенос внутри той же колонки — сортируем по ord
+      ownerColumn.cards.sort((a, b) => Number(a.ord) - Number(b.ord))
+      return
+    }
+
+    // Убираем из старой колонки
+    ownerColumn.cards = ownerColumn.cards.filter((c) => c.id !== cardId)
+
+    // Вставляем в целевую колонку на позицию по ord
+    const target = columns.value.find((col) => col.id === targetColumnId)
+    if (!target) {
+      ownerColumn.cards.push(card) // целевую колонку не нашли — вернем на место
+      return
+    }
+
+    let position = 0
+    while (position < target.cards.length && Number(target.cards[position].ord) < Number(updatedCard.ord)) {
+      position++
+    }
+    target.cards.splice(position, 0, card)
+  }
+
   // --- Drag & Drop Карточек ---
-  // VueDraggable сам поменяет массивы внутри columns.value при перемещении.
-  // В onEnd мы просто берем актуальное состояние и шлем на сервер.
-  const saveCardOrder = async (movedCardId, targetColumnId, targetCards) => {
-    const orderedCardIds = targetCards.map(c => c.id)
-    const index = orderedCardIds.indexOf(Number(movedCardId))
-    
+
+  // Единая точка изменения состояния при перемещении карточки.
+  // vue-draggable-plus работает с локальными копиями массивов в Column.vue,
+  // поэтому после дропа мы сами детерминированно переносим карточку в сторе,
+  // и Vue перестраивает обе колонки из данных стора.
+  const applyCardMove = (fromColumnId, toColumnId, cardId, targetIndex) => {
+    const source = columns.value.find((col) => col.id === fromColumnId)
+    const target = columns.value.find((col) => col.id === toColumnId)
+    if (!source || !target) return
+
+    // [инвариант] Карточка должна числиться ровно в одной колонке.
+    // Если вдруг она уже есть в целевой — считаем это следствием гонки и чиним.
+    const alreadyInTarget = target.cards.findIndex((card) => card.id === cardId)
+    if (alreadyInTarget !== -1) {
+      console.warn('Карточка уже числится в целевой колонке, дубль устранён', {
+        cardId, fromColumnId, toColumnId
+      })
+    }
+
+    const index = source.cards.findIndex((card) => card.id === cardId)
+    if (index === -1) {
+      if (alreadyInTarget !== -1) return // карточка уже в целевой, ничего делать не надо
+      console.error('Карточка не найдена в исходной колонке стора!', { cardId, fromColumnId })
+      return
+    }
+
+    // Splice-out + splice-in корректно работает и для тех же колонок (переупорядочивание),
+    // и для переноса между колонками, потому что sortable уже выставил финальный DOM-индекс.
+    const [card] = source.cards.splice(index, 1)
+    card.column_id = toColumnId
+    if (alreadyInTarget === -1) {
+      target.cards.splice(targetIndex, 0, card)
+    }
+    bumpCardsRenderTick()
+  }
+
+  // Счётчик для принудительной перерисовки контейнеров карточек после DnD.
+  // SortableJS физически перемещает DOM-узлы сам, Vue об этом не знает, и в целевой
+  // колонке всегда остаётся «призрак» перенесённого узла + узел Vue. Смена key
+  // заставляет Vue полностью пересобрать контейнеры из данных стора.
+  const cardsRenderTick = ref(0)
+  const bumpCardsRenderTick = () => {
+    cardsRenderTick.value++
+  }
+
+  // Снимок порядка карточек ДО перемещения (для отката, если сервер отклонит запрос).
+  // Должен снимать ДО мутации массивов, поэтому вызывается в onStart перетаскивания.
+  const boardSnapshot = ref(null)
+
+  const snapshotBoard = () => {
+    boardSnapshot.value = columns.value.map((col) => ({
+      colId: col.id,
+      cardIds: col.cards.map((c) => c.id),
+    }))
+  }
+
+  // Восстанавливает массивы карточек (и column_id карточек) по снапшоту
+  const restoreBoardSnapshot = () => {
+    if (!boardSnapshot.value) return
+
+    const allCards = columns.value.flatMap((col) => col.cards)
+
+    for (const { colId, cardIds } of boardSnapshot.value) {
+      const column = columns.value.find((c) => c.id === colId)
+      if (!column) continue
+
+      column.cards = cardIds
+        .map((id) => allCards.find((c) => c.id === id))
+        .filter(Boolean)
+
+      // Карточка снова числится в своей старой колонке
+      column.cards.forEach((card) => {
+        card.column_id = colId
+      })
+    }
+
+    bumpCardsRenderTick()
+    boardSnapshot.value = null
+  }
+
+  // Отправляет итоговую позицию карточки (prev/next уже посчитаны по финальному
+  // состоянию стора в applyCardMove)
+  const saveCardOrder = async (movedCardId, targetColumnId) => {
+    const cardId = Number(movedCardId)
+    const orderedCardIds = columns.value
+      .find((col) => col.id === Number(targetColumnId))
+      ?.cards.map((c) => c.id) ?? []
+
+    const index = orderedCardIds.indexOf(cardId)
     const prev = index > 0 ? orderedCardIds[index - 1] : null
-    const next = index < orderedCardIds.length - 1 ? orderedCardIds[index + 1] : null
+    const next = index !== -1 && index < orderedCardIds.length - 1 ? orderedCardIds[index + 1] : null
 
     try {
-      await axios.patch(`/cards/orders`, {
-        cardId: movedCardId,
-        columnId: targetColumnId,
+      await axios.patch(route('boards.cards.orders'), {
+        cardId: cardId,
+        columnId: Number(targetColumnId),
         prevCardId: prev,
         nextCardId: next
       })
+      boardSnapshot.value = null
     } catch (error) {
       console.error('Ошибка сохранения позиции карточки:', error)
-      // TODO: Откат (перечитывание доски с сервера)
+      restoreBoardSnapshot()
     }
   }
 
@@ -409,8 +541,9 @@ export const useBoardStore = defineStore('board', () => {
   return {
     currentBoard, columns, selectedCard, filters, sortedColumns, labels,
     createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
-    saveColumnsOrder, saveCardOrder, findCard, updateCard,
-    updateCardField, updateCardDates,
+    saveColumnsOrder, saveCardOrder, applyCardMove, findCard, updateCard,
+    updateCardField, updateCardDates, snapshotBoard,
+    cardsRenderTick, bumpCardsRenderTick,
     createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem,
     addComment, deleteComment, editComment,
     setLabels, createLabel,

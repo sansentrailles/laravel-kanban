@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import DropdownMenu from '../UI/DropdownMenu.vue'
 import DropdownMenuItem from '../UI/DropdownMenuItem.vue'
 import WipLimitBar from '../UI/WipLimitBar.vue'
@@ -20,28 +20,51 @@ const isDragging = ref(false)
 const cardsListRef = ref(null)
 const showAddCard = ref(false)
 
-// МАГИЯ ЗДЕСЬ: Привязываем Draggable напрямую к массиву карточек в Pinia!
-// props.column - это реактивный объект из стора. 
-// При перетаскивании vue-draggable-plus сам поменяет массив props.column.cards.
-useDraggable(cardsListRef, props.column.cards, {
+// vue-draggable-plus перетаскивает локальную КОПИЮ списка.
+// Истиной всегда является стор: после дропа BoardView вызывает store.applyCardMove,
+// стор мутируется один раз, и watcher ниже обновляет локальную копию —
+// Vue полностью перестраивает DOM из данных стора (нет дублей карточек).
+const localCards = ref([])
+
+watch(
+  () => [...props.column.cards],
+  (cards) => { localCards.value = [...cards] },
+  { immediate: true }
+)
+
+const draggable = useDraggable(cardsListRef, localCards, {
   group: 'cards',
   animation: 150,
   forceFallback: true,
-  // --- ДОБАВЛЕННЫЕ ОПЦИИ ДЛЯ КАРТОЧЕК ---
-  forceFallback: true,             
-  ghostClass: 'ghost-card',         // Класс для плейсхолдера (куда упадет карточка)
-  chosenClass: 'chosen-card2',       // Класс для карточки, которую начали тянуть
-  dragClass: 'drag-card2',           // Класс для перемещаемой карточки
-  fallbackClass: 'fallback-card2',   // Кла
-  onStart: () => { isDragging.value = true },
+  ghostClass: 'ghost-card',       // Класс для плейсхолдера (куда упадет карточка)
+  chosenClass: 'chosen-card2',    // Класс для карточки, которую начали тянуть
+  dragClass: 'drag-card2',        // Класс для перемещаемой карточки
+  fallbackClass: 'fallback-card2',
+  onStart: () => {
+    // Снимаем порядок карточек ДО того, как изменим стор в applyCardMove,
+    // чтобы было чем откатиться, если сервер отклонит запрос
+    store.snapshotBoard()
+    isDragging.value = true
+  },
   onEnd: (event) => {
     setTimeout(() => { isDragging.value = false }, 0)
     emit('card-drag-end', event) // Сообщаем родителю, что драг окончен (для API)
   }
 })
 
+// SortableJS перенес DOM-узел карточки сам, Vue об этом не знает — после дропа
+// делаем полную перерисовку контейнера из стор-данных (по ключу) и заново
+// инициализируем Sortable на новом DOM-узле контейнера.
+const cardsListKey = computed(() => `${props.column.id}-cards-${store.cardsRenderTick}`)
+
+watch(store.cardsRenderTick, () => {
+  nextTick(() => {
+    draggable.start()
+  })
+})
+
 const handleCardClick = (card) => {
-  if (isDragging.value) return 
+  if (isDragging.value) return
   emit('card-click', card)
 }
 
@@ -59,7 +82,7 @@ const addCard = (title) => {
       <div class="flex items-center gap-2">
         <h3 class="font-semibold text-gray-900">{{ column.title }} - {{ column.id }}</h3>
         <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
-          {{ column.cards.length }}
+          {{ localCards.length }}
         </span>
       </div>
       <DropdownMenu>
@@ -74,7 +97,7 @@ const addCard = (title) => {
     <!-- WIP Limit Bar (если установлен) -->
     <WipLimitBar 
       v-if="column.wip_limit"
-      :current="column.cards.length"
+      :current="localCards.length"
       :limit="column.wip_limit"
       :color="column.color"
     />
@@ -83,10 +106,11 @@ const addCard = (title) => {
     <div
       class="flex-1 overflow-y-auto p-2 space-y-2"
       ref="cardsListRef"
+      :key="cardsListKey"
       :data-column-id="column.id"
     >
       <Card
-        v-for="card in column.cards"
+        v-for="card in localCards"
         :key="card.id"
         :card="card"
         :data-card-id="card.id"

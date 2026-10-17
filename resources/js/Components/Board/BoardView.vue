@@ -2,7 +2,7 @@
 <script setup>
 import { useBoardStore } from '@/Stores/board'
 import { usePage } from "@inertiajs/vue3"
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import BoardHeader from './BoardHeader.vue'
 import Column from './Column.vue'
 import AddColumnButton from './AddColumnButton.vue'
@@ -51,25 +51,43 @@ const onCardDragEnd = (event) => {
   const movedCardId = event.item?.dataset?.cardId
   if (!movedCardId) return
 
-  // ID целевой колонки (с атрибута на контейнере списка в Column.vue)
-  // event.to - это DOM-элемент, куда упала карточка
-  const targetColumnId = event.to?.dataset?.columnId
-  if (!targetColumnId) return
+  // Колонки определяем по DOM-контейнерам в Column.vue (ids на data-атрибутах)
+  const fromColumnId = Number(event.from?.dataset?.columnId)
+  const targetColumnId = Number(event.to?.dataset?.columnId)
+  if (!fromColumnId || !targetColumnId) return
 
   // Если перетащили в ту же колонку на ту же позицию — ничего не делаем
   if (event.from === event.to && event.oldIndex === event.newIndex) {
     return
   }
 
-  // Находим колонку в сторе, чтобы получить актуальный список карточек
-  const targetColumn = store.columns.find(col => col.id === Number(targetColumnId))
-  if (!targetColumn) {
-    console.error('Целевая колонка не найдена в сторе!')
+  // Есть ли карточка вообще в исходной колонке в сторе
+  const sourceColumn = store.columns.find((col) => col.id === fromColumnId)
+  if (!sourceColumn?.cards.some((card) => card.id === Number(movedCardId))) {
+    console.error('Карточка не найдена в исходной колонке в сторе!')
     return
   }
 
-  // Отправляем на сервер
-  store.saveCardOrder(movedCardId, targetColumnId, targetColumn.cards)
+  // Детерминированно меняем стор (обе колонки перестроятся Vue'ем из этих данных)
+  store.applyCardMove(fromColumnId, targetColumnId, Number(movedCardId), event.newIndex)
+
+  // Отправляем итоговую позицию на сервер; при ошибке стор откатится по снапшоту
+  store.saveCardOrder(Number(movedCardId), targetColumnId)
+
+  // Аудит после отрисовки: после мутации стора и пересборки контейнера
+  // карточка должна существовать ровно в одном DOM-узле
+  nextTick(() => {
+    const cardId = Number(movedCardId)
+    const domCount = document.querySelectorAll(`[data-card-id="${cardId}"]`).length
+    if (domCount !== 1) {
+      console.warn('Проверка после перетаскивания: карточка отрисована не один раз', {
+        domCount,
+        columnsInStore: store.columns
+          .filter((col) => col.cards.some((card) => card.id === cardId))
+          .map((col) => col.id)
+      })
+    }
+  })
 }
 
 const openCardDetail = (card) => store.selectCard(card)
