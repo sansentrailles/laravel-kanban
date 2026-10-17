@@ -82,7 +82,14 @@ const addCard = (title) => {
 </script>
 
 <template>
-  <div class="column w-80 flex-shrink-0 bg-gray-100 rounded-lg flex flex-col max-h-full">
+  <div class="column w-80 flex-shrink-0 bg-gray-100 rounded-lg flex flex-col max-h-full overflow-hidden">
+    <!-- Полоска цвета колонки (если цвет установлен) -->
+    <div
+      v-if="column.color"
+      class="h-1.5 w-full"
+      :style="{ backgroundColor: column.color }"
+    />
+
     <!-- Header -->
     <div class="p-3 flex items-center justify-between column-handle">
       <div class="flex items-center gap-2">
