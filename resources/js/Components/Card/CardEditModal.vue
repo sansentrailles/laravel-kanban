@@ -1,8 +1,9 @@
 <script setup>
-import { useBoardStore } from '@/Stores/board';
-import { XMarkIcon } from '@heroicons/vue/24/outline';
-import { computed } from 'vue';
+import { XMarkIcon, PencilIcon } from '@heroicons/vue/24/outline';
+import { computed, nextTick, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+
+import { useBoardStore } from '@/Stores/board';
 
 import FormField from '../UI/FormField.vue';
 import DescriptionEditor from './DescriptionEditor.vue';
@@ -61,6 +62,37 @@ const handleCreateComment = (comment) => store.addComment(card.value.id, comment
 const handleDeleteComment = (commentId) => store.deleteComment(card.value.id, commentId);
 const handleEditComment = (params) => store.editComment(card.value.id, params);
 
+// --- Инлайн-редактирование заголовка в шапке модалки ---
+const isTitleEditing = ref(false)
+const titleDraft = ref('')
+const titleInput = ref(null)
+
+const startTitleEditing = () => {
+  titleDraft.value = card.value.title
+  isTitleEditing.value = true
+  // Фокус после монтирования input, с выделением всего текста
+  nextTick(() => {
+    titleInput.value?.focus()
+    titleInput.value?.select()
+  })
+}
+
+const cancelTitleEditing = () => {
+  isTitleEditing.value = false
+  titleDraft.value = ''
+}
+
+const commitTitle = () => {
+  const newTitle = titleDraft.value.trim()
+  isTitleEditing.value = false
+  titleDraft.value = ''
+
+  // Пустой заголовок сохранять нельзя — просто откатываемся к отображению
+  if (!newTitle || newTitle === card.value.title) return
+
+  store.updateCardField(card.value.id, 'title', newTitle)
+}
+
 </script>
 
 <template>
@@ -71,8 +103,30 @@ const handleEditComment = (params) => store.editComment(card.value.id, params);
 
         <div class="relative bg-white rounded-md shadow-2xl w-full max-w-4xl overflow-hidden h-[80vh] flex flex-col">
           <div class="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900">{{ card.title }}</h2>
-            <button @click="close" class="text-gray-400 hover:text-gray-600" aria-label="Закрыть">
+            <!-- Заголовок: клик по тексту включает инлайн-редактирование -->
+            <template v-if="!isTitleEditing">
+              <h2
+                class="text-xl font-semibold text-gray-900 cursor-text hover:text-gray-600 flex items-center gap-1.5 min-w-0"
+                title="Нажмите, чтобы отредактировать заголовок"
+                @click="startTitleEditing"
+              >
+                <span class="truncate">{{ card.title }}</span>
+                <PencilIcon class="w-4 h-4 flex-shrink-0 text-gray-300 hover:text-gray-500" />
+              </h2>
+            </template>
+            <input
+              v-else
+              ref="titleInput"
+              v-model="titleDraft"
+              type="text"
+              maxlength="255"
+              class="text-xl font-semibold text-gray-900 border-2 border-blue-500 rounded px-2 py-1 outline-none w-full max-w-xl"
+              @blur="commitTitle"
+              @keyup.enter="commitTitle"
+              @keyup.esc="cancelTitleEditing"
+            />
+
+            <button @click="close" class="ml-2 text-gray-400 hover:text-gray-600 flex-shrink-0" aria-label="Закрыть">
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
