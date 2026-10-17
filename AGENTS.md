@@ -1,3 +1,32 @@
+# Project Notes (kanban app)
+
+## Environment: development runs in Docker
+- Services (`docker-compose.yml`): `app` (PHP-FPM), `nginx` (:80), `db` (PostgreSQL 16), `redis` (cache/session/queue), `queue` worker, `reverb` (WebSockets, `BROADCAST_CONNECTION=reverb`). Frontend deps run in a separate `node` service.
+- Use the Makefile instead of host commands — it wraps everything in Docker with the right user (`HOST_UID`/`HOST_GID`): `make artisan CMD="..."`, `make composer CMD="..."`, `make npm-install PACKAGE=...`, `make test`, `make pest`, `make pint`, `make bash`, `make logs`. `make help` lists all.
+- `make init` is full first-run setup (env, containers, deps, key, Breeze install, npm build, migrate+seed). `make rebuild` wipes volumes — destructive (DB data and node_modules).
+- The README is in Russian and explains the Makefile commands, ports, and troubleshooting in detail.
+
+## Testing quirks
+- The app runs on PostgreSQL, but tests run on **SQLite `:memory:`** (overridden in `phpunit.xml`) with Pest + `RefreshDatabase`. Properties/postgres-specific types in migrations can break tests even when they work live.
+- Tests: `make pest` (root `vendor/bin/pest` inside the container) or `make test`. Host-installed-vendor scripts (e.g. `vendor/bin/pint --dirty`) work only if Composer deps were installed on the host, not just in Docker.
+- `make phpstan` fails: phpstan is not installed (`composer.json` has no phpstan in require-dev).
+
+## Stack & structure
+- Laravel 13 + PHP 8.5, Inertia v2 (Vue 3) + Breeze auth scaffold, Tailwind, Vite, Ziggy, Sanctum, Reverb.
+- Business logic lives in the Actions pattern: `app/Actions/Kanban/*Action.php`, with DTOs in `app/DTO` and `app/Enums`. Kanban models are namespaced `App\Models\Kanban\*`, controllers `App\Http\Controllers\Kanban\*`. Inertia pages in `resources/js/Pages`.
+- Routes identify boards by workspace `slug` and board `uuid` (`routes/web.php`).
+
+## Domain & data model
+- Hierarchy: Workspace → Board → Column → Card; Card has Comments, Checklists (+items), Attachments, Labels (per workspace). Authorization via `App\Policies\WorkspacePolicy` + pivot `workspace_user`.
+- Card/column ordering uses string decimal `ord` values (e.g. `'1000000000.0000000000'`) so cards can be inserted between neighbors without reordering the rest.
+- Mutations go through Actions (`app/Actions/**`); realtime updates broadcast Laravel events from `app/Events/Kanban` (CardCreated/Updated, Column*) via Reverb + Echo into the Pinia store `resources/js/Stores/board.js`.
+- Seeders: `DatabaseSeeder` + `KanbanSeeder`.
+
+## Local host workflow (no Docker)
+- `composer run dev` starts `artisan serve` + queue listener + Vite concurrently; `npm run build` needed for non-HMR things. But DB/Redis env vars in `.env.example` point at `db`/`redis` hostnames — host-only runs need adjusted values.
+
+---
+
 <laravel-boost-guidelines>
 === foundation rules ===
 

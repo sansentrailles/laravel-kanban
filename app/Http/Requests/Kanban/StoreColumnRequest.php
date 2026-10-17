@@ -45,7 +45,7 @@ class StoreColumnRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.uniqie' => 'Колонка с таким названием уже существует в этой доске',
+            'title.unique' => 'Колонка с таким названием уже существует в этой доске',
             'color.regex' => 'Цвет должен быть в формате HEX (например, #4b82f6)',
             'wip_limit.max' => 'WIP лимит не может превышать 100',
         ];

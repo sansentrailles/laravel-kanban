@@ -51,9 +51,6 @@ class BoardController extends Controller
             ])
             ->firstOrFail();
 
-        // dd(new BoardResource($board->columns[3]->cards[0]));
-        // dd(new BoardResource($board));
-
         // TODO: реализовать
         // $this->authorize('view', $board);
 

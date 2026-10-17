@@ -17,7 +17,7 @@ class CreateWorkspaceAction
             // Создание воркспейса
             $workspace = Workspace::create([
                 'name' => $dto->name,
-                'descritpion' => $dto->description,
+                'description' => $dto->description,
                 'owner_id' => $dto->ownerId,
             ]);
 

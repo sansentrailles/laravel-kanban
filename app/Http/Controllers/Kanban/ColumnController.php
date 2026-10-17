@@ -26,7 +26,7 @@ class ColumnController extends Controller
         $dto = new CreateColumnDTO(
             title: $request->validated('title'),
             color: $request->validated('color'),
-            wipLimit: $request->validated('wip_limmit'),
+            wipLimit: $request->validated('wip_limit'),
             boardId: $board->id,
             order: $maxOrder + 100,
         );

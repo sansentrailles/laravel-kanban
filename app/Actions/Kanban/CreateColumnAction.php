@@ -18,7 +18,7 @@ class CreateColumnAction
                 'title' => $dto->title,
                 'wip_limit' => $dto->wipLimit,
                 'color' => $dto->color,
-                'order' => $dto->order,
+                'ord' => $dto->order ?? 0,
             ]);
         });
     }
