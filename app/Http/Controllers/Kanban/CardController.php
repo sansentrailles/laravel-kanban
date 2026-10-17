@@ -8,6 +8,7 @@ use App\Actions\Kanban\UpdateCardAction;
 use App\DTO\Kanban\CreateCardDTO;
 use App\DTO\Kanban\UpdateCardDTO;
 use App\Events\Kanban\CardCreated;
+use App\Events\Kanban\CardMoved;
 use App\Events\Kanban\CardUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kanban\CardCreateRequest;
@@ -56,7 +57,9 @@ class CardController extends Controller
         $prevCard = Card::find($request->validated('prevCardId'));
         $nextCard = Card::find($request->validated('nextCardId'));
 
-        $this->moveCardAction->execute($card, $column, $prevCard, $nextCard);
+        $movedCard = $this->moveCardAction->execute($card, $column, $prevCard, $nextCard);
+
+        broadcast(new CardMoved($movedCard))->toOthers();
 
         return response()->json([
             'success' => true,
