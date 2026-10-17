@@ -49,7 +49,7 @@ class RegisteredUserController extends Controller
 
     //     Auth::login($user);
 
-    //     return redirect(route('dashboard', absolute: false));
+    //     return redirect(route('home', absolute: false));
     // }
 
     public function store(RegisterUserRequest $request): RedirectResponse
@@ -58,6 +58,6 @@ class RegisteredUserController extends Controller
         $user = $this->registerUserAction->handle($dto);
         Auth::login($user);
 
-        return to_route('dashboard');
+        return to_route('home');
     }
 }
