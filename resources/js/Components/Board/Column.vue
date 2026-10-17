@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import DropdownMenu from '../UI/DropdownMenu.vue'
 import DropdownMenuItem from '../UI/DropdownMenuItem.vue'
 import WipLimitBar from '../UI/WipLimitBar.vue'
@@ -55,13 +55,19 @@ const draggable = useDraggable(cardsListRef, localCards, {
 // SortableJS перенес DOM-узел карточки сам, Vue об этом не знает — после дропа
 // делаем полную перерисовку контейнера из стор-данных (по ключу) и заново
 // инициализируем Sortable на новом DOM-узле контейнера.
+// ВАЖНО: источник watch — геттер. store.cardsRenderTick разворачивается Pinia
+// в число, и watch по нему никогда не сработает.
 const cardsListKey = computed(() => `${props.column.id}-cards-${store.cardsRenderTick}`)
 
-watch(store.cardsRenderTick, () => {
-  nextTick(() => {
-    draggable.start()
-  })
-})
+watch(
+  () => store.cardsRenderTick,
+  () => {
+    // flush: 'post' — к этому моменту контейнер уже пересобран, cardsListRef указывает
+    // на новый DOM-узел: пересоздаем Sortable на нем
+    draggable?.start()
+  },
+  { flush: 'post' }
+)
 
 const handleCardClick = (card) => {
   if (isDragging.value) return

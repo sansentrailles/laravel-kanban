@@ -285,7 +285,12 @@ export const useBoardStore = defineStore('board', () => {
       })
       boardSnapshot.value = null
     } catch (error) {
-      console.error('Ошибка сохранения позиции карточки:', error)
+      console.warn('Не удалось сохранить позицию карточки', {
+        cardId,
+        targetColumnId,
+        response: error?.response?.status,
+        message: error?.response?.data?.message,
+      })
       restoreBoardSnapshot()
     }
   }
