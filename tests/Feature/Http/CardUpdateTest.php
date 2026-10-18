@@ -4,6 +4,7 @@ use App\Models\Kanban\Card;
 use App\Models\User;
 
 it('forbids updating a card for a user outside the workspace', function () {
+    /** @var \Tests\TestCase $this */
     $card = Card::factory()->create();
     $user = User::factory()->create();
 
@@ -17,6 +18,7 @@ it('forbids updating a card for a user outside the workspace', function () {
 });
 
 it('allows a workspace member to update a card', function () {
+    /** @var \Tests\TestCase $this */
     $user = User::factory()->create();
     $card = Card::factory()->create();
 
