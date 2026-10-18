@@ -370,6 +370,10 @@ test-filter: ## 🧪 Запустить тесты с фильтром (make tes
 pest: ## 🧪 Запустить Pest тесты
 	$(EXEC) ./vendor/bin/pest
 
+.PHONY: pest-file
+pest-file: ## 🧪 Запустить Pest тесты из конкретного файла (make pest-file FILE=tests/Feature/Http/CardMoveTest.php)
+	$(EXEC) ./vendor/bin/pest $(FILE)
+
 .PHONY: pint
 pint: ## 🎨 Исправить стиль кода с помощью Laravel Pint
 	$(EXEC) ./vendor/bin/pint
