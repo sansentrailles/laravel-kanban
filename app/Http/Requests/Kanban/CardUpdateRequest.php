@@ -14,12 +14,12 @@ class CardUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
         // БЕЗОПАСНОСТЬ: Проверяем права на обновление конкретной карточки.
         // Если в роуте параметр называется {card}, используем $this->route('card').
         // Если {id}, используем $this->route('id').
-        // $card = $this->route('card') ?? Card::findOrFail($this->route('id'));
-        // return $this->user()->can('update', $card);
+        $card = $this->route('card') ?? Card::findOrFail($this->route('id'));
+
+        return $this->user()->can('update', $card);
     }
 
     /**
