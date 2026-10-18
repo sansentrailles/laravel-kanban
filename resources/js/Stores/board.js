@@ -210,9 +210,14 @@ export const useBoardStore = defineStore('board', () => {
     const target = columns.value.find((col) => col.id === toColumnId)
     if (!source || !target) return
 
-    // [инвариант] Карточка должна числиться ровно в одной колонке.
+    // [инвариант] При переносе МЕЖДУ колонками карточка должна числиться ровно в одной колонке.
     // Если вдруг она уже есть в целевой — считаем это следствием гонки и чиним.
-    const alreadyInTarget = target.cards.findIndex((card) => card.id === cardId)
+    // ВАЖНО: для same-column (переупорядочивание) проверка не выполняется — там target === source,
+    // и карточка закономерно «уже в целевой» (index === position in source), иначе бы
+    // затем не сработал splice-in и карточка исчезала бы из стора.
+    const alreadyInTarget = fromColumnId === toColumnId
+      ? -1
+      : target.cards.findIndex((card) => card.id === cardId)
     if (alreadyInTarget !== -1) {
       console.warn('Карточка уже числится в целевой колонке, дубль устранён', {
         cardId, fromColumnId, toColumnId
@@ -226,10 +231,13 @@ export const useBoardStore = defineStore('board', () => {
       return
     }
 
-    // Splice-out + splice-in корректно работает и для тех же колонок (переупорядочивание),
+    // Splice-out + splice-in корректно работает и для тех же колонок (переупорядочивание):
+    // убрали по старому индексу — вставили по финальному DOM-индексу sortable,
     // и для переноса между колонками, потому что sortable уже выставил финальный DOM-индекс.
     const [card] = source.cards.splice(index, 1)
     card.column_id = toColumnId
+    // same-column: target === source, alreadyInTarget всегда -1 (см. выше) — вставка выполняется всегда.
+    // Перенос между колонками при гонке «карточка уже в целевой»: не вставляем второй раз.
     if (alreadyInTarget === -1) {
       target.cards.splice(targetIndex, 0, card)
     }
