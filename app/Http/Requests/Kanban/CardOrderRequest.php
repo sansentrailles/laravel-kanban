@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Kanban;
 
+use App\Models\Kanban\Card;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,8 +13,13 @@ class CardOrderRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // TODO: Реализовать проверку пользователя
-        return true;
+        $card = Card::find($this->input('cardId'));
+
+        if (! $card) {
+            return true;
+        }
+
+        return $this->user()->can('update', $card);
     }
 
     /**
