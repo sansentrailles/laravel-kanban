@@ -5,6 +5,11 @@ import { EllipsisVerticalIcon } from '@heroicons/vue/24/outline'
 const isOpen = ref(false)
 const dropdownRef = ref(null)
 
+// Родитель (Column.vue) закрывает меню после выбора пункта
+defineExpose({
+  close: () => { isOpen.value = false },
+})
+
 const handleClickOutside = (event) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
     isOpen.value = false

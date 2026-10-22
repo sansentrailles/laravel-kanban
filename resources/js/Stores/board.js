@@ -73,21 +73,24 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  // Смена цвета колонки (пункт меню «Сменить цвет» в Column.vue).
-  // Оптимистично красим полоску, при ошибке сервера откатываем предыдущий цвет.
-  const updateColumnColor = async (columnId, color) => {
+  // Частичное обновление поля колонки (цвет, название).
+  // Оптимистично меняем значение, при ошибке сервера откатываем старое.
+  const updateColumnField = async (columnId, fieldName, value, payloadKey = null) => {
     const column = columns.value.find((c) => c.id === Number(columnId))
     if (!column) return
 
-    const oldColor = column.color
-    column.color = color
+    const oldValue = column[fieldName]
+    column[fieldName] = value
 
     try {
-      await axios.patch(route('boards.columns.update', columnId), { color })
+      await axios.patch(route('boards.columns.update', columnId), {
+        [payloadKey || fieldName]: value
+      })
     } catch (error) {
-      column.color = oldColor
-      console.warn('Не удалось обновить цвет колонки', {
-        color,
+      column[fieldName] = oldValue
+      console.warn('Не удалось обновить колонку', {
+        fieldName,
+        value,
         response: error?.response?.status,
         message: error?.response?.data?.message,
       })
@@ -592,7 +595,7 @@ export const useBoardStore = defineStore('board', () => {
     createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
     saveColumnsOrder, saveCardOrder, applyCardMove, findCard, updateCard,
     updateCardField, updateCardDates, snapshotBoard,
-    updateColumnColor,
+    updateColumnField,
     cardsRenderTick, bumpCardsRenderTick,
     createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem,
     addComment, deleteComment, editComment,

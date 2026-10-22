@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import DropdownMenu from '../UI/DropdownMenu.vue'
 import DropdownMenuItem from '../UI/DropdownMenuItem.vue'
 import WipLimitBar from '../UI/WipLimitBar.vue'
@@ -82,15 +82,52 @@ const addCard = (title) => {
 
 // --- Смена цвета колонки через меню ---
 const colorInputRef = ref(null)
+const columnMenuRef = ref(null)
 
 const changeColor = () => {
+  columnMenuRef.value?.close()
   // Открываем нативный диалог выбора цвета браузера
   colorInputRef.value?.click()
 }
 
 const onColorChange = (event) => {
   // Инпут типа color всегда возвращает HEX #RRGGBB — валидация на бэке совпадает
-  store.updateColumnColor(props.column.id, event.target.value)
+  store.updateColumnField(props.column.id, 'color', event.target.value)
+}
+
+// --- Переименование колонки (инлайн в шапке) ---
+const isRenaming = ref(false)
+const titleDraft = ref('')
+const renameInputRef = ref(null)
+
+const startRenaming = () => {
+  columnMenuRef.value?.close()
+  titleDraft.value = props.column.title
+  isRenaming.value = true
+  // Фокус и выделение текста после монтирования input
+  nextTick(() => {
+    renameInputRef.value?.focus()
+    renameInputRef.value?.select()
+  })
+}
+
+const commitRename = () => {
+  const newTitle = titleDraft.value.trim()
+  isRenaming.value = false
+  titleDraft.value = ''
+
+  // Пустое название не отправляем; совпадение со старым — тоже
+  // (нет изменений, запрос не нужен)
+  if (!newTitle || newTitle === props.column.title) return
+
+  // Оптимистичное обновление в сторе; при ошибке сервер вернет (например, не
+  // уникальное название в этой доске -> 422) и значение откатится
+  store.updateColumnField(props.column.id, 'title', newTitle)
+}
+
+const cancelRenaming = () => {
+  isRenaming.value = false
+  titleDraft.value = ''
 }
 </script>
 
@@ -105,15 +142,28 @@ const onColorChange = (event) => {
 
     <!-- Header -->
     <div class="p-3 flex items-center justify-between column-handle">
-      <div class="flex items-center gap-2">
-        <h3 class="font-semibold text-gray-900">{{ column.title }} - {{ column.id }}</h3>
-        <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
-          {{ localCards.length }}
-        </span>
+      <div class="flex items-center gap-2 min-w-0">
+        <template v-if="!isRenaming">
+          <h3 class="font-semibold text-gray-900 truncate">{{ column.title }} - {{ column.id }}</h3>
+          <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+            {{ localCards.length }}
+          </span>
+        </template>
+        <input
+          v-else
+          ref="renameInputRef"
+          v-model="titleDraft"
+          type="text"
+          maxlength="255"
+          class="font-semibold text-gray-900 border-2 border-blue-500 rounded px-1.5 py-0.5 outline-none w-full"
+          @blur="commitRename"
+          @keyup.enter="commitRename"
+          @keyup.esc="cancelRenaming"
+        >
       </div>
-      <DropdownMenu>
+      <DropdownMenu ref="columnMenuRef">
+        <DropdownMenuItem @click="startRenaming">Переименовать</DropdownMenuItem>
         <DropdownMenuItem @click="changeColor">Сменить цвет</DropdownMenuItem>
-        <DropdownMenuItem @click="editColumn">Переименовать</DropdownMenuItem>
         <DropdownMenuItem @click="setWipLimit">WIP Лимит</DropdownMenuItem>
         <DropdownMenuItem @click="archiveColumn" class="text-red-600">
           Архивировать

@@ -22,7 +22,7 @@ readonly class UpdateColumnDTO
     {
         // safe()->only вернет только поля, прошедшие валидацию
         return new self(
-            $request->safe()->only(['color'])
+            $request->safe()->only(['color', 'title'])
         );
     }
 }

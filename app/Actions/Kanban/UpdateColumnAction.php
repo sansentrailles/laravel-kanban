@@ -11,7 +11,7 @@ class UpdateColumnAction
 {
     /**
      * Частичное обновление колонки: приходят только поля из запроса
-     * (сейчас — color), остальные данные колонки не трогаем.
+     * (сейчас — color / title), остальные данные колонки не трогаем.
      */
     public function execute(Column $column, UpdateColumnDTO $dto): Column
     {
