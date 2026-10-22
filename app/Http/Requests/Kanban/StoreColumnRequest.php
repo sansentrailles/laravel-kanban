@@ -10,10 +10,15 @@ use Illuminate\Validation\Rule;
 
 class StoreColumnRequest extends FormRequest
 {
+    /**
+     * Создание колонки в доске проверяет BoardPolicy::createColumn():
+     * участник воркспейса, к которому принадлежит доска.
+     * Роут-модель-биндинг гарантированно отдаёт Board (нет {board} — будет 404
+     * ещё до вызова authorize), поэтому защитной ветки на null не нужно.
+     */
     public function authorize(): bool
     {
-        // return $this->user()->can('update', $this->route('board'));
-        return true;
+        return $this->user()->can('createColumn', $this->route('board'));
     }
 
     public function rules(): array

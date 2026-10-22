@@ -27,7 +27,7 @@ class ColumnController extends Controller
 
     public function store(StoreColumnRequest $request, Board $board): RedirectResponse
     {
-        $maxOrder = $board->columns->max('order') ?? 0;
+        $maxOrder = $board->columns->max('ord') ?? 0;
 
         $dto = new CreateColumnDTO(
             title: $request->validated('title'),
