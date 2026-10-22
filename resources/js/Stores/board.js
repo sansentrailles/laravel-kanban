@@ -73,6 +73,27 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  // Смена цвета колонки (пункт меню «Сменить цвет» в Column.vue).
+  // Оптимистично красим полоску, при ошибке сервера откатываем предыдущий цвет.
+  const updateColumnColor = async (columnId, color) => {
+    const column = columns.value.find((c) => c.id === Number(columnId))
+    if (!column) return
+
+    const oldColor = column.color
+    column.color = color
+
+    try {
+      await axios.patch(route('boards.columns.update', columnId), { color })
+    } catch (error) {
+      column.color = oldColor
+      console.warn('Не удалось обновить цвет колонки', {
+        color,
+        response: error?.response?.status,
+        message: error?.response?.data?.message,
+      })
+    }
+  }
+
   const reorderColumns = (cols) => {
     for (const col of cols) {
       const column = columns.value.find(c => c.id === Number(col.id))
@@ -571,6 +592,7 @@ export const useBoardStore = defineStore('board', () => {
     createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
     saveColumnsOrder, saveCardOrder, applyCardMove, findCard, updateCard,
     updateCardField, updateCardDates, snapshotBoard,
+    updateColumnColor,
     cardsRenderTick, bumpCardsRenderTick,
     createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem,
     addComment, deleteComment, editComment,

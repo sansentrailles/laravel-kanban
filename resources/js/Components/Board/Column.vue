@@ -79,6 +79,19 @@ const addCard = (title) => {
   store.createCard(props.column.id, title)
   showAddCard.value = false
 }
+
+// --- Смена цвета колонки через меню ---
+const colorInputRef = ref(null)
+
+const changeColor = () => {
+  // Открываем нативный диалог выбора цвета браузера
+  colorInputRef.value?.click()
+}
+
+const onColorChange = (event) => {
+  // Инпут типа color всегда возвращает HEX #RRGGBB — валидация на бэке совпадает
+  store.updateColumnColor(props.column.id, event.target.value)
+}
 </script>
 
 <template>
@@ -99,12 +112,22 @@ const addCard = (title) => {
         </span>
       </div>
       <DropdownMenu>
+        <DropdownMenuItem @click="changeColor">Сменить цвет</DropdownMenuItem>
         <DropdownMenuItem @click="editColumn">Переименовать</DropdownMenuItem>
         <DropdownMenuItem @click="setWipLimit">WIP Лимит</DropdownMenuItem>
         <DropdownMenuItem @click="archiveColumn" class="text-red-600">
           Архивировать
         </DropdownMenuItem>
       </DropdownMenu>
+      <!-- Нативный color-picker: открываем программно из пункта меню,
+           диалог выбора цвета не требует дополнительных компонентов -->
+      <input
+        ref="colorInputRef"
+        type="color"
+        :value="column.color || '#4b82f6'"
+        class="sr-only"
+        @change="onColorChange"
+      >
     </div>
 
     <!-- WIP Limit Bar (если установлен) -->

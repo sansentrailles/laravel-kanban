@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Kanban;
 
 use App\Actions\Kanban\CreateColumnAction;
+use App\Actions\Kanban\UpdateColumnAction;
 use App\DTO\Kanban\CreateColumnDTO;
+use App\DTO\Kanban\UpdateColumnDTO;
 use App\Events\Kanban\ColumnReordered;
+use App\Events\Kanban\ColumnUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kanban\ColumnOrderRequest;
 use App\Http\Requests\Kanban\StoreColumnRequest;
+use App\Http\Requests\Kanban\UpdateColumnRequest;
+use App\Http\Resources\Kanban\ColumnResource;
 use App\Models\Kanban\Board;
 use App\Models\Kanban\Column;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +21,8 @@ use Illuminate\Support\Facades\DB;
 class ColumnController extends Controller
 {
     public function __construct(
-        private CreateColumnAction $createColumnAction
+        private CreateColumnAction $createColumnAction,
+        private UpdateColumnAction $updateColumnAction,
     ) {}
 
     public function store(StoreColumnRequest $request, Board $board): RedirectResponse
@@ -34,6 +40,27 @@ class ColumnController extends Controller
         $this->createColumnAction->execute($dto);
 
         return redirect()->back()->with('success', 'Колонка успешно создана');
+    }
+
+    /**
+     * Частичное обновление колонки (сейчас — смена цвета).
+     * Оповещаем других клиентов по realtime, чтобы полоска цвета
+     * у них перекрасилась без перезагрузки доски.
+     */
+    public function update(UpdateColumnRequest $request, Column $column)
+    {
+        $updatedColumn = $this->updateColumnAction->execute(
+            $column,
+            UpdateColumnDTO::fromRequest($request)
+        );
+
+        event(new ColumnUpdated($updatedColumn));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Колонка обновлена',
+            'column' => ColumnResource::make($updatedColumn)->resolve(),
+        ]);
     }
 
     public function orders(ColumnOrderRequest $request, Board $board)
