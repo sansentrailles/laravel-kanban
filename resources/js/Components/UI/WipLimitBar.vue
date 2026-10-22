@@ -13,6 +13,8 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['open'])
+
 const percentage = computed(() => {
   return Math.min((props.current / props.limit) * 100, 100)
 })
@@ -33,7 +35,7 @@ const barColor = computed(() => {
 </script>
 
 <template>
-  <div class="px-3 pb-2">
+  <div class="px-3 pb-2 cursor-pointer select-none" @click="$emit('open')">
     <div class="flex items-center justify-between text-xs mb-1">
       <span class="text-gray-600">WIP Лимит</span>
       <span 

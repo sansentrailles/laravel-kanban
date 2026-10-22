@@ -1,12 +1,12 @@
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import DropdownMenu from '../UI/DropdownMenu.vue'
 import DropdownMenuItem from '../UI/DropdownMenuItem.vue'
 import WipLimitBar from '../UI/WipLimitBar.vue'
 import Card from './Card.vue'
 import AddCardForm from './AddCardForm.vue'
 import { useDraggable } from 'vue-draggable-plus'
-import { PlusIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { useBoardStore } from '@/Stores/board'
 
 const props = defineProps({
@@ -95,10 +95,23 @@ const onColorChange = (event) => {
   store.updateColumnField(props.column.id, 'color', event.target.value)
 }
 
+const saveWipLimit = () => {
+  store.updateColumnField(props.column.id, 'wip_limit', wipLimitDraft.value)
+  closeWipPopover()
+}
+
+const resetWipLimit = () => {
+  store.updateColumnField(props.column.id, 'wip_limit', null)
+  closeWipPopover()
+}
+
+
+
 // --- Переименование колонки (инлайн в шапке) ---
 const isRenaming = ref(false)
 const titleDraft = ref('')
 const renameInputRef = ref(null)
+const wipLimit = ref(0);
 
 const startRenaming = () => {
   columnMenuRef.value?.close()
@@ -129,6 +142,54 @@ const cancelRenaming = () => {
   isRenaming.value = false
   titleDraft.value = ''
 }
+
+// --- WIP-лимит (поповер под шапкой колонки) ---
+// Пока только верстка: сохранение лимита добавим следующим шагом
+const showWipPopover = ref(false)
+const wipLimitDraft = ref('')
+const wipInputRef = ref(null)
+const wipPopoverRef = ref(null)
+
+const setWipLimit = () => {
+  columnMenuRef.value?.close()
+  // В инпуте показываем текущий лимит (или пусто, если его нет)
+  wipLimitDraft.value = props.column.wip_limit ?? ''
+  showWipPopover.value = true
+  nextTick(() => {
+    wipInputRef.value?.focus()
+  })
+}
+
+const closeWipPopover = () => {
+  showWipPopover.value = false
+  wipLimitDraft.value = ''
+}
+
+// --- Закрытие поповера по клику вне его ---
+// Слушатель вешаем только пока поповер открыт. Важно: attach через nextTick —
+// клик по пункту меню «WIP Лимит» ещё пузырится до document в момент открытия,
+// и постоянный слушатель закрыл бы поповер тем же самым кликом.
+const onDocumentClick = (event) => {
+  if (wipPopoverRef.value && !wipPopoverRef.value.contains(event.target)) {
+    closeWipPopover()
+  }
+}
+
+watch(showWipPopover, (isOpen) => {
+  if (isOpen) {
+    // setTimeout, а не nextTick: nextTick — микротаск и сработает МЕЖДУ
+    // слушателями всплывающего клика, то есть тот же клик по пункту меню
+    // сам же попадёт в свежеприкреплённый слушатель и мгновенно закроет
+    // поповер. Макротаск же исполняется уже после завершения таска всплытия.
+    setTimeout(() => document.addEventListener('click', onDocumentClick))
+  } else {
+    document.removeEventListener('click', onDocumentClick)
+  }
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', onDocumentClick)
+})
 </script>
 
 <template>
@@ -141,7 +202,7 @@ const cancelRenaming = () => {
     />
 
     <!-- Header -->
-    <div class="p-3 flex items-center justify-between column-handle">
+    <div class="p-3 relative flex items-center justify-between column-handle">
       <div class="flex items-center gap-2 min-w-0">
         <template v-if="!isRenaming">
           <h3 class="font-semibold text-gray-900 truncate">{{ column.title }} - {{ column.id }}</h3>
@@ -178,14 +239,72 @@ const cancelRenaming = () => {
         class="sr-only"
         @change="onColorChange"
       >
+
+      <!-- WIP-лимит: поповер под шапкой колонки. Пока только верстка,
+           кнопки сохранения не отправляют запросов -->
+      <div
+        v-if="showWipPopover"
+        ref="wipPopoverRef"
+        class="absolute top-full left-3 right-3 mt-1 z-20 bg-white rounded-lg shadow-lg border border-gray-200 p-3"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-semibold text-gray-900">WIP-лимит</span>
+          <button
+            type="button"
+            class="text-gray-400 hover:text-gray-600 rounded p-0.5"
+            title="Закрыть"
+            @click="closeWipPopover"
+          >
+            <XMarkIcon class="w-4 h-4" />
+          </button>
+        </div>
+
+        <p class="text-xs text-gray-500 mb-2">
+          Максимум карточек в колонке (1–100). Когда лимит достигнут,
+          перенести сюда еще одну карточку нельзя
+        </p>
+
+        <label class="sr-only" :for="`wip-input-${column.id}`">WIP-лимит</label>
+        <input
+          :id="`wip-input-${column.id}`"
+          ref="wipInputRef"
+          v-model="wipLimitDraft"
+          type="number"
+          min="1"
+          max="100"
+          class="w-full border-gray-300 rounded-md text-sm px-2 py-1.5 focus:border-blue-500 outline-none"
+          @keyup.esc="closeWipPopover"
+        >
+
+        <div class="flex items-center gap-2 mt-3">
+          <button
+            @click="saveWipLimit()"
+            type="button"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md px-2 py-1.5"
+          >
+            Сохранить
+          </button>
+          <button
+            type="button"
+            @click="resetWipLimit()"
+            class="text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md px-2 py-1.5"
+            :disabled="!column.wip_limit"
+            :class="{ 'opacity-40 cursor-not-allowed': !column.wip_limit }"
+          >
+            Снять лимит
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- WIP Limit Bar (если установлен) -->
     <WipLimitBar 
+      class="cursor-pointer"
       v-if="column.wip_limit"
       :current="localCards.length"
       :limit="column.wip_limit"
       :color="column.color"
+      @open="setWipLimit"
     />
 
     <!-- Список карточек -->

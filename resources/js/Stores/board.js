@@ -389,7 +389,7 @@ export const useBoardStore = defineStore('board', () => {
   const addComment = async (cardId, comment) => {
     const card = findCard(cardId)
     if (!card) return
-    
+
     try {
       const response = await axios.post(route('cards.comments.store', cardId), {
         content: comment
@@ -410,7 +410,7 @@ export const useBoardStore = defineStore('board', () => {
     const card = findCard(cardId)
     if (!card) return
     const oldComments = [...card.comments]
-    
+
     card.comments = card.comments.filter(c => c.id !== commentId)
 
     try {
@@ -437,9 +437,9 @@ export const useBoardStore = defineStore('board', () => {
     comment.is_edited = true
 
     try {
-      await axios.patch(route('cards.comments.edit', { 
-        card: cardId, 
-        comment: id 
+      await axios.patch(route('cards.comments.edit', {
+        card: cardId,
+        comment: id
       }), {
         content: content
       })
@@ -468,7 +468,7 @@ export const useBoardStore = defineStore('board', () => {
     const card = findCard(cardId)
     if (!card) return
     const oldChecklists = [...card.checklists]
-    
+
     // Оптимистичное удаление
     card.checklists = card.checklists.filter(c => c.id !== checklistId)
 
@@ -484,7 +484,7 @@ export const useBoardStore = defineStore('board', () => {
     try {
       const response = await axios.post(route('cards.checklist.items.store', checklistId), { content })
       const newItem = response.data.createdChecklistItem
-      
+
       const card = findCard(cardId)
       if (card) {
         const checklist = card.checklists.find(c => c.id === checklistId)
@@ -500,7 +500,7 @@ export const useBoardStore = defineStore('board', () => {
     if (!card) return
     const checklist = card.checklists.find(c => c.id === checklistId)
     if (!checklist) return
-    
+
     const item = checklist.items.find(i => i.id === itemId)
     if (!item) return
 
@@ -539,7 +539,7 @@ export const useBoardStore = defineStore('board', () => {
     try {
       const response = await axios.post(route('workspaces.labels.store', workspaceId), labelData)
       const newLabel = response.data.createdLabel || response.data
-      
+
       if (newLabel) {
         labels.value.push(newLabel)
         return newLabel

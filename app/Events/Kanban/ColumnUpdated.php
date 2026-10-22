@@ -19,7 +19,13 @@ final class ColumnUpdated implements ShouldBroadcast
     public function __construct(
         public Column $column
     ) {
-        $this->column->load(['cards']);
+        // Грузим ТОЛЬКО саму колонку, без вложенных карточек: событие ловит
+        // скалярные изменения (title/color/wip_limit), а их payload совпадает
+        // с ColumnResource::whenLoaded('cards') — ключ cards в него не попадает.
+        // Обработчик на фронте мержит колонку через Object.assign: карточки
+        // не трогаются, отдельные события (.card.*) отвечают за их состояние.
+        // Дополнительно: полный payload с карточками достигает лимита
+        // Reverb max_message_size (10 КБ) и молча теряется.
     }
 
     /**
@@ -29,7 +35,7 @@ final class ColumnUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('board.'.$this->column->workspace_id),
+            new PrivateChannel('board.'.$this->column->board->workspace_id),
         ];
     }
 
@@ -45,10 +51,10 @@ final class ColumnUpdated implements ShouldBroadcast
     /**
      * (Опционально) Форматируем данные перед отправкой, чтобы не тащить лишнее.
      */
-    // public function broadcastWith(): array
-    // {
-    //     return [
-    //         'card' => ColumnResource::make($this->column)->resolve(),
-    //     ];
-    // }
+    public function broadcastWith(): array
+    {
+        return [
+            'column' => ColumnResource::make($this->column),
+        ];
+    }
 }

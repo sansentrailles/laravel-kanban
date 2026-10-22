@@ -28,8 +28,14 @@ it('allows a workspace member to change the column color and queues a broadcast'
     expect($column->refresh()->color)->toBe('#10b981');
 
     Queue::assertPushed(BroadcastEvent::class, function (BroadcastEvent $job) use ($column) {
+        // Payload без карточек: ключ cards должен отсутствовать (whenLoaded
+        // его опускает), а скалярные поля колонки — присутствовать
+        $payload = $job->event->broadcastWith()['column']->resolve();
+
         return $job->event instanceof ColumnUpdated
-            && $job->event->column->id === $column->id;
+            && $job->event->column->id === $column->id
+            && ! array_key_exists('cards', $payload)
+            && $payload['color'] === '#10b981';
     });
 
     // Фронт может сразу применить ответ: колонка приходит в пейлоаде

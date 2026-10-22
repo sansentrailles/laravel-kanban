@@ -45,6 +45,12 @@ class UpdateColumnRequest extends FormRequest
                     // ...а своё текущее название (без изменений) считаем валидным
                     ->ignore($column->id),
             ],
+            'wip_limit' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:100',
+            ],
         ];
     }
 

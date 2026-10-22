@@ -54,7 +54,7 @@ class ColumnController extends Controller
             UpdateColumnDTO::fromRequest($request)
         );
 
-        event(new ColumnUpdated($updatedColumn));
+        broadcast(new ColumnUpdated($updatedColumn))->toOthers();
 
         return response()->json([
             'success' => true,
