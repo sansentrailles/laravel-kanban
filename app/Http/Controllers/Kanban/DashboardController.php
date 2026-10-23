@@ -21,8 +21,8 @@ class DashboardController extends Controller
 
             if ($board && $board->workspace->hasMember($user)) {
                 return redirect()->route('kanban.board', [
-                    'slug' => $board->workspace->slug,
-                    'uuid' => $board->uuid,
+                    'workspace' => $board->workspace->slug,
+                    'board' => $board->uuid,
                 ]);
             }
         }
