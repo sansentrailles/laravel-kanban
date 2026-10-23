@@ -12,56 +12,24 @@ use App\Http\Resources\Kanban\WorkspaceResource;
 use App\Models\Kanban\Board;
 use App\Models\Kanban\Workspace;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class BoardController extends Controller
 {
-    // Отображаем список воркспейсов пользоваеля
-    // TODO: Добавить проверку права пользователя смотреть доску
-    public function show(string $slug, string $uuid): Response
+    public function show(Workspace $workspace, Board $board, UpdateLastVisitedAction $updateLastVisitedAction): Response
     {
+        Gate::authorize('view', $board);
+
         $user = Auth::user();
 
-        $currentWorkspace = Workspace::where('slug', $slug)
-            ->with(['members', 'boards', 'labels'])
-            ->firstOrFail();
-
-        // Находим доску и жадно загружаем все необходимые связи
-        $board = Board::where('workspace_id', $currentWorkspace->id)
-            ->where('uuid', $uuid)
-            ->with([
-                // Группируем все действия для модели Card
-                'columns.cards' => function ($query) {
-                    $query->withCount([
-                        'comments',
-                        'attachments',
-                        'checklists',
-                    ]) // Добавляет атрибут comments_count
-                        ->with([
-                            'labels',
-                            'checklists',
-                            'attachments',
-                            'assignees',
-                            'comments.user',
-                        ]);
-                },
-                // Связи верхнего уровня
-                'workspace.labels',
-            ])
-            ->firstOrFail();
-
-        // TODO: реализовать
-        // $this->authorize('view', $board);
-
-        app(UpdateLastVisitedAction::class)->execute(
+        $updateLastVisitedAction->execute(
             $user,
-            workspaceId: $currentWorkspace->id,
+            workspaceId: $workspace->id,
             boardId: $board->id
         );
 
-        // Собираем данные для сайдбара (ИСПРАВЛЕННЫЙ ЗАПРОС)
-        // Получаем все воркспейсы, где пользователь является owner ИЛИ member
         $workspaces = Workspace::where('owner_id', $user->id)
             ->orWhereHas('members', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
@@ -69,18 +37,16 @@ class BoardController extends Controller
             ->withCount('members')
             ->get();
 
-        // Доски текущего воркспейса
-        $boards = $currentWorkspace->boards()
-            ->withCount('columns')
-            ->ordered()
-            ->get();
-
         return Inertia::render('Boards/Show', [
-            'board' => (new BoardResource($board))->resolve(),
+            'board' => BoardResource::make($board->load([
+                'columns.cards' => fn($q) => $q
+                    ->withCount(['comments', 'attachments', 'assignees'])
+                    ->with(['labels', 'checklists', 'attachments', 'assignees']),
+            ]))->resolve(),
+            'currentWorkspace' => WorkspaceResource::make($workspace->load('labels'))->resolve(),
+            'boards' => BoardResource::collection($workspace->boards()->withCount(['columns'])->ordered()->get())->resolve(),
+            'workspaceLabels' => LabelResource::collection($workspace->labels),
             'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
-            'currentWorkspace' => (new WorkspaceResource($currentWorkspace))->resolve(),
-            'boards' => BoardResource::collection($boards),
-            'workspaceLabels' => LabelResource::collection($currentWorkspace->labels),
             'unreadNotifications' => 0,
         ]);
     }

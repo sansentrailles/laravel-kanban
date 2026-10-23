@@ -172,4 +172,13 @@ class Board extends Model
     {
         return $query->orderBy('ord');
     }
+
+    public function scopeWithCardData($query)
+    {
+        return $query->with([
+            'columns.cards' => fn ($q) => $q
+                ->withCount(['comments', 'attachments', 'assignee'])
+                ->with(['labels', 'checklists', 'attachments', 'assignee']),
+        ]);
+    }
 }

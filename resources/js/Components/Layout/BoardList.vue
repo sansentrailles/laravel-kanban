@@ -26,7 +26,7 @@ defineEmits(['select', 'create'])
     <Link 
       v-for="board in boards.data"
       :key="board.id" 
-      :href="route('kanban.board', {slug: workspace.slug, uuid: board.uuid})"
+      :href="route('kanban.board', {workspace: workspace.slug, board: board.uuid})"
       class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-left"
       :class="activeBoardId === board.id 
         ? 'bg-slate-800 text-white' 
