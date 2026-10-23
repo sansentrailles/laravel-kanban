@@ -19,6 +19,11 @@ final class CardCreated implements ShouldBroadcast
     public function __construct(
         public Card $card
     ) {
+        // Payload события — НОВАЯ, самодостаточная сущность: фронт пушит её
+        // в массив карточек целиком, а Card.vue читает связи напрямую
+        // (card.labels.length и т.п.). Без загрузки связей whenLoaded просто
+        // опустит ключи, и рендер карточки упадёт на undefined.length.
+        // Карточка только что создана — связи почти пустые, payload легкий.
         $this->card->load(['checklists.items', 'labels', 'assignees', 'comments.user']);
     }
 

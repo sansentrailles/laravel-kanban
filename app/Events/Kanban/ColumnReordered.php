@@ -19,9 +19,7 @@ class ColumnReordered implements ShouldBroadcast
      */
     public function __construct(
         private Board $board
-    ) {
-        $this->board->load(['columns']);
-    }
+    ) {}
 
     /**
      * Определяем, на какой канал отправлять событие.

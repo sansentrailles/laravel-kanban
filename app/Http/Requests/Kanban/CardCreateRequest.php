@@ -8,11 +8,12 @@ use Illuminate\Foundation\Http\FormRequest;
 class CardCreateRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Право на создание карточки в колонке проверяет ColumnPolicy::createCard():
+     * участник воркспейса, к которому принадлежит колонка.
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('createCard', $this->route('column'));
     }
 
     /**
