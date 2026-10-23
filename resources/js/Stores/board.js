@@ -41,6 +41,12 @@ export const useBoardStore = defineStore('board', () => {
       .listen('.card.updated', (e) => {
         updateCard(e.card, true) // true = пришло по WS
       })
+      // Изменения комментариев и чек-листов приходят отдельными событиями
+      // с минимальным payload — патчим только нужный массив карточки.
+      .listen('.comment.created', (e) => applyCommentCreated(e))
+      .listen('.comment.updated', (e) => applyCommentUpdated(e))
+      .listen('.comment.deleted', (e) => applyCommentDeleted(e))
+      .listen('.checklist.updated', (e) => applyChecklistUpdated(e))
       .listen('.card.moved', (e) => {
         moveCardRemote(e.card)
       })
@@ -63,6 +69,46 @@ export const useBoardStore = defineStore('board', () => {
 
   const disconnectRealtime = (workspaceId) => {
     window.Echo.leave(`board.${workspaceId}`)
+  }
+
+  // --- Точечные realtime-обновления карточки ---
+  // Комментарии и чек-листы приходят отдельными событиями, а не в составе
+  // CardUpdated: у карточки может быть много комментариев, и полный payload
+  // рискует превысить лимит сообщения Reverb (~10 КБ).
+
+  const applyCommentCreated = ({ card_id: cardId, comment, comments_count: commentsCount }) => {
+    const card = findCard(cardId)
+    if (!card) return
+
+    if (!Array.isArray(card.comments)) card.comments = []
+    if (!card.comments.some((c) => c.id === comment.id)) {
+      card.comments.push(comment)
+    }
+    card.comments_count = commentsCount ?? card.comments.length
+  }
+
+  const applyCommentUpdated = ({ card_id: cardId, comment }) => {
+    const card = findCard(cardId)
+    if (!card || !Array.isArray(card.comments)) return
+
+    const existing = card.comments.find((c) => c.id === comment.id)
+    if (existing) Object.assign(existing, comment)
+  }
+
+  const applyCommentDeleted = ({ card_id: cardId, comment_id: commentId, comments_count: commentsCount }) => {
+    const card = findCard(cardId)
+    if (!card) return
+
+    card.comments = (card.comments || []).filter((c) => c.id !== commentId)
+    card.comments_count = commentsCount ?? card.comments.length
+  }
+
+  const applyChecklistUpdated = ({ card_id: cardId, checklists, checklists_count: checklistsCount }) => {
+    const card = findCard(cardId)
+    if (!card) return
+
+    card.checklists = checklists || []
+    card.checklists_count = checklistsCount ?? card.checklists.length
   }
 
   const updateColumn = (updatedColumn, fromRealtime = false) => {
@@ -399,7 +445,11 @@ export const useBoardStore = defineStore('board', () => {
 
       if (newComment) {
         const card = findCard(cardId)
-        if (card) card.comments.push(newComment)
+        if (card) {
+          if (!Array.isArray(card.comments)) card.comments = []
+          card.comments.push(newComment)
+          card.comments_count = card.comments.length
+        }
       }
     } catch (error) {
       console.error('Ошибка создания чеклиста:', error)
@@ -412,6 +462,7 @@ export const useBoardStore = defineStore('board', () => {
     const oldComments = [...card.comments]
 
     card.comments = card.comments.filter(c => c.id !== commentId)
+    card.comments_count = card.comments.length
 
     try {
       await axios.delete(route('cards.comments.delete', { card: card.id, comment: commentId }))
@@ -457,7 +508,11 @@ export const useBoardStore = defineStore('board', () => {
       const newChecklist = response.data.createdChecklist
       if (newChecklist) {
         const card = findCard(cardId)
-        if (card) card.checklists.push(newChecklist)
+        if (card) {
+          if (!Array.isArray(card.checklists)) card.checklists = []
+          card.checklists.push(newChecklist)
+          card.checklists_count = card.checklists.length
+        }
       }
     } catch (error) {
       console.error('Ошибка создания чеклиста:', error)
@@ -471,6 +526,7 @@ export const useBoardStore = defineStore('board', () => {
 
     // Оптимистичное удаление
     card.checklists = card.checklists.filter(c => c.id !== checklistId)
+    card.checklists_count = card.checklists.length
 
     try {
       await axios.delete(route('cards.checklist.delete', checklistId))

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Kanban;
 
-use App\Events\Kanban\CardUpdated;
+use App\Events\Kanban\ChecklistUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Kanban\ChecklistItemResource;
 use App\Models\Kanban\Checklist;
@@ -16,10 +16,7 @@ class ChecklistItemController extends Controller
             'content' => 'required|string|max:255',
         ]));
 
-        $card = $checklist->card;
-        $card->fresh()->load(['checklists.items', 'labels', 'assignees', 'comments']);
-
-        broadcast(new CardUpdated($checklist->card))->toOthers();
+        broadcast(new ChecklistUpdated($checklist->card))->toOthers();
 
         return response()->json([
             'createdChecklistItem' => $item,
@@ -32,10 +29,7 @@ class ChecklistItemController extends Controller
             'is_completed' => ! $item->is_completed,
         ]);
 
-        $card = $checklist->card;
-        $card->fresh()->load(['checklists.items', 'labels', 'assignees', 'comments']);
-
-        broadcast(new CardUpdated($checklist->card))->toOthers();
+        broadcast(new ChecklistUpdated($checklist->card))->toOthers();
 
         return response()->json([
             'updatedChecklistItems' => ChecklistItemResource::collection($checklist->items),
@@ -47,9 +41,7 @@ class ChecklistItemController extends Controller
         $card = $checklist->card;
         $item->delete();
 
-        $card->fresh()->load(['checklists.items', 'labels', 'assignees', 'comments']);
-
-        broadcast(new CardUpdated($card))->toOthers();
+        broadcast(new ChecklistUpdated($card))->toOthers();
 
         return response()->json([
             'success' => true,

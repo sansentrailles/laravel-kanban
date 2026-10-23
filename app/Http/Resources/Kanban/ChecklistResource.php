@@ -17,6 +17,9 @@ class ChecklistResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
+            // resolve() сразу, чтобы вложенная коллекция в payload события
+            // (и в тестах) была обычным массивом, как в CardResource
+            'items' => $this->whenLoaded('items', fn () => ChecklistItemResource::collection($this->items)->resolve()),
         ];
     }
 }

@@ -5,4 +5,5 @@ Before planning or editing, find the row whose globs match the file's path and r
 | Applies to | Rule file |
 | --- | --- |
 | docker-compose.yml | .ai/rules/general.md |
+| app/Events/Kanban/** | .ai/rules/kanban.md |
 | app/Http/Resources/** | .ai/rules/resources.md |
