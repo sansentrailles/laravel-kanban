@@ -39,9 +39,9 @@ class BoardController extends Controller
 
         return Inertia::render('Boards/Show', [
             'board' => BoardResource::make($board->load([
-                'columns.cards' => fn($q) => $q
-                    ->withCount(['comments', 'attachments', 'assignees'])
-                    ->with(['labels', 'checklists', 'attachments', 'assignees']),
+                'columns.cards' => fn ($q) => $q
+                    ->withCount(['comments', 'attachments', 'checklists'])
+                    ->with(['labels', 'checklists.items', 'attachments', 'assignees', 'comments.user']),
             ]))->resolve(),
             'currentWorkspace' => WorkspaceResource::make($workspace->load('labels'))->resolve(),
             'boards' => BoardResource::collection($workspace->boards()->withCount(['columns'])->ordered()->get())->resolve(),
