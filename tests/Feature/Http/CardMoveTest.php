@@ -53,9 +53,19 @@ it('moves a card between columns and queues a broadcast so other clients can syn
         ->column_id->toBe($targetColumn->id)
         ->and(bccomp((string) $card->ord, '1000000000.0000000000', 10))->toBe(0);
 
-    Queue::assertPushed(BroadcastEvent::class, function (BroadcastEvent $job) use ($card) {
-        return $job->event instanceof CardMoved
-            && $job->event->card->id === $card->id;
+    Queue::assertPushed(BroadcastEvent::class, function (BroadcastEvent $job) use ($card, $targetColumn) {
+        if (! $job->event instanceof CardMoved || $job->event->card->id !== $card->id) {
+            return false;
+        }
+
+        // Регрессия: ресурс отдавал порядок под несуществующим ключом 'order',
+        // а фронт (moveCardRemote) читает updatedCard.ord. Из-за NaN при
+        // сравнении удалённый клиент вставлял карточку всегда первой и не
+        // менял порядок при переупорядочивании внутри колонки.
+        $payloadCard = $job->event->broadcastWith()['card'];
+
+        return ($payloadCard['ord'] ?? null) === (string) $card->ord
+            && ($payloadCard['column_id'] ?? null) === $targetColumn->id;
     });
 });
 
