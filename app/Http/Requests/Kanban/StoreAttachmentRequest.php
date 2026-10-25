@@ -20,7 +20,7 @@ final class StoreAttachmentRequest extends FormRequest
         return [
             'file' => [
                 'required',
-                File::types(['jpeg', 'png', 'jpg', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'txt', 'md', 'zip', 'rar'])
+                File::types(['jpeg', 'png', 'jpg', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'txt', 'md', 'rar'])
                     ->max(10 * 1024), // Максимум 10 МБ
             ],
         ];
