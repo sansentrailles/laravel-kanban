@@ -15,6 +15,7 @@ use App\Http\Requests\Kanban\UpdateColumnRequest;
 use App\Http\Resources\Kanban\ColumnResource;
 use App\Models\Kanban\Board;
 use App\Models\Kanban\Column;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -63,28 +64,28 @@ class ColumnController extends Controller
         ]);
     }
 
-    public function orders(ColumnOrderRequest $request, Board $board)
+    public function orders(ColumnOrderRequest $request, Board $board): JsonResponse
     {
-        $orders = $request->validated('ids');
+        $ids = collect($request->validated('ids'));
+        $columns = $board->columns()->get();
 
-        // Колонок не много, можно обновлять в цикле
-        try {
-            DB::transaction(function () use ($orders) {
-                foreach ($orders as $index => $id) {
-                    Column::find($id)?->update(['ord' => ($index + 1) * 100]);
-                }
-            });
+        $incomingIds = $ids->sort()->values();
+        $existingIds = $columns->pluck('id')->sort()->values();
 
-            $board->load(['columns']);
-            broadcast(new ColumnReordered($board))->toOthers();
+        abort_if($incomingIds->all() !== $existingIds->all(), 404);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Порядок обновлен',
-            ]);
-        } catch (\Throwable $e) {
-            // Любая ошибка внутри транзакции приведет к откату
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
+        $columnById = $columns->keyBy('id');
+        DB::transaction(function () use ($ids, $columnById) {
+            foreach ($ids as $index => $id) {
+                $columnById[$id]->update(['ord' => ($index + 1) * 100]);
+            }
+        });
+
+        broadcast(new ColumnReordered($board))->toOthers();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Порядок обновлен',
+        ]);
     }
 }

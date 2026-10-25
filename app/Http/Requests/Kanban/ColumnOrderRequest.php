@@ -12,8 +12,7 @@ class ColumnOrderRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // TODO: Добавить проверку пользователя
-        return true;
+        return $this->user()->can('update', $this->route('board'));
     }
 
     /**

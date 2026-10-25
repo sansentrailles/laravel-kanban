@@ -22,4 +22,9 @@ class BoardPolicy
     {
         return $board->workspace->hasMember($user);
     }
+
+    public function update(User $user, Board $board): bool
+    {
+        return $board->workspace->hasMember($user);
+    }
 }

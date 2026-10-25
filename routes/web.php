@@ -23,7 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/workspaces/{workspace:slug}/boards/{board:uuid}', [BoardController::class, 'show'])->name('kanban.board');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('kanban.workspaces.store');
 
-    // Создание колонки
+    // Колонки
     Route::post('/boards/{board}/columns', [ColumnController::class, 'store'])->name('boards.columns.store');
     Route::patch('/boards/{board}/columns/orders', [ColumnController::class, 'orders'])->name('boards.columns.orders');
     Route::patch('/columns/{column}', [ColumnController::class, 'update'])->name('boards.columns.update');

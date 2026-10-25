@@ -6,8 +6,11 @@ use App\Models\Kanban\Column;
 use App\Models\Kanban\Workspace;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 it('renders the board page with a self-contained card payload', function () {
+    /** @var TestCase $this */
+
     // Регрессия: карточки на доске приходили без ключа comments (whenLoaded
     // опускал связь) — стор падал на card.comments.push при добавлении
     // комментария; без checklists_count пропадал счётчик на карточке.

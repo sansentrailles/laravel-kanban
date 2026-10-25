@@ -3,8 +3,10 @@
 use App\Actions\Kanban\CreateColumnAction;
 use App\DTO\Kanban\CreateColumnDTO;
 use App\Models\Kanban\Board;
+use Tests\TestCase;
 
 it('creates a column with the provided attributes', function () {
+    /** @var TestCase $this */
     $board = Board::factory()->create();
 
     $column = (new CreateColumnAction)->execute(
