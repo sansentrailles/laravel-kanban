@@ -6,7 +6,6 @@ import SidebarNavItem from '@/Components/Layout/SidebarNavItem.vue'
 import BoardList from '@/Components/Layout/BoardList.vue'
 import UserProfileDropdown from '@/Components/Layout/UserProfileDropdown.vue'
 import Topbar from '@/Components/Layout/Topbar.vue'
-import CardDetailDrawer from '@/Components/Card/CardDetailDrawer.vue'
 import ToastContainer from '@/Components/UI/ToastContainer.vue'
 import { useBoardStore } from '@/Stores/board'
 import CreateWorkspaceModal from '@/Components/Workspace/CreateWorkspaceModal.vue'
@@ -104,10 +103,6 @@ const handleFilterChange = (filters) => {
     <!-- Global Overlays -->
     <CardEditModal v-if="selectedCard" :card="selectedCard" />
 
-    <!--
-    <CardDetailDrawer v-if="selectedCard" :card="selectedCard" />
-    -->
-    
     <ToastContainer />
     <!-- Модальное окно создания -->
     <CreateWorkspaceModal

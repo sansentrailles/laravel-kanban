@@ -9,6 +9,7 @@ use App\Http\Resources\Kanban\AttachmentResource;
 use App\Models\Kanban\Attachment;
 use App\Models\Kanban\Card;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class AttachmentController extends Controller
@@ -19,10 +20,7 @@ class AttachmentController extends Controller
 
     public function store(StoreAttachmentRequest $request, Card $card): JsonResponse
     {
-        // dd([
-        //     'user' => $request->user(),
-        //     'file' => $request->file('file'),
-        // ]);
+        Gate::authorize('update', $card);
 
         $attachment = $this->uploadAction->execute(
             $card,
@@ -38,7 +36,11 @@ class AttachmentController extends Controller
 
     public function destroy(Card $card, Attachment $attachment): JsonResponse
     {
-        // $this->authorize('delete', $attachment);
+        Gate::authorize('delete', $attachment);
+
+        if ($card->id !== $attachment->card_id) {
+            abort(404);
+        }
 
         Storage::disk('public')->delete($attachment->path);
 

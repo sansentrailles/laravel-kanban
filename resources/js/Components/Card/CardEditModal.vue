@@ -54,7 +54,6 @@ const handleToggleItem = (checklistId, itemId) => store.toggleChecklistItem(card
 const handleDeleteItem = (checklistId, itemId) => store.deleteChecklistItem(card.value.id, checklistId, itemId)
 const convertItemToCard = (checklistId, itemId) => {
   store.convertItemToCard(card.value.id, itemId)
-  console.log('Конвертация в карточку:', checklistId, itemId)
 }
 
 // Прокси методы для комментариев
@@ -169,7 +168,7 @@ const commitTitle = () => {
                   <AttachmentsList
                     :attachments="card.attachments"
                     @upload="(files) => store.uploadAttachment(card.id, files)"
-                    @delete="(attachemtId) => store.deleteAttacment(card.id, attachemtId)"
+                    @delete="(attachemtId) => store.deleteAttachment(card.id, attachemtId)"
                   />
                 </FormField>
 

@@ -51,7 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Вложения
     Route::post('/cards/{card}/attachments', [AttachmentController::class, 'store'])->name('cards.attachments.store');
-    Route::delete('/cards/{card}/attachments', [AttachmentController::class, 'destroy'])->name('cards.attachments.destroy');
+    Route::delete('/cards/{card}/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('cards.attachments.destroy');
 });
 
 Route::middleware('auth')->group(function () {

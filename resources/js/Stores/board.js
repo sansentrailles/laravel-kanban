@@ -636,7 +636,7 @@ export const useBoardStore = defineStore('board', () => {
 
     const oldAttachments = [...card.attachments]
 
-    card.attachments = card.attachmens.filter(a => a.id !== attachmentId)
+    card.attachments = card.attachments.filter(a => a.id !== attachmentId)
 
     try {
       await axios.delete(route('cards.attachments.destroy', {card: cardId, attachment: attachmentId}))
