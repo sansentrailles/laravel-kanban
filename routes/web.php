@@ -37,8 +37,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/card/{card}/checklist', [ChecklistController::class, 'store'])->name('cards.checklist.store');
     Route::delete('/card/checklist/{checklist}', [ChecklistController::class, 'delete'])->name('cards.checklist.delete');
     Route::post('/card/checklist/{checklist}/items', [ChecklistItemController::class, 'store'])->name('cards.checklist.items.store');
-    Route::patch('/card/checklist/{checklist}/items/{item}/toggle', [ChecklistItemController::class, 'toggle'])->name('cards.checklists.items.toggle');
-    Route::delete('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'delete'])->name('cards.checklists.items.delete');
+    Route::patch('/card/checklist/{checklist}/items/{item}/toggle', [ChecklistItemController::class, 'toggle'])->name('cards.checklists.items.toggle')->scopeBindings();
+    Route::delete('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'delete'])->name('cards.checklists.items.delete')->scopeBindings();
 
     // Комментарии
     Route::post('/cards/{card}/comments', [CommentController::class, 'store'])->name('cards.comments.store');
@@ -52,7 +52,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Вложения
     Route::post('/cards/{card}/attachments', [AttachmentController::class, 'store'])->name('cards.attachments.store');
-    Route::delete('/cards/{card}/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('cards.attachments.destroy');
+    Route::delete('/cards/{card}/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('cards.attachments.destroy')->scopeBindings();
 });
 
 Route::middleware('auth')->group(function () {

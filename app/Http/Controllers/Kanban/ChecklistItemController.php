@@ -7,11 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Kanban\ChecklistItemResource;
 use App\Models\Kanban\Checklist;
 use App\Models\Kanban\ChecklistItem;
+use Illuminate\Support\Facades\Gate;
 
 class ChecklistItemController extends Controller
 {
     public function store(Checklist $checklist)
     {
+        Gate::authorize('update', $checklist);
+
         $item = $checklist->items()->create(request()->validate([
             'content' => 'required|string|max:255',
         ]));
@@ -25,6 +28,8 @@ class ChecklistItemController extends Controller
 
     public function toggle(Checklist $checklist, ChecklistItem $item)
     {
+        Gate::authorize('update', $checklist);
+
         $item->update([
             'is_completed' => ! $item->is_completed,
         ]);
@@ -38,6 +43,8 @@ class ChecklistItemController extends Controller
 
     public function delete(Checklist $checklist, ChecklistItem $item)
     {
+        Gate::authorize('delete', $checklist);
+
         $card = $checklist->card;
         $item->delete();
 

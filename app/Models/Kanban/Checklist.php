@@ -2,8 +2,10 @@
 
 namespace App\Models\Kanban;
 
+use Database\Factories\Kanban\ChecklistFactory;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,6 +25,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Table('kanban_checklists')]
 class Checklist extends Model
 {
+    /** @use HasFactory<ChecklistFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'card_id',
         'title',

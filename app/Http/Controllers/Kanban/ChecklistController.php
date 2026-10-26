@@ -7,12 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Kanban\StoreChecklistRequest;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Checklist;
+use Illuminate\Support\Facades\Gate;
 
 class ChecklistController extends Controller
 {
     public function store(StoreChecklistRequest $request, Card $card)
     {
-        // Gate::authorize('update', $card);
         $checklist = $card->checklists()->create($request->validated());
 
         // Присылаем всем клиентам актуальный набор чек-листов карточки
@@ -30,6 +30,8 @@ class ChecklistController extends Controller
 
     public function delete(Checklist $checklist)
     {
+        Gate::authorize('delete', $checklist);
+
         $card = $checklist->card;
         $checklist->delete();
 

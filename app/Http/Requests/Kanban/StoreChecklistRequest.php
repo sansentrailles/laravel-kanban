@@ -14,8 +14,9 @@ class StoreChecklistRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
-        // return $this->user()->can('update', $this->route('workspace'));
+        $card = $this->route('card');
+
+        return $this->user()->can('update', $card);
     }
 
     /**

@@ -2,7 +2,9 @@
 
 namespace App\Models\Kanban;
 
+use Database\Factories\Kanban\ChecklistItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -18,6 +20,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Table('kanban_checklist_items')]
 class ChecklistItem extends Model
 {
+    /** @use HasFactory<ChecklistItemFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'checklist_id',
         'content',
@@ -29,7 +34,7 @@ class ChecklistItem extends Model
     {
         return [
             'checklist_id' => 'integer',
-            'is_completed' => 'integer',
+            'is_completed' => 'boolean',
             'ord' => 'integer',
         ];
     }
