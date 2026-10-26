@@ -45,6 +45,28 @@ it('forbids deleting a checklist for a user outside the workspace', function () 
     expect($checklist->title)->toBe('New checklist');
 });
 
+it('allows a workspace member to add an item', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $checklist = Checklist::factory()->create(['title' => 'New checklist', 'card_id' => $card->id]);
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->postJson(route('cards.checklist.items.store', ['checklist' => $checklist->id]), [
+            'content' => 'New item',
+        ])
+        ->assertOk()
+        ->assertJsonPath('createdChecklistItem.content', 'New item');
+
+    $this->assertDatabaseHas('kanban_checklist_items', [
+        'checklist_id' => $checklist->id,
+        'content' => 'New item',
+    ]);
+});
+
 it('forbids adding an item for a user outside the workspace', function () {
     /** @var TestCase $this */
     $user = User::factory()->create();
@@ -53,12 +75,31 @@ it('forbids adding an item for a user outside the workspace', function () {
 
     $this
         ->actingAs($user)
-        ->postJson(route('cards.checklist.items.store', ['checklist' => $checklist->id]))
+        ->postJson(route('cards.checklist.items.store', ['checklist' => $checklist->id]), [
+            'content' => 'New item',
+        ])
         ->assertForbidden();
 
     $this->assertDatabaseMissing('kanban_checklist_items', [
         'checklist_id' => $checklist->id,
     ]);
+
+    expect($checklist->items->count())->toBe(0);
+});
+
+it('requires content to add an item', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $checklist = Checklist::factory()->create(['title' => 'New checklist', 'card_id' => $card->id]);
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->postJson(route('cards.checklist.items.store', ['checklist' => $checklist->id]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('content');
 
     expect($checklist->items->count())->toBe(0);
 });
