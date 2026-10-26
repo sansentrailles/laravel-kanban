@@ -12,9 +12,8 @@ use Illuminate\Validation\ValidationException;
 final class MoveCardAction
 {
     /**
-     * Перемещает карточку в новую колонку и позициз
+     * Перемещает карточку в новую колонку и вычисляет новый порядок (ord).
      */
-    //  public function execute(Card $card, Column $targetColumn, ?Card $previousCard, ?Card $nextCard): Card
     public function execute(Card $card, Column $targetColumn, ?Card $prevCard, ?Card $nextCard): Card
     {
         $isCrossColumnMove = (int) $card->column_id !== (int) $targetColumn->id;
