@@ -169,6 +169,35 @@ it('deletes the attachment record and the stored file for a workspace member', f
     Storage::disk('public')->assertMissing($path);
 });
 
+it('deletes the attachment record when the stored file is already missing', function () {
+    /** @var TestCase $this */
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $attachment = $card->attachments()->create([
+        'user_id' => $user->id,
+        'name' => 'missing.pdf',
+        'path' => 'attachments/2026/10/missing.pdf',
+        'mime_type' => 'application/pdf',
+        'size' => 7,
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->deleteJson(route('cards.attachments.destroy', [
+            'card' => $card->id,
+            'attachment' => $attachment->id,
+        ]))
+        ->assertOk()
+        ->assertJsonPath('attachments_count', 0);
+
+    $this->assertDatabaseMissing('kanban_attachments', ['id' => $attachment->id]);
+});
+
 it('forbids deleting an attachment for a user outside the workspace', function () {
     /** @var TestCase $this */
     Storage::fake('public');

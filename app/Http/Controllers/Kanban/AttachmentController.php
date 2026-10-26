@@ -45,9 +45,13 @@ class AttachmentController extends Controller
             abort(404);
         }
 
-        Storage::disk('public')->delete($attachment->path);
+        // Сначала строка в БД, затем файл: если удаление записи упадёт,
+        // вложение останется рабочим, а не превратится в битую ссылку.
+        $path = $attachment->path;
 
         $attachment->delete();
+
+        Storage::disk('public')->delete($path);
 
         broadcast(new AttachmentDeleted($card, $attachment->id))->toOthers();
 
