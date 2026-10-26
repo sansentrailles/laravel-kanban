@@ -13,6 +13,7 @@ use App\Http\Requests\Kanban\UpdateCommentRequest;
 use App\Http\Resources\Kanban\CommentResource;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Comment;
+use Illuminate\Support\Facades\Gate;
 
 class CommentController extends Controller
 {
@@ -46,6 +47,8 @@ class CommentController extends Controller
 
     public function destroy(Card $card, Comment $comment)
     {
+        Gate::authorize('delete', $comment);
+
         $commentId = $comment->id;
         $comment->delete();
 
@@ -58,6 +61,8 @@ class CommentController extends Controller
 
     public function update(UpdateCommentRequest $request, Card $card, Comment $comment)
     {
+        Gate::authorize('update', $comment);
+
         $comment->update($request->validated());
 
         broadcast(new CommentUpdated($comment, $card))->toOthers();

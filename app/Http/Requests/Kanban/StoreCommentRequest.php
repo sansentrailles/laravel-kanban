@@ -12,10 +12,9 @@ class StoreCommentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // $card = $this->route('card');
+        $card = $this->route('card');
 
-        // return $this->user()->can('update', $card);
-        return true;
+        return $this->user()->can('update', $card);
     }
 
     /**

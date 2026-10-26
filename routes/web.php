@@ -40,9 +40,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/card/checklist/{checklist}/items/{item}/toggle', [ChecklistItemController::class, 'toggle'])->name('cards.checklists.items.toggle');
     Route::delete('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'delete'])->name('cards.checklists.items.delete');
 
+    // Комментарии
     Route::post('/cards/{card}/comments', [CommentController::class, 'store'])->name('cards.comments.store');
-    Route::patch('/cards/{card}/comments/{comment}', [CommentController::class, 'update'])->name('cards.comments.edit');
-    Route::delete('/cards/{card}/comments/{comment}', [CommentController::class, 'destroy'])->name('cards.comments.delete');
+    Route::patch('/cards/{card}/comments/{comment}', [CommentController::class, 'update'])->name('cards.comments.edit')->scopeBindings();
+    Route::delete('/cards/{card}/comments/{comment}', [CommentController::class, 'destroy'])->name('cards.comments.delete')->scopeBindings();
 
     // Метки
     Route::post('/workspaces/{workspace}/labels', [LabelController::class, 'store'])->name('workspaces.labels.store');
