@@ -28,12 +28,4 @@ class UpdateCommentRequest extends FormRequest
             'content' => ['required', 'string', 'min:1', 'max:5000'],
         ];
     }
-
-    public function validated($key = null, $default = null): mixed
-    {
-        $data = parent::validated();
-        $data['is_edited'] = true;
-
-        return $data;
-    }
 }

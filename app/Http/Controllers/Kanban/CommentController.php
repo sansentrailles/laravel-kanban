@@ -63,7 +63,10 @@ class CommentController extends Controller
     {
         Gate::authorize('update', $comment);
 
-        $comment->update($request->validated());
+        $comment->update([
+            ...$request->validated(),
+            'is_edited' => true,
+        ]);
 
         broadcast(new CommentUpdated($comment, $card))->toOthers();
 
