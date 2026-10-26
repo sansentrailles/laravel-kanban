@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\Kanban\CardMoved;
+use App\Models\Kanban\Board;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Column;
 use App\Models\User;
@@ -11,8 +12,11 @@ use Tests\TestCase;
 it('does not move a card into a column that is at its WIP limit', function () {
     /** @var TestCase $this */
     $user = User::factory()->create();
-    $limited = Column::factory()->create(['wip_limit' => 1]);
     $card = Card::factory()->create(); // другой столбец без лимита
+    $limited = Column::factory()->create([
+        'board_id' => $card->column->board_id,
+        'wip_limit' => 1,
+    ]);
 
     $card->column->board->workspace->members()->attach($user->id);
 
@@ -92,4 +96,105 @@ it('forbids moving a card for a user outside workspace', function () {
     // Изоляция: картоку в столбце не сдвинули
     expect($card->refresh()->column_id)->toBe($card->column_id)
         ->and($target->refresh()->cards()->count())->toBe(0);
+});
+
+it('forbids moving a card into a column of another workspace', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $foreignColumn = Column::factory()->create(); // своя доска и свой воркспейс
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->patch(route('boards.cards.orders'), [
+            'cardId' => $card->id,
+            'columnId' => $foreignColumn->id,
+        ])
+        ->assertForbidden();
+
+    expect($card->refresh()->column_id)->not->toBe($foreignColumn->id)
+        ->and($foreignColumn->cards()->count())->toBe(0);
+});
+
+it('forbids moving a card to a column of another board in the same workspace', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $workspace = $card->column->board->workspace;
+
+    $otherBoard = Board::factory()->create(['workspace_id' => $workspace->id]);
+    $otherColumn = Column::factory()->create(['board_id' => $otherBoard->id]);
+
+    $workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->patch(route('boards.cards.orders'), [
+            'cardId' => $card->id,
+            'columnId' => $otherColumn->id,
+        ])
+        ->assertForbidden();
+
+    expect($card->refresh()->column_id)->not->toBe($otherColumn->id)
+        ->and($otherColumn->cards()->count())->toBe(0);
+});
+
+it('rejects a neighbour card from another column', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $targetColumn = Column::factory()->create(['board_id' => $card->column->board_id]);
+    $foreignNeighbour = Card::factory()->create(); // другая колонка другой доски
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->patchJson(route('boards.cards.orders'), [
+            'cardId' => $card->id,
+            'columnId' => $targetColumn->id,
+            'prevCardId' => $foreignNeighbour->id,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('prevCardId');
+
+    expect($card->refresh()->column_id)->not->toBe($targetColumn->id);
+});
+
+it('moves a card between neighbours in the target column', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $targetColumn = Column::factory()->create([
+        'board_id' => $card->column->board_id,
+        'wip_limit' => null,
+    ]);
+
+    $prevCard = Card::factory()->create([
+        'column_id' => $targetColumn->id,
+        'ord' => '1000000000.0000000000',
+    ]);
+    $nextCard = Card::factory()->create([
+        'column_id' => $targetColumn->id,
+        'ord' => '2000000000.0000000000',
+    ]);
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->patch(route('boards.cards.orders'), [
+            'cardId' => $card->id,
+            'columnId' => $targetColumn->id,
+            'prevCardId' => $prevCard->id,
+            'nextCardId' => $nextCard->id,
+        ])
+        ->assertOk();
+
+    expect($card->refresh())
+        ->column_id->toBe($targetColumn->id)
+        ->and(bccomp((string) $card->ord, (string) $prevCard->ord, 10))->toBe(1)
+        ->and(bccomp((string) $card->ord, (string) $nextCard->ord, 10))->toBe(-1);
 });

@@ -19,17 +19,21 @@ final class MoveCardAction
     {
         $isCrossColumnMove = (int) $card->column_id !== (int) $targetColumn->id;
 
-        if ($isCrossColumnMove && $targetColumn->isOverLimit()) {
-            throw ValidationException::withMessages([
-                'wip_limit' => "WIP-лимит колонки «{$targetColumn->title}» достигнут ({$targetColumn->wip_limit}). Карточка не может быть перенесена.",
-            ]);
-        }
+        return DB::transaction(function () use ($card, $targetColumn, $prevCard, $nextCard, $isCrossColumnMove) {
+            // Блокируем строку колонки, чтобы параллельные переносы в неё
+            // проверяли WIP-лимит последовательно, а не одновременно.
+            $lockedColumn = Column::whereKey($targetColumn->id)->lockForUpdate()->firstOrFail();
 
-        return DB::transaction(function () use ($card, $targetColumn, $prevCard, $nextCard) {
+            if ($isCrossColumnMove && $lockedColumn->isOverLimit()) {
+                throw ValidationException::withMessages([
+                    'wip_limit' => "WIP-лимит колонки «{$lockedColumn->title}» достигнут ({$lockedColumn->wip_limit}). Карточка не может быть перенесена.",
+                ]);
+            }
+
             $newOrder = $this->calculateOrder($prevCard, $nextCard);
 
             $card->update([
-                'column_id' => $targetColumn->id,
+                'column_id' => $lockedColumn->id,
                 'ord' => $newOrder,
             ]);
 
