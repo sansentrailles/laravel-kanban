@@ -14,8 +14,8 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Новый комментарий. Отправляем только сам комментарий и счётчик,
- * чтобы не гонять всю карточку (лимит сообщения Reverb ~10 КБ).
+ * Новое вложение. Отправляем вложение и счётчик, чтобы не гонять
+ * всю карточку (лимит сообщения Reverb ~10 КБ).
  */
 final class AttachmentUploaded implements ShouldBroadcast
 {
@@ -43,7 +43,7 @@ final class AttachmentUploaded implements ShouldBroadcast
         return [
             'card_id' => $this->card->id,
             'attachment' => AttachmentResource::make($this->attachment)->resolve(),
-            'attachment_count' => $this->card->attachments()->count(),
+            'attachments_count' => $this->card->attachments()->count(),
         ];
     }
 }

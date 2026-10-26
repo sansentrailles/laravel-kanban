@@ -11,8 +11,7 @@ final class StoreAttachmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
-        // return $this->user()->can('update', $this->route('card'));
+        return $this->user()->can('update', $this->route('card'));
     }
 
     public function rules(): array

@@ -22,8 +22,6 @@ class AttachmentController extends Controller
 
     public function store(StoreAttachmentRequest $request, Card $card): JsonResponse
     {
-        Gate::authorize('update', $card);
-
         $attachment = $this->uploadAction->execute(
             $card,
             $request->file('file'),
@@ -51,7 +49,7 @@ class AttachmentController extends Controller
 
         $attachment->delete();
 
-        broadcast(new AttachmentDeleted($card))->toOthers();
+        broadcast(new AttachmentDeleted($card, $attachment->id))->toOthers();
 
         return response()->json([
             'success' => true,

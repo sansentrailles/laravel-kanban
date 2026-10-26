@@ -73,20 +73,30 @@ export const useBoardStore = defineStore('board', () => {
     window.Echo.leave(`board.${workspaceId}`)
   }
 
-  const applyAttachmentChanges = ({ card_id: cardId, attachment, attachment_count: attachmentCount }) => {
+  const applyAttachmentChanges = ({
+    card_id: cardId,
+    attachment,
+    attachment_id: attachmentId,
+    attachments_count: attachmentsCount,
+  }) => {
     const card = findCard(cardId)
     if (!card) return
 
     if (!Array.isArray(card.attachments)) card.attachments = []
-    if (attachment && !card.attachments.some((c) => c.id === attachment.id)) {
+
+    if (attachmentId) {
+      card.attachments = card.attachments.filter((a) => a.id !== attachmentId)
+    }
+
+    if (attachment && !card.attachments.some((a) => a.id === attachment.id)) {
       card.attachments.push(attachment)
     }
 
-    updateAttachmentsCounts(card, attachmentCount)
+    updateAttachmentsCounts(card, attachmentsCount)
   }
 
-  const updateAttachmentsCounts = (card, attachmentCount) => {
-    card.attachments_count = attachmentCount ?? card.attachments.length
+  const updateAttachmentsCounts = (card, attachmentsCount) => {
+    card.attachments_count = attachmentsCount ?? card.attachments.length
   }
 
   // --- Точечные realtime-обновления карточки ---
@@ -654,9 +664,9 @@ export const useBoardStore = defineStore('board', () => {
     const card = findCard(cardId)
     if (!card) return
 
-    const oldAttachments = [...card.attachments]
+    const oldAttachments = [...(card.attachments ?? [])]
 
-    card.attachments = card.attachments.filter(a => a.id !== attachmentId)
+    card.attachments = (card.attachments ?? []).filter(a => a.id !== attachmentId)
 
     try {
       const response = await axios.delete(route('cards.attachments.destroy', { card: cardId, attachment: attachmentId }))
