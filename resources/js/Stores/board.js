@@ -43,6 +43,8 @@ export const useBoardStore = defineStore('board', () => {
       })
       // Изменения комментариев и чек-листов приходят отдельными событиями
       // с минимальным payload — патчим только нужный массив карточки.
+      .listen('.attachment.uploaded', (e) => applyAttachmentChanges(e))
+      .listen('.attachment.deleted', (e) => applyAttachmentChanges(e))
       .listen('.comment.created', (e) => applyCommentCreated(e))
       .listen('.comment.updated', (e) => applyCommentUpdated(e))
       .listen('.comment.deleted', (e) => applyCommentDeleted(e))
@@ -69,6 +71,22 @@ export const useBoardStore = defineStore('board', () => {
 
   const disconnectRealtime = (workspaceId) => {
     window.Echo.leave(`board.${workspaceId}`)
+  }
+
+  const applyAttachmentChanges = ({ card_id: cardId, attachment, attachment_count: attachmentCount }) => {
+    const card = findCard(cardId)
+    if (!card) return
+
+    if (!Array.isArray(card.attachments)) card.attachments = []
+    if (attachment && !card.attachments.some((c) => c.id === attachment.id)) {
+      card.attachments.push(attachment)
+    }
+
+    updateAttachmentsCounts(card, attachmentCount)
+  }
+
+  const updateAttachmentsCounts = (card, attachmentCount) => {
+    card.attachments_count = attachmentCount ?? card.attachments.length
   }
 
   // --- Точечные realtime-обновления карточки ---
@@ -146,7 +164,7 @@ export const useBoardStore = defineStore('board', () => {
   const reorderColumns = (cols) => {
     for (const col of cols) {
       const column = columns.value.find(c => c.id === Number(col.id))
-      if (column)  {
+      if (column) {
         column.ord = col.ord
       }
     }
@@ -165,7 +183,7 @@ export const useBoardStore = defineStore('board', () => {
         if (selectedCard.value && selectedCard.value.id === updatedCard.id && !fromRealtime) {
           Object.assign(selectedCard.value, updatedCard)
         } else if (fromRealtime) {
-           // При обновлении по WS просто мержим данные
+          // При обновлении по WS просто мержим данные
           Object.assign(column.cards[cardIndex], updatedCard)
         }
         return
@@ -622,7 +640,9 @@ export const useBoardStore = defineStore('board', () => {
         const response = await axios.post(route('cards.attachments.store', cardId), formData)
 
         if (response.data.attachment) {
+          const attachmentCount = response.data.attachments_count
           card.attachments.push(response.data.attachment)
+          updateAttachmentsCounts(card, attachmentCount)
         }
       } catch (error) {
         console.error('Ошибка загрузки файла: ', error)
@@ -639,7 +659,10 @@ export const useBoardStore = defineStore('board', () => {
     card.attachments = card.attachments.filter(a => a.id !== attachmentId)
 
     try {
-      await axios.delete(route('cards.attachments.destroy', {card: cardId, attachment: attachmentId}))
+      const response = await axios.delete(route('cards.attachments.destroy', { card: cardId, attachment: attachmentId }))
+      const attachmentCount = response.data.attachments_count
+      updateAttachmentsCounts(card, attachmentCount)
+
     } catch (error) {
       card.attachments = oldAttachments
       console.error('Ошибка удаления вложения:', error)

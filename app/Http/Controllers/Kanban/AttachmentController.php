@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Kanban;
 
 use App\Actions\Kanban\UploadAttachmentAction;
+use App\Events\Kanban\AttachmentDeleted;
+use App\Events\Kanban\AttachmentUploaded;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kanban\StoreAttachmentRequest;
 use App\Http\Resources\Kanban\AttachmentResource;
@@ -28,9 +30,12 @@ class AttachmentController extends Controller
             $request->user()
         );
 
+        broadcast(new AttachmentUploaded($attachment, $card))->toOthers();
+
         return response()->json([
             'success' => true,
             'attachment' => new AttachmentResource($attachment),
+            'attachments_count' => $card->attachments()->count(),
         ], 201);
     }
 
@@ -46,6 +51,11 @@ class AttachmentController extends Controller
 
         $attachment->delete();
 
-        return response()->json(['success' => true]);
+        broadcast(new AttachmentDeleted($card))->toOthers();
+
+        return response()->json([
+            'success' => true,
+            'attachments_count' => $card->attachments()->count(),
+        ]);
     }
 }
