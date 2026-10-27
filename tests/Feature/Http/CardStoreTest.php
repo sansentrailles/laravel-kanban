@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\Kanban\CardCreated;
+use App\Models\Kanban\Card;
 use App\Models\Kanban\Column;
 use App\Models\User;
 use Illuminate\Broadcasting\BroadcastEvent;
@@ -26,6 +27,44 @@ it('allows a workspace member to create a card in the column', function () {
         'title' => 'Новая карточка',
     ]);
     expect($response->json('card.title'))->toBe('Новая карточка');
+});
+
+it('rejects creating a card in a column that is at its WIP limit', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $column = Column::factory()->create(['wip_limit' => 1]);
+    $column->board->workspace->members()->attach($user->id);
+    Card::factory()->create(['column_id' => $column->id]);
+
+    $this
+        ->actingAs($user)
+        ->postJson(route('boards.cards.store', $column->id), [
+            'title' => 'Лишняя карточка',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('wip_limit');
+
+    expect($column->cards()->count())->toBe(1)
+        ->and($column->cards()->where('title', 'Лишняя карточка')->exists())->toBeFalse();
+});
+
+it('allows creating a card when the column has free WIP capacity', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $column = Column::factory()->create(['wip_limit' => 2]);
+    $column->board->workspace->members()->attach($user->id);
+    Card::factory()->create(['column_id' => $column->id]);
+
+    $this
+        ->actingAs($user)
+        ->postJson(route('boards.cards.store', $column->id), [
+            'title' => 'Вторая карточка',
+        ])
+        ->assertOk();
+
+    expect($column->cards()->count())->toBe(2);
 });
 
 it('forbids creating a card for a user outside the workspace', function () {

@@ -18,6 +18,8 @@ use App\Http\Resources\Kanban\CardResource;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Column;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CardController extends Controller
 {
@@ -27,19 +29,29 @@ class CardController extends Controller
         private readonly CreateCardAction $createCardAction
     ) {}
 
-    public function store(CardCreateRequest $reqeust, Column $column)
+    public function store(CardCreateRequest $request, Column $column): JsonResponse
     {
-        $dto = new CreateCardDTO(
-            title: $reqeust->validated('title'),
-            columnId: $column->id,
-        );
+        $card = DB::transaction(function () use ($request, $column) {
+            // Блокируем колонку до проверки лимита: без этого два параллельных
+            // создания увидят одинаковое число карточек и оба пройдут проверку.
+            $lockedColumn = Column::whereKey($column->id)->lockForUpdate()->firstOrFail();
 
-        $lastCard = $column->cards()->reorder('ord', 'desc')->first();
+            if ($lockedColumn->isOverLimit()) {
+                throw ValidationException::withMessages([
+                    'wip_limit' => "WIP-лимит колонки «{$lockedColumn->title}» достигнут ({$lockedColumn->wip_limit}). Карточка не может быть создана.",
+                ]);
+            }
 
-        $card = $this->createCardAction->execute($dto);
-        // Перемещаем в конец
-        // TODO: Возможно лучше вычислить ORD и передевать в экшн
-        $this->moveCardAction->execute($card, $column, $lastCard, null);
+            $lastCard = $lockedColumn->cards()->reorder('ord', 'desc')->first();
+
+            $card = $this->createCardAction->execute(new CreateCardDTO(
+                title: $request->validated('title'),
+                columnId: $lockedColumn->id,
+            ));
+
+            // Перемещаем в конец, чтобы карточка получила ord после последней.
+            return $this->moveCardAction->execute($card, $lockedColumn, $lastCard, null);
+        });
 
         $card->fresh(['labels', 'checklists', 'assignees', 'comments.user']);
 
