@@ -48,3 +48,40 @@ it('redirects to the last visited workspace when no board is set', function () {
             'slug' => $board->workspace->slug,
         ]));
 });
+
+it('keeps redirecting to the board after revisiting it', function () {
+    // Регрессия: повторный визит доски обнулял last_visited_board_id,
+    // и дашборд начинал вести на воркспейс вместо доски.
+    $user = User::factory()->create();
+    $board = Board::factory()->create();
+    $board->workspace->members()->attach($user->id);
+
+    $boardUrl = route('kanban.board', [
+        'workspace' => $board->workspace->slug,
+        'board' => $board->uuid,
+    ]);
+
+    $this->actingAs($user)->get($boardUrl)->assertOk();
+    $this->actingAs($user)->get($boardUrl)->assertOk();
+
+    $this->actingAs($user)->get('/')->assertRedirect($boardUrl);
+});
+
+it('redirects to the workspace after visiting the workspace page', function () {
+    $user = User::factory()->create();
+    $board = Board::factory()->create();
+    $board->workspace->members()->attach($user->id);
+
+    $workspaceUrl = route('kanban.workspace', ['slug' => $board->workspace->slug]);
+
+    $this->actingAs($user)
+        ->get(route('kanban.board', [
+            'workspace' => $board->workspace->slug,
+            'board' => $board->uuid,
+        ]))
+        ->assertOk();
+
+    $this->actingAs($user)->get($workspaceUrl)->assertOk();
+
+    $this->actingAs($user)->get('/')->assertRedirect($workspaceUrl);
+});
