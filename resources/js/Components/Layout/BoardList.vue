@@ -4,13 +4,13 @@ import { Link } from '@inertiajs/vue3';
 
 defineProps({
   boards: {
-    type: Object,
-    required: true
+    type: Array,
+    default: () => []
   },
   // Возможно следует передавать только slug
   workspace: {
     type: Object,
-    required: true
+    default: null
   },
   activeBoardId: {
     type: [Number, String, null],
@@ -24,9 +24,9 @@ defineEmits(['select', 'create'])
 <template>
   <div class="px-4 space-y-1">
     <Link 
-      v-for="board in boards.data"
+      v-for="board in boards"
       :key="board.id" 
-      :href="route('kanban.board', {workspace: workspace.slug, board: board.uuid})"
+      :href="route('kanban.board', {workspace: workspace?.slug, board: board.uuid})"
       class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-left"
       :class="activeBoardId === board.id 
         ? 'bg-slate-800 text-white' 

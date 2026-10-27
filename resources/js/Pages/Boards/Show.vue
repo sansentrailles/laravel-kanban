@@ -19,12 +19,8 @@ const props = defineProps({
     required: true
   },
   boards: {
-    type: Object,
-    required: true
-  },
-  workspaceLabels: {
     type: Array,
-    default: () => []
+    required: true
   },
   unreadNotifications: {
     type: Number,

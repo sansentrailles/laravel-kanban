@@ -9,7 +9,7 @@ const props = defineProps({
     required: true
   },
   currentWorkspace: {
-    type: Array,
+    type: Object,
     default: null
   }
 })

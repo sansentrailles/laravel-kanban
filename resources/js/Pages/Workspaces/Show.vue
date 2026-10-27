@@ -17,8 +17,11 @@ const props = defineProps({
 
 const showCreateBoardModal = ref(false)
 
-const navigateToBoard = (boardId) => {
-  router.visit(`/boards/${boardId}`)
+const navigateToBoard = (board) => {
+  router.visit(route('kanban.board', {
+    workspace: props.currentWorkspace.slug,
+    board: board.uuid,
+  }))
 }
 </script>
 
@@ -71,7 +74,7 @@ const navigateToBoard = (boardId) => {
         <div
           v-for="board in boards"
           :key="board.id"
-          @click="navigateToBoard(board.id)"
+          @click="navigateToBoard(board)"
           class="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer group"
         >
           <div class="flex items-start justify-between mb-4">

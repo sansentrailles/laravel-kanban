@@ -15,9 +15,9 @@ const page = usePage()
 const store = useBoardStore()
 
 const auth = computed(() => page.props.auth)
-const workspaces = computed(() => page.props.workspaces)
+const workspaces = computed(() => page.props.workspaces ?? [])
 const currentWorkspace = computed(() => page.props.currentWorkspace)
-const boards = computed(() => page.props.boards)
+const boards = computed(() => page.props.boards ?? [])
 const currentBoard = computed(() => page.props.board)
 const unreadCount = computed(() => page.props.unreadNotifications || 0)
 const selectedCard = computed(() => store.selectedCard)
@@ -76,7 +76,6 @@ const handleFilterChange = (filters) => {
           :boards="boards"
           :workspace="currentWorkspace"
           :active-board-id="currentBoard?.id"
-          @select="handleBoardSelect"
           @create="showCreateBoardModal = true"
         />
       </nav>
