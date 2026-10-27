@@ -10,6 +10,16 @@ export const useBoardStore = defineStore('board', () => {
   const filters = ref({})
   const labels = ref([])
 
+  // Показывает пользователю ошибку от API (валидация, WIP-лимит и т.п.).
+  // ToastContainer вешает window.toast при монтировании; optional chaining
+  // защищает от вызова до того, как контейнер появился.
+  const notifyError = (error, fallback) => {
+    const validationMessage = Object.values(error?.response?.data?.errors ?? {})[0]?.[0]
+    const message = validationMessage || error?.response?.data?.message || fallback
+
+    window.toast?.error(message)
+  }
+
   // Геттер для отсортированных колонок (используем order)
   const sortedColumns = computed(() => {
     return [...columns.value].sort((a, b) => a.ord - b.ord)
@@ -249,6 +259,7 @@ export const useBoardStore = defineStore('board', () => {
       }
     } catch (error) {
       console.error('Ошибка создания карточки:', error)
+      notifyError(error, 'Не удалось создать карточку')
     }
   }
 
@@ -413,6 +424,7 @@ export const useBoardStore = defineStore('board', () => {
         response: error?.response?.status,
         message: error?.response?.data?.message,
       })
+      notifyError(error, 'Не удалось переместить карточку')
       restoreBoardSnapshot()
     }
   }
