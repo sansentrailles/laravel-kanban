@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Kanban;
 use App\Actions\User\UpdateLastVisitedAction;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Kanban\BoardResource;
-use App\Http\Resources\Kanban\LabelResource;
 use App\Http\Resources\Kanban\WorkspaceResource;
 use App\Models\Kanban\Board;
 use App\Models\Kanban\Workspace;
@@ -43,9 +42,9 @@ class BoardController extends Controller
                     ->withCount(['comments', 'attachments', 'checklists'])
                     ->with(['labels', 'checklists.items', 'attachments', 'assignees', 'comments.user']),
             ]))->resolve(),
-            'currentWorkspace' => WorkspaceResource::make($workspace->load('labels'))->resolve(),
+            // members нужны AssigneePicker в модалке карточки.
+            'currentWorkspace' => WorkspaceResource::make($workspace->load(['labels', 'members']))->resolve(),
             'boards' => BoardResource::collection($workspace->boards()->withCount(['columns'])->ordered()->get())->resolve(),
-            'workspaceLabels' => LabelResource::collection($workspace->labels),
             'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
             'unreadNotifications' => 0,
         ]);

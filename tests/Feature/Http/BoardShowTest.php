@@ -39,6 +39,12 @@ it('renders the board page with a self-contained card payload', function () {
             ->has('boards.0.uuid')
             ->missing('boards.data')
             ->has('currentWorkspace.labels')
+            // AssigneePicker в модалке карточки читает members.data; без
+            // загруженной связи список участников был пустым.
+            ->has('currentWorkspace.members.data', 1)
+            ->where('currentWorkspace.members.data.0.id', $user->id)
+            // Лейблы уже приходят в currentWorkspace.labels, отдельный проп не нужен.
+            ->missing('workspaceLabels')
             ->has('board.columns.data.0.cards.0', fn (Assert $card) => $card
                 ->has('comments', 1)
                 ->has('comments.0.content')
