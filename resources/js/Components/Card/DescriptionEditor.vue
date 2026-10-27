@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 
 const props = defineProps({
   value: {
@@ -13,14 +13,6 @@ const emit = defineEmits(['update'])
 const isEditing = ref(false)
 const content = ref('')
 const descInput = ref(null)
-
-const formattedValue = computed(() => {
-  // Simple markdown-like formatting
-  return props.value
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
-})
 
 const startEditing = async () => {
   content.value = props.value
@@ -90,8 +82,7 @@ watch(() => props.value, (newValue) => {
     <div 
       v-else-if="value"
       class="p-3 text-sm text-gray-700 bg-gray-50 rounded-lg whitespace-pre-wrap"
-      v-html="formattedValue"
-    ></div>
+    >{{ value }}</div>
     
     <div 
       v-else
