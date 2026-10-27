@@ -25,7 +25,7 @@ class WorkspaceController extends Controller
     ) {}
 
     // Отображаем список воркспейсов пользоваеля
-    public function list(): Response
+    public function list(): Response|RedirectResponse
     {
         $user = Auth::user();
 
@@ -36,18 +36,18 @@ class WorkspaceController extends Controller
             ->unique('id')
             ->values();
 
-        // TODO: Переделать
-        $boards = $workspaces->first()?->boards()
-            ->withCount('columns')
-            ->ordered()
-            ->get();
+        // Отдельной страницы со списком нет: сразу открываем первый воркспейс.
+        if ($workspaces->isNotEmpty()) {
+            return redirect()->route('kanban.workspace', [
+                'slug' => $workspaces->first()->slug,
+            ]);
+        }
 
         return Inertia::render('Workspaces/Index', [
-            // 'workspaces' => $workspaces,
-            'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
-            'currentWorkspace' => $workspaces->first() ? (new WorkspaceResource($workspaces->first()))->resolve() : null,
-            'boards' => BoardResource::collection($boards),
-            'unreadNotifications' => 3,
+            'workspaces' => [],
+            'currentWorkspace' => null,
+            'boards' => [],
+            'unreadNotifications' => 0,
         ]);
     }
 
@@ -56,7 +56,8 @@ class WorkspaceController extends Controller
         $user = Auth::user();
 
         $workspace = Workspace::where('slug', $slug)
-            ->with(['owner', 'members', 'boards'])
+            ->with(['owner', 'members'])
+            ->withCount('members')
             ->firstOrFail();
 
         $workspaces = $user->ownedWorkspaces()
@@ -73,10 +74,15 @@ class WorkspaceController extends Controller
             workspaceId: $workspace->id,
         );
 
-        return Inertia::render('Workspaces/Index', [
+        $boards = $workspace->boards()
+            ->withCount('columns')
+            ->ordered()
+            ->get();
+
+        return Inertia::render('Workspaces/Show', [
             'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
             'currentWorkspace' => (new WorkspaceResource($workspace))->resolve(),
-            'boards' => BoardResource::collection($workspace->boards),
+            'boards' => BoardResource::collection($boards)->resolve(),
             'unreadNotifications' => 3,
         ]);
     }

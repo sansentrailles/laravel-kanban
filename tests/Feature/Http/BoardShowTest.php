@@ -36,6 +36,8 @@ it('renders the board page with a self-contained card payload', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Boards/Show')
             ->has('workspaces')
+            ->has('boards.0.uuid')
+            ->missing('boards.data')
             ->has('currentWorkspace.labels')
             ->has('board.columns.data.0.cards.0', fn (Assert $card) => $card
                 ->has('comments', 1)
