@@ -185,10 +185,10 @@ class Card extends Model
 
     public function scopeOrdered($query)
     {
-        return $query->order('ord');
+        return $query->orderBy('ord');
     }
 
-    public function scopOverdue($query)
+    public function scopeOverdue($query)
     {
         return $query->where('due_date', '<', now()->toDateString())
             ->whereNull('completed_at');
@@ -202,7 +202,7 @@ class Card extends Model
     {
         return $this->due_date !== null
             && $this->due_date->isPast()
-            && $this->is_completed_at === null;
+            && $this->completed_at === null;
     }
 
     public function isCompleted(): bool
@@ -212,6 +212,6 @@ class Card extends Model
 
     public function markAsCompleted(): void
     {
-        $this->update(['is_completed' => now()]);
+        $this->update(['completed_at' => now()]);
     }
 }
