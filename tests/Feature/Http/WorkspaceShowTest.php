@@ -29,6 +29,7 @@ it('renders the workspace page with ordered boards and counts', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Workspaces/Show')
             ->where('currentWorkspace.members_count', 1)
+            ->where('unreadNotifications', 0)
             ->has('boards', 2)
             // Плоский массив, а не { data: [...] }: иначе BoardList
             // в сайдбаре снова останется пустым.

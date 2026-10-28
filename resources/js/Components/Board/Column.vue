@@ -8,6 +8,7 @@ import AddCardForm from './AddCardForm.vue'
 import { useDraggable } from 'vue-draggable-plus'
 import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { useBoardStore } from '@/Stores/board'
+import { notifyNotImplemented } from '@/Composables/useNotImplemented'
 
 const props = defineProps({
   column: { type: Object, required: true }
@@ -163,6 +164,13 @@ const setWipLimit = () => {
 const closeWipPopover = () => {
   showWipPopover.value = false
   wipLimitDraft.value = ''
+}
+
+// Бэкенда для архивации колонок пока нет: не роняем обработчик, а честно
+// сообщаем пользователю.
+const archiveColumn = () => {
+  columnMenuRef.value?.close()
+  notifyNotImplemented('Архивация колонок пока не реализована')
 }
 
 // --- Закрытие поповера по клику вне его ---

@@ -20,7 +20,9 @@ const percentage = computed(() => {
 })
 
 const isOverLimit = computed(() => {
-  return props.current > props.limit
+  // Совпадает с Column::isOverLimit() на бэкенде: лимит считается достигнутым
+  // уже при равенстве, иначе при 100% полоска оставалась оранжевой.
+  return props.current >= props.limit
 })
 
 const isNearLimit = computed(() => {
@@ -28,8 +30,8 @@ const isNearLimit = computed(() => {
 })
 
 const barColor = computed(() => {
-  if (props.isOverLimit) return '#ef4444' // red
-  if (props.isNearLimit) return '#f59e0b' // yellow
+  if (isOverLimit.value) return '#ef4444' // red
+  if (isNearLimit.value) return '#f59e0b' // yellow
   return props.color || '#10b981' // цвет колонки или зеленый по умолчанию
 })
 </script>

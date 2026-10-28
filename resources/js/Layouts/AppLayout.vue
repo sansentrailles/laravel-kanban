@@ -10,6 +10,7 @@ import ToastContainer from '@/Components/UI/ToastContainer.vue'
 import { useBoardStore } from '@/Stores/board'
 import CreateWorkspaceModal from '@/Components/Workspace/CreateWorkspaceModal.vue'
 import CardEditModal from '@/Components/Card/CardEditModal.vue'
+import { notifyNotImplemented } from '@/Composables/useNotImplemented'
 
 const page = usePage()
 const store = useBoardStore()
@@ -30,6 +31,18 @@ const handleWorkspaceSelect = (workspace) => {
 
 const openCreateWorspaceModal = () => {
   showCreateWorkspaceModal.value = true
+}
+
+const handleCreateBoard = () => {
+  notifyNotImplemented('Создание досок пока не реализовано')
+}
+
+const handleInvite = () => {
+  notifyNotImplemented('Приглашение участников пока не реализовано')
+}
+
+const handleShare = () => {
+  notifyNotImplemented('Общий доступ к доске пока не реализован')
 }
 
 const handleFilterChange = (filters) => {
@@ -76,7 +89,7 @@ const handleFilterChange = (filters) => {
           :boards="boards"
           :workspace="currentWorkspace"
           :active-board-id="currentBoard?.id"
-          @create="showCreateBoardModal = true"
+          @create="handleCreateBoard"
         />
       </nav>
       
@@ -88,8 +101,9 @@ const handleFilterChange = (filters) => {
     <main class="flex-1 flex flex-col overflow-hidden">
       <!-- Topbar -->
       <Topbar 
-        @invite="showInviteModal = true"
-        @share="showShareModal = true"
+        :unread-notifications="unreadCount"
+        @invite="handleInvite"
+        @share="handleShare"
         @filter-change="handleFilterChange"
       />
       
@@ -107,7 +121,6 @@ const handleFilterChange = (filters) => {
     <CreateWorkspaceModal
       v-if="showCreateWorkspaceModal"
       @close="showCreateWorkspaceModal = false"
-      @created="handleWorkspaceCreated"
     />
   </div>
 </template>

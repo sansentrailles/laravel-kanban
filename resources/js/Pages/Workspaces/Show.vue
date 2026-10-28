@@ -1,8 +1,8 @@
 <script setup>
-import { ref } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import { PlusIcon, ChevronRightIcon, UsersIcon, UserIcon, ViewColumnsIcon } from '@heroicons/vue/24/outline'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import { notifyNotImplemented } from '@/Composables/useNotImplemented'
 
 const props = defineProps({
   currentWorkspace: {
@@ -15,7 +15,9 @@ const props = defineProps({
   }
 })
 
-const showCreateBoardModal = ref(false)
+const createBoard = () => {
+  notifyNotImplemented('Создание досок пока не реализовано')
+}
 
 const navigateToBoard = (board) => {
   router.visit(route('kanban.board', {
@@ -62,7 +64,7 @@ const navigateToBoard = (board) => {
       <div class="mb-6 flex items-center justify-between">
         <h2 class="text-xl font-semibold text-gray-900">Доски</h2>
         <button
-          @click="showCreateBoardModal = true"
+          @click="createBoard"
           class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
           <PlusIcon class="w-5 h-5" />
@@ -113,7 +115,7 @@ const navigateToBoard = (board) => {
           Создайте первую доску, чтобы начать работу
         </p>
         <button
-          @click="showCreateBoardModal = true"
+          @click="createBoard"
           class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
         >
           Создать доску

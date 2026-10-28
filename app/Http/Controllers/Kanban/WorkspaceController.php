@@ -83,7 +83,8 @@ class WorkspaceController extends Controller
             'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
             'currentWorkspace' => (new WorkspaceResource($workspace))->resolve(),
             'boards' => BoardResource::collection($boards)->resolve(),
-            'unreadNotifications' => 3,
+            // Уведомлений пока нет: не отдаём фронту фейковый счётчик.
+            'unreadNotifications' => 0,
         ]);
     }
 

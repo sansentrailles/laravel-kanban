@@ -11,6 +11,13 @@ import { useDebounceFn } from '@vueuse/core'
 
 const emit = defineEmits(['invite', 'share', 'filter-change'])
 
+defineProps({
+  unreadNotifications: {
+    type: Number,
+    default: 0
+  }
+})
+
 const searchQuery = ref('')
 const searchResults = ref([])
 const activeFilters = reactive({
