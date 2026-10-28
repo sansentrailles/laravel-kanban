@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Kanban;
 
+use App\Enums\Kanban\CardPriority;
 use App\Models\Kanban\Card;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -36,6 +37,7 @@ class CardUpdateRequest extends FormRequest
             // 'cardId' => 'required|integer|exists:kanban_cards,id',
             'description' => 'string|nullable',
             'title' => 'string|nullable',
+            'priority' => ['nullable', Rule::enum(CardPriority::class)],
             'start_date' => ['nullable', 'date'],
             'due_date' => ['nullable', 'date'],
             'label_ids' => ['nullable', 'array'],

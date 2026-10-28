@@ -8,7 +8,7 @@ enum CardPriority: string
 {
     case Low = 'low';
     case Medium = 'medium';
-    case High = 'hight';
+    case High = 'high';
     case Urgent = 'urgent';
 
     public function label(): string

@@ -23,6 +23,16 @@ const isOverdue = computed(() => {
   return new Date(props.card.due_date) < new Date()
 })
 
+// Значения и подписи совпадают с App\Enums\Kanban\CardPriority.
+const priorities = {
+  low: { label: 'Низкий', class: 'bg-green-50 text-green-700 border-green-200' },
+  medium: { label: 'Средний', class: 'bg-blue-50 text-blue-700 border-blue-200' },
+  high: { label: 'Высокий', class: 'bg-orange-50 text-orange-700 border-orange-200' },
+  urgent: { label: 'Срочный', class: 'bg-red-50 text-red-700 border-red-200' }
+}
+
+const priority = computed(() => priorities[props.card.priority] ?? null)
+
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString('ru-RU', {
     day: 'numeric',
@@ -63,8 +73,17 @@ const hideTooltip = () => {
     class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 cursor-pointer hover:shadow-md transition-shadow"
     :class="{ 'border-l-4 border-l-red-500': isOverdue }"
   >
-    <!-- Метки -->
-    <div v-if="card.labels.length" class="flex flex-wrap gap-1 mb-2">
+    <!-- Приоритет и метки -->
+    <div v-if="priority || card.labels.length" class="flex flex-wrap items-center gap-1 mb-2">
+      <span
+        v-if="priority"
+        class="inline-flex items-center px-1.5 py-0.5 rounded border text-[11px] font-medium"
+        :class="priority.class"
+        title="Приоритет"
+      >
+        {{ priority.label }}
+      </span>
+
       <LabelBadge 
         v-for="label in card.labels"
         :key="label.id"

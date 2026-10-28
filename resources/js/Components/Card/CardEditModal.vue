@@ -10,7 +10,8 @@ import DescriptionEditor from './DescriptionEditor.vue';
 import ActivityLog from './ActivityLog.vue';
 import AssigneePicker from './AssigneePicker.vue';
 import LabelSelector from './LabelSelector.vue';
-import DateRangePicker from './DateRangePicker.vue';
+import DateRangePicker from './DateRangePicker.vue'
+import PrioritySelector from './PrioritySelector.vue';
 import AttachmentsList from './AttachmentsList.vue';
 import ChecklistSection from './ChecklistSection.vue';
 import CommentsSection from './CommentsSection.vue';
@@ -44,6 +45,10 @@ const updateAssignees = (users) => {
 
 const updateDates = (dates) => {
   store.updateCardDates(card.value.id, dates)
+}
+
+const updatePriority = (priority) => {
+  store.updateCardField(card.value.id, 'priority', priority)
 }
 
 // Прокси-методы для чеклистов
@@ -159,6 +164,10 @@ const commitTitle = () => {
                   @delete-item="handleDeleteItem"
                   @to-card="convertItemToCard"
                 />
+
+                <FormField label="Приоритет">
+                  <PrioritySelector :value="card.priority" @change="updatePriority" />
+                </FormField>
 
                 <FormField label="Сроки">
                   <DateRangePicker :start="card.start_date" :end="card.due_date" @change="updateDates" />
