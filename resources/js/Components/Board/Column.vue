@@ -213,7 +213,7 @@ onUnmounted(() => {
     <div class="p-3 relative flex items-center justify-between column-handle">
       <div class="flex items-center gap-2 min-w-0">
         <template v-if="!isRenaming">
-          <h3 class="font-semibold text-gray-900 truncate">{{ column.title }} - {{ column.id }}</h3>
+          <h3 class="font-semibold text-gray-900 truncate">{{ column.title }}</h3>
           <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
             {{ localCards.length }}
           </span>

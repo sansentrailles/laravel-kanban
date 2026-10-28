@@ -19,6 +19,13 @@ class BoardController extends Controller
 {
     public function show(Workspace $workspace, Board $board, UpdateLastVisitedAction $updateLastVisitedAction): Response
     {
+        // Страховка на уровне контроллера: доска должна принадлежать воркспейсу
+        // из URL, а сам воркспейс — быть доступен пользователю. Иначе
+        // currentWorkspace мог бы отдать участников и метки чужого воркспейса.
+        Gate::authorize('view', $workspace);
+
+        abort_unless($board->workspace_id === $workspace->id, 404);
+
         Gate::authorize('view', $board);
 
         $user = Auth::user();

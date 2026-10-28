@@ -70,3 +70,22 @@ it('forbids viewing a board of another workspace', function () {
         ]))
         ->assertForbidden();
 });
+
+it('returns 404 when the board does not belong to the workspace in the url', function () {
+    // Регрессия: доска должна резолвиться только внутри воркспейса из URL,
+    // иначе через slug чужого воркспейса можно было открыть свою доску
+    // и увидеть участников и метки того воркспейса.
+    $user = User::factory()->create();
+    $workspace = Workspace::factory()->create();
+    $workspace->members()->attach($user->id);
+
+    $foreignBoard = Board::factory()->create();
+    $foreignBoard->workspace->members()->attach($user->id);
+
+    $this->actingAs($user)
+        ->get(route('kanban.board', [
+            'workspace' => $workspace->slug,
+            'board' => $foreignBoard->uuid,
+        ]))
+        ->assertNotFound();
+});
