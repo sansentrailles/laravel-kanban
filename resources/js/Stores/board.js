@@ -62,6 +62,9 @@ export const useBoardStore = defineStore('board', () => {
       .listen('.card.moved', (e) => {
         moveCardRemote(e.card)
       })
+      .listen('.cards.reordered', (e) => {
+        applyCardsReordered(e)
+      })
       .listen('.card.created', (e) => {
         const column = columns.value.find(c => c.id === e.card.column_id)
         if (column) {
@@ -261,6 +264,24 @@ export const useBoardStore = defineStore('board', () => {
       console.error('Ошибка создания карточки:', error)
       notifyError(error, 'Не удалось создать карточку')
     }
+  }
+
+  // Сервер перенумеровал ord в колонке (вставка в узкую щель или в начало).
+  // Относительный порядок карточек при этом не меняется, поэтому обновляем
+  // только ord — по ним удалённые клиенты вставляют следующие перемещения.
+  const applyCardsReordered = ({ column_id: columnId, cards }) => {
+    const column = columns.value.find((c) => c.id === Number(columnId))
+    if (!column || !Array.isArray(cards)) return
+
+    const ordById = new Map(cards.map((card) => [card.id, card.ord]))
+
+    column.cards.forEach((card) => {
+      if (ordById.has(card.id)) {
+        card.ord = ordById.get(card.id)
+      }
+    })
+
+    bumpCardsRenderTick()
   }
 
   // --- Перенос карточки, пришедший по realtime ---
