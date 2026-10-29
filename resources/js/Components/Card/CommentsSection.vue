@@ -8,6 +8,10 @@ const props = defineProps({
   comments: {
     type: Array,
     default: () => []
+  },
+  loading: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -30,7 +34,8 @@ const addComment = () => {
     <h3 class="text-sm font-semibold text-gray-900">Комментарии</h3>
     
     <!-- Comments list -->
-    <div class="space-y-3">
+    <div v-if="loading" class="text-sm text-gray-500">Загрузка комментариев…</div>
+    <div v-else class="space-y-3">
       <Comment
         v-for="comment in comments"
         :comment="comment"
@@ -38,6 +43,7 @@ const addComment = () => {
         @delete="(id) => emit('delete-comment', id)"
         @edit="(params) => emit('edit-comment', params)"
       />
+      <p v-if="!comments.length" class="text-sm text-gray-500">Пока нет комментариев</p>
     </div>
     
     <!-- Add comment -->

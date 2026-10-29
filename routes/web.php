@@ -41,6 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/card/checklist/{checklist}/items/{item}', [ChecklistItemController::class, 'delete'])->name('cards.checklists.items.delete')->scopeBindings();
 
     // Комментарии
+    Route::get('/cards/{card}/comments', [CommentController::class, 'index'])->name('cards.comments.index');
     Route::post('/cards/{card}/comments', [CommentController::class, 'store'])->name('cards.comments.store');
     Route::patch('/cards/{card}/comments/{comment}', [CommentController::class, 'update'])->name('cards.comments.edit')->scopeBindings();
     Route::delete('/cards/{card}/comments/{comment}', [CommentController::class, 'destroy'])->name('cards.comments.delete')->scopeBindings();

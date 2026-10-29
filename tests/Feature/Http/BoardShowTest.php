@@ -11,9 +11,10 @@ use Tests\TestCase;
 it('renders the board page with a self-contained card payload', function () {
     /** @var TestCase $this */
 
-    // Регрессия: карточки на доске приходили без ключа comments (whenLoaded
-    // опускал связь) — стор падал на card.comments.push при добавлении
-    // комментария; без checklists_count пропадал счётчик на карточке.
+    // Регрессия: без checklists_count пропадал счётчик на карточке, а без
+    // labels/assignees/checklists рендер карточки падал на undefined.length.
+    // Комментарии намеренно не входят в payload доски — они грузятся лениво
+    // при открытии карточки (GET cards.comments.index).
     $user = User::factory()->create();
     $workspace = Workspace::factory()->create();
     $workspace->members()->attach($user->id);
@@ -46,11 +47,10 @@ it('renders the board page with a self-contained card payload', function () {
             // Лейблы уже приходят в currentWorkspace.labels, отдельный проп не нужен.
             ->missing('workspaceLabels')
             ->has('board.columns.data.0.cards.0', fn (Assert $card) => $card
-                ->has('comments', 1)
-                ->has('comments.0.content')
-                ->has('comments.0.user.name')
+                // Комментарии грузятся лениво, счётчик остаётся для бейджа.
+                ->missing('comments')
+                ->where('comments_count', 1)
                 ->has('checklists_count')
-                ->has('comments_count')
                 ->has('labels')
                 ->has('assignees')
                 ->has('checklists')

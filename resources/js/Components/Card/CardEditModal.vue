@@ -183,6 +183,7 @@ const commitTitle = () => {
 
                 <CommentsSection
                   :comments="card.comments"
+                  :loading="store.commentsLoading"
                   @change="handleCreateComment"
                   @delete-comment="handleDeleteComment"
                   @edit-comment="handleEditComment"

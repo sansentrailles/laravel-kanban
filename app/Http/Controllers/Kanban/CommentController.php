@@ -22,6 +22,22 @@ class CommentController extends Controller
     ) {}
 
     /**
+     * Комментарии грузятся лениво при открытии карточки: в payload доски
+     * их нет, потому что у карточки может быть очень много комментариев.
+     */
+    public function index(Card $card)
+    {
+        Gate::authorize('view', $card);
+
+        $comments = $card->comments()->with('user')->get();
+
+        return response()->json([
+            'comments' => CommentResource::collection($comments)->resolve(),
+            'comments_count' => $comments->count(),
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(StoreCommentRequest $request, Card $card)

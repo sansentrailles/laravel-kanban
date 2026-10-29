@@ -25,8 +25,6 @@ export const useBoardStore = defineStore('board', () => {
     return [...columns.value].sort((a, b) => a.ord - b.ord)
   })
 
-  const selectCard = (card) => { selectedCard.value = card }
-  const setFilters = (newFilters) => { filters.value = newFilters }
   const findCard = (cardId) => {
     for (const column of columns.value) {
       const card = column.cards.find(c => c.id === Number(cardId))
@@ -35,8 +33,42 @@ export const useBoardStore = defineStore('board', () => {
     return null
   }
 
+  // Комментарии грузятся лениво при открытии карточки: в payload доски их нет.
+  // Set хранит id уже загруженных карточек, чтобы не дёргать API на каждое открытие.
+  const commentsLoadedCardIds = new Set()
+  const pendingCommentsRequests = ref(0)
+  const commentsLoading = computed(() => pendingCommentsRequests.value > 0)
+
+  const loadComments = async (cardId) => {
+    const card = findCard(cardId)
+    if (!card || commentsLoadedCardIds.has(card.id)) return
+
+    pendingCommentsRequests.value++
+
+    try {
+      const { data } = await axios.get(route('cards.comments.index', card.id))
+
+      card.comments = data.comments ?? []
+      card.comments_count = data.comments_count ?? card.comments.length
+      commentsLoadedCardIds.add(card.id)
+    } catch (error) {
+      notifyError(error, 'Не удалось загрузить комментарии')
+    } finally {
+      pendingCommentsRequests.value--
+    }
+  }
+
+  const selectCard = (card) => {
+    selectedCard.value = card
+    if (card) loadComments(card.id)
+  }
+
+  const setFilters = (newFilters) => { filters.value = newFilters }
+
   const setBoardData = (boardData) => {
     currentBoard.value = boardData
+    // Комментарии в новом payload снова не загружены — сбрасываем кэш.
+    commentsLoadedCardIds.clear()
     // Сохраняем колонки и сразу сортируем
     columns.value = (boardData.columns?.data || []).sort((a, b) => a.ord - b.ord)
   }
@@ -714,6 +746,7 @@ export const useBoardStore = defineStore('board', () => {
 
   return {
     currentBoard, columns, selectedCard, filters, sortedColumns, labels,
+    commentsLoading,
     createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
     saveColumnsOrder, saveCardOrder, applyCardMove, findCard, updateCard,
     updateCardField, updateCardDates, snapshotBoard,

@@ -9,6 +9,11 @@ use App\Models\User;
 
 class CardPolicy
 {
+    public function view(User $user, Card $card): bool
+    {
+        return $card->column->board->workspace->hasMember($user);
+    }
+
     public function update(User $user, Card $card): bool
     {
         $workspace = $card->column->board->workspace;

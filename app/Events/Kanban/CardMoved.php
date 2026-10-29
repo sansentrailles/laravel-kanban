@@ -19,7 +19,9 @@ final class CardMoved implements ShouldBroadcast
     public function __construct(
         public Card $card
     ) {
-        $this->card->load(['checklists.items', 'labels', 'assignees', 'comments.user']);
+        // comments намеренно не грузим: карточку можно перенести с десятками
+        // комментариев, а клиенту для переноса нужны только column_id и ord.
+        $this->card->load(['checklists.items', 'labels', 'assignees']);
     }
 
     /**

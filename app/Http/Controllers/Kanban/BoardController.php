@@ -47,7 +47,9 @@ class BoardController extends Controller
             'board' => BoardResource::make($board->load([
                 'columns.cards' => fn ($q) => $q
                     ->withCount(['comments', 'attachments', 'checklists'])
-                    ->with(['labels', 'checklists.items', 'attachments', 'assignees', 'comments.user']),
+                    // Комментарии не грузим: их может быть много, а нужны они
+                    // только в открытой карточке (GET cards.comments.index).
+                    ->with(['labels', 'checklists.items', 'attachments', 'assignees']),
             ]))->resolve(),
             // members нужны AssigneePicker в модалке карточки.
             'currentWorkspace' => WorkspaceResource::make($workspace->load(['labels', 'members']))->resolve(),
