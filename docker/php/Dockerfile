@@ -1,6 +1,6 @@
 FROM php:8.5-fpm
 
-# 1. Системные зависимости
+# Системные зависимости
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_pgsql pgsql bcmath gd intl mbstring xml zip pcntl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 2. Установка Redis из исходного кода (GitHub master)
+# Установка Redis из исходного кода (GitHub master)
 RUN git clone https://github.com/phpredis/phpredis.git /tmp/phpredis \
     && cd /tmp/phpredis \
     && phpize \
@@ -27,16 +27,23 @@ RUN git clone https://github.com/phpredis/phpredis.git /tmp/phpredis \
     && docker-php-ext-enable redis \
     && rm -rf /tmp/phpredis
 
-# 3. Composer
+# MongoDB PHP driver. PECL's channel sometimes answers "No releases available",
+# so install from a pinned tarball instead of `pecl install mongodb`.
+RUN curl -fsSL https://pecl.php.net/get/mongodb-2.5.5.tgz -o /tmp/mongodb-2.5.5.tgz \
+    && pecl install /tmp/mongodb-2.5.5.tgz \
+    && docker-php-ext-enable mongodb \
+    && rm -f /tmp/mongodb-2.5.5.tgz
+
+# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 4. Рабочая директория
+# Рабочая директория
 WORKDIR /var/www/html
 
-# 5. ИСПРАВЛЕНИЕ: Разрешаем Git работать в этой папке внутри контейнера
+# Разрешаем Git работать в этой папке внутри контейнера
 RUN git config --global --add safe.directory /var/www/html
 
-# 6. Установка прав
+# Установка прав
 RUN chown -R www-data:www-data /var/www
 
 EXPOSE 9000

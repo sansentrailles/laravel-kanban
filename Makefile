@@ -170,6 +170,10 @@ root: ## 💻 Войти в контейнер как root
 db-shell: ## 🗄 Войти в консоль PostgreSQL
 	$(DOCKER_COMPOSE) exec db psql -U laravel -d laravel
 
+.PHONY: mongo-shell
+mongo-shell: ## 🍃 Войти в консоль MongoDB (mongosh)
+	$(DOCKER_COMPOSE) exec mongodb mongosh -u laravel -p secret --authenticationDatabase admin
+
 .PHONY: redis-cli
 redis-cli: ## 🔴 Войти в Redis CLI
 	$(DOCKER_COMPOSE) exec redis redis-cli
