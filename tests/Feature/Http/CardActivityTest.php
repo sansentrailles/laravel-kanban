@@ -1,9 +1,11 @@
 <?php
 
+use App\Enums\Kanban\CardActivityType;
 use App\Jobs\Kanban\PersistCardActivity;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\CardActivity;
 use App\Models\Kanban\Column;
+use App\Models\Kanban\Label;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
@@ -84,3 +86,78 @@ it('stores an activity only once for the same event id', function () {
         CardActivity::query()->where('event_id', $eventId)->delete();
     }
 })->group('mongo');
+
+it('records scalar changes as a card.updated activity', function () {
+    /** @var TestCase $this */
+
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create([
+        'title' => 'Old name',
+        'description' => 'Old description'
+    ]);
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->patchJson(route('boards.cards.update', $card->id), [
+            'title' => 'New name',
+            'description' => 'New description',
+        ])
+        ->assertOk();
+    
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($card) {
+        $property = new ReflectionProperty($job, 'payload');
+        $payload = $property->getValue($job);
+
+        return $payload['type'] === 'card.updated'
+            && $payload['card_id'] === $card->id
+            && $payload['changes']['title'] === [
+                'from' => 'Old name',
+                'to' => 'New name',
+            ]
+            && $payload['changes']['description']['from']['length'] === mb_strlen('Old description')
+            && $payload['changes']['description']['to']['preview'] === 'New description';
+    });
+});
+
+it('record label changes as a separate activity', function () {
+    /** @var TestCase $this */
+
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $workspace = $card->column->board->workspace;
+    $workspace->members()->attach($user->id);
+
+    $attached = Label::factory()->create(['workspace_id' => $workspace->id]);
+    $detached = Label::factory()->create(['workspace_id' => $workspace->id]);
+    $card->labels()->attach($detached->id);
+
+    $this
+        ->actingAs($user)
+        ->patchJson(route('boards.cards.update', $card->id), [
+            'label_ids' => [$attached->id]
+        ])
+        ->assertOk();
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($attached, $detached) {
+        $property = new ReflectionProperty($job, 'payload');
+        $payload = $property->getValue($job);
+
+        return $payload['type'] === 'card.labels_changed'
+            && $payload['changes']['added'] === [[
+                'id' => $attached->id,
+                'name' => $attached->name,
+                'color' => $attached->color,
+            ]]
+            && $payload['changes']['removed'] === [[
+                'id' => $detached->id,
+                'name' => $detached->name,
+                'color' => $detached->color,
+            ]];
+    });
+});
