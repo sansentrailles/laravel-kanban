@@ -84,7 +84,7 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
-    command: php artisan queue:work --tries=3 --timeout=90
+    command: php artisan queue:work --queue=default,activity --tries=3 --timeout=90
     volumes:
       - ./:/var/www/html
     depends_on:

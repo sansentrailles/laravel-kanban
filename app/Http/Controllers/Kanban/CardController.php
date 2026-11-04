@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Kanban;
 
 use App\Actions\Kanban\CreateCardAction;
 use App\Actions\Kanban\MoveCardAction;
+use App\Actions\Kanban\RecordCardActivityAction;
 use App\Actions\Kanban\UpdateCardAction;
+use App\DTO\Kanban\CardActivityDTO;
 use App\DTO\Kanban\CreateCardDTO;
 use App\DTO\Kanban\UpdateCardDTO;
+use App\Enums\Kanban\CardActivityType;
 use App\Events\Kanban\CardCreated;
 use App\Events\Kanban\CardMoved;
 use App\Events\Kanban\CardUpdated;
@@ -26,7 +29,8 @@ class CardController extends Controller
     public function __construct(
         private readonly MoveCardAction $moveCardAction,
         private readonly UpdateCardAction $updateCardAction,
-        private readonly CreateCardAction $createCardAction
+        private readonly CreateCardAction $createCardAction,
+        private readonly RecordCardActivityAction $recordCardActivityAction
     ) {}
 
     public function store(CardCreateRequest $request, Column $column): JsonResponse
@@ -56,6 +60,24 @@ class CardController extends Controller
         $card->fresh(['labels', 'checklists', 'assignees', 'comments.user']);
 
         broadcast(new CardCreated($card))->toOthers();
+
+        $actor = $request->user();
+        $board = $column->board;
+
+        $this->recordCardActivityAction->execute(new CardActivityDTO(
+            type: CardActivityType::CardCreated,
+            cardId: $card->id,
+            workspaceId: $board->workspace_id,
+            boardId: $board->id,
+            columnId: $column->id,
+            cardTitle: $card->title,
+            actorId: $actor->id,
+            actorName: $actor->name,
+            subjectId: $card->id,
+            context: [
+                'priority' => $card->priority?->value,
+            ]
+        ));
 
         return response()->json([
             'card' => new CardResource($card),
