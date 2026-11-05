@@ -8,6 +8,7 @@ use App\Actions\Kanban\RecordCardActivityAction;
 use App\Actions\Kanban\UpdateCardAction;
 use App\DTO\Kanban\CardActivityDTO;
 use App\DTO\Kanban\CreateCardDTO;
+use App\DTO\Kanban\TextSnapshotDTO;
 use App\DTO\Kanban\UpdateCardDTO;
 use App\Enums\Kanban\CardActivityType;
 use App\Events\Kanban\CardCreated;
@@ -216,7 +217,7 @@ class CardController extends Controller
     {
         $normalize = [
             'title' => static fn (?string $value): ?string => $value,
-            'description' => fn (?string $value): ?array => $this->textSnapshot($value),
+            'description' => fn (?string $value): ?array => TextSnapshotDTO::from($value)?->toArray(),
             'priority' => static fn ($value): ?string => $value?->value,
             'start_date' => static fn ($value): ?string => $value?->format('Y-m-d'),
             'due_date' => static fn ($value): ?string => $value?->format('Y-m-d'),
