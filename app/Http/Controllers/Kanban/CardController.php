@@ -95,9 +95,26 @@ class CardController extends Controller
         $prevCard = Card::find($request->validated('prevCardId'));
         $nextCard = Card::find($request->validated('nextCardId'));
 
+        $fromColumnId = $card->column_id;
+        $fromOrd = (string) $card->ord;
+
         $movedCard = $this->moveCardAction->execute($card, $column, $prevCard, $nextCard);
 
         broadcast(new CardMoved($movedCard))->toOthers();
+
+        $this->recordCardActivity(
+            card: $movedCard,
+            actor: $request->user(),
+            type: CardActivityType::CardMoved,
+            context: [
+                'from_column_id' => $fromColumnId,
+                'to_column_id' => $movedCard->column_id,
+                'from_ord' => $fromOrd,
+                'to_ord' => (string) $movedCard->ord,
+                'prev_card_id' => $prevCard?->id,
+                'next_card_id' => $nextCard?->id,
+            ],
+        );
 
         return response()->json([
             'success' => true,
@@ -233,7 +250,7 @@ class CardController extends Controller
      */
     private function recordRelationChanges(
         Card $card,
-        user $actor,
+        User $actor,
         CardActivityType $type,
         Collection $before,
         Collection $after,

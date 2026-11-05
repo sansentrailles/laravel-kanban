@@ -161,3 +161,45 @@ it('record label changes as a separate activity', function () {
             ]];
     });
 });
+
+it('records card movement with from/to context', function () {
+    /** @var TestCase $this */
+
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create(['ord' => '1000000000.0000000000']);
+    $targetColumn = Column::factory()->create(['board_id' => $card->column->board_id]);
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $fromColumnId = $card->column_id;
+    $fromOrd = (string) $card->ord;
+
+    $this
+        ->actingAs($user)
+        ->patchJson(route('boards.cards.orders'), [
+            'cardId' => $card->id,
+            'columnId' => $targetColumn->id,
+            'prevCardId' => null,
+            'nextCardId' => null,
+        ])
+        ->assertOk();
+    
+    $card->refresh();
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($card, $targetColumn, $fromColumnId, $fromOrd) {
+        $property = new ReflectionProperty($job, 'payload');
+        $payload = $property->getValue($job);
+
+        return $payload['type'] === 'card.moved'
+            && $payload['card_id'] === $card->id
+            && $payload['column_id'] === $targetColumn->id
+            && $payload['context']['from_column_id'] === $fromColumnId
+            && $payload['context']['from_ord'] === $fromOrd
+            && $payload['context']['to_ord'] === (string) $card->ord
+            && $payload['context']['prev_card_id'] === null
+            && $payload['context']['next_card_id'] === null
+            ;
+    });
+});
