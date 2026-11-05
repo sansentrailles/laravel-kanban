@@ -9,6 +9,7 @@ use App\Jobs\Kanban\PersistCardActivity;
 use App\Models\Kanban\CardActivity;
 use BackedEnum;
 use DateTimeInterface;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
@@ -45,7 +46,7 @@ class RecordCardActivityAction
             Log::error('Не удалось поставить запись активности карточки в очередь', [
                 'event_id' => $payload['event_id'],
                 'type' => $payload['type'],
-                'card_id' => $payload['type'],
+                'card_id' => $payload['card_id'],
             ]);
         }
     }
@@ -67,6 +68,11 @@ class RecordCardActivityAction
             if ($value instanceof DateTimeInterface) {
                 return $value->format(DATE_ATOM);
             }
+
+            if ($value instanceof Arrayable) {
+                return $this->normalize($value->toArray());
+            }
+
 
             if (is_array($value)) {
                 return $this->normalize($value);

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\DTO\Kanban;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
 
-class TextSnapshotDTO
+class TextSnapshotDTO implements Arrayable
 {
     public const PREVIEW_LIMIT = 120;
 

@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Kanban;
 
 use App\Actions\Kanban\CreateCommentAction;
+use App\Actions\Kanban\RecordCardActivityAction;
+use App\DTO\Kanban\CardActivityDTO;
 use App\DTO\Kanban\CreateCommentDTO;
+use App\DTO\Kanban\TextSnapshotDTO;
+use App\Enums\Kanban\CardActivityType;
 use App\Events\Kanban\CommentCreated;
 use App\Events\Kanban\CommentDeleted;
 use App\Events\Kanban\CommentUpdated;
@@ -14,12 +18,15 @@ use App\Http\Resources\Kanban\CommentResource;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Comment;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class CommentController extends Controller
 {
     public function __construct(
         private readonly CreateCommentAction $createCommentAction,
-    ) {}
+        private readonly RecordCardActivityAction $recordCardActivityAction,
+    ) {
+    }
 
     /**
      * Комментарии грузятся лениво при открытии карточки: в payload доски
@@ -54,6 +61,25 @@ class CommentController extends Controller
         // Отдельное событие с минимальным payload: ни карточку, ни её
         // остальные связи не гоняем по WebSocket.
         broadcast(new CommentCreated($comment, $card))->toOthers();
+
+        $actor = $request->user();
+        $board = $card->column->board;
+
+        $this->recordCardActivityAction->execute(new CardActivityDTO(
+            type: CardActivityType::CommentCreated,
+            cardId: $card->id,
+            workspaceId: $board->workspace_id,
+            boardId: $board->id,
+            columnId: $card->column->id,
+            cardTitle: $card->title,
+            actorId: $actor->id,
+            actorName: $actor->name,
+            subjectId: $comment->id,
+            changes: [
+                'content' => TextSnapshotDTO::from($comment->content),
+            ],
+            context: [],
+        ));
 
         return response()->json([
             'success' => true,

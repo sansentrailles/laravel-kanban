@@ -1,5 +1,6 @@
 <?php
 
+use App\DTO\Kanban\TextSnapshotDTO;
 use App\Enums\Kanban\CardActivityType;
 use App\Jobs\Kanban\PersistCardActivity;
 use App\Models\Kanban\Card;
@@ -201,5 +202,35 @@ it('records card movement with from/to context', function () {
             && $payload['context']['prev_card_id'] === null
             && $payload['context']['next_card_id'] === null
             ;
+    });
+});
+
+it('records a comment.created activity with a text snapshot', function () {
+    /** @var TestCase $this */
+
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $content = str_repeat('a', 200);
+
+    $this
+        ->actingAs($user)
+        ->postJson(route('cards.comments.store', $card->id), [
+            'content' => $content,
+        ])
+        ->assertOk();
+    
+    $comment = $card->comments()->firstOrFail();
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($comment) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'comment.created'
+            && $payload['subject_type'] === 'comment'
+            && $payload['subject_id'] === $comment->id
+            && $payload['changes']['content'] === TextSnapshotDTO::from($comment->content)->toArray();
     });
 });
