@@ -4,6 +4,8 @@ use App\DTO\Kanban\TextSnapshotDTO;
 use App\Jobs\Kanban\PersistCardActivity;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\CardActivity;
+use App\Models\Kanban\Checklist;
+use App\Models\Kanban\ChecklistItem;
 use App\Models\Kanban\Column;
 use App\Models\Kanban\Comment;
 use App\Models\Kanban\Label;
@@ -24,8 +26,7 @@ it('queues a card.created activity with the full payload', function () {
     $this
         ->actingAs($user)
         ->postJson(route('boards.cards.store', $column->id), [
-            'title' => 'New activity card',
-        ])
+            'title' => 'New activity card', ])
         ->assertOk();
 
     $card = Card::query()
@@ -297,7 +298,7 @@ it('does not record activity when comment text is unchanged', function () {
     expect($comment->refresh()->is_edited)->toBeFalse();
 });
 
-it('records a comment.deleted activity with the textsnapshot', function () {
+it('records a comment.deleted activity with the text snapshot', function () {
     /** @var TestCase $this */
     Queue::fake();
 
@@ -405,5 +406,40 @@ it('records a checklist.created activity with a text snapshot', function () {
             && $payload['subject_type'] === 'checklist'
             && $payload['subject_id'] === $checklist->id
             && $payload['changes']['title'] === 'New checklist';
+    });
+});
+
+it('records a checklist.deleted activity with the checklist title', function () {
+    /** @var TestCase $this */
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $checklist = Checklist::factory()->create([
+        'card_id' => $card->id,
+        'title' => 'New checklist',
+    ]);
+
+    ChecklistItem::factory()->count(3)->create(['checklist_id' => $checklist->id]);
+
+    $checklistId = $checklist->id;
+
+    $this
+        ->actingAs($user)
+        ->deleteJson(route('cards.checklist.delete', ['checklist' => $checklist->id]))
+        ->assertOk();
+
+    $this->assertDatabaseMissing('kanban_checklists', ['id' => $checklistId]);
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($checklistId) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'checklist.deleted'
+            && $payload['subject_type'] === 'checklist'
+            && $payload['subject_id'] === $checklistId
+            && $payload['changes']['title'] === 'New checklist'
+            && $payload['context']['items_count'] === 3;
     });
 });

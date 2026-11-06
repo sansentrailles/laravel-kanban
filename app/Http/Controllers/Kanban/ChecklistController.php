@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Kanban\StoreChecklistRequest;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Checklist;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class ChecklistController extends Controller
@@ -24,7 +25,6 @@ class ChecklistController extends Controller
         // Присылаем всем клиентам актуальный набор чек-листов карточки
         broadcast(new ChecklistUpdated($card))->toOthers();
 
-        $board = $card->column->board;
         $actor = $request->user();
 
         $this->recordCardActivityAction->executeForCard(
@@ -35,7 +35,6 @@ class ChecklistController extends Controller
             changes: [
                 'title' => $checklist->title,
             ],
-            context: [],
         );
 
         return response()->json([
@@ -48,14 +47,30 @@ class ChecklistController extends Controller
         ]);
     }
 
-    public function delete(Checklist $checklist)
+    public function delete(Request $request, Checklist $checklist)
     {
         Gate::authorize('delete', $checklist);
 
+        $checklistId = $checklist->id;
+        $checklistTitle = $checklist->title;
         $card = $checklist->card;
+        $itemsCount = $checklist->items()->count();
         $checklist->delete();
 
         broadcast(new ChecklistUpdated($card))->toOthers();
+
+        $this->recordCardActivityAction->executeForCard(
+            card: $card,
+            actor: $request->user,
+            type: CardActivityType::ChecklistDeleted,
+            subjectId: $checklistId,
+            changes: [
+                'title' => $checklistTitle,
+            ],
+            context: [
+                'items_count' => $itemsCount,
+            ],
+        );
 
         return response()->json([
             'success' => true,
