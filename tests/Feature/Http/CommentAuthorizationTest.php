@@ -125,7 +125,7 @@ it('allows the author to delete a comment', function () {
         ->assertOk()
         ->assertJsonPath('success', true);
 
-    $this->assertDatabaseMissing('kanban_comments', [
+    $this->assertSoftDeleted('kanban_comments', [
         'card_id' => $card->id,
         'user_id' => $user->id,
     ]);
