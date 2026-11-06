@@ -1,7 +1,6 @@
 <?php
 
 use App\DTO\Kanban\TextSnapshotDTO;
-use App\Enums\Kanban\CardActivityType;
 use App\Jobs\Kanban\PersistCardActivity;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\CardActivity;
@@ -16,7 +15,6 @@ use Tests\TestCase;
 
 it('queues a card.created activity with the full payload', function () {
     /** @var TestCase $this */
-
     Queue::fake();
 
     $user = User::factory()->create();
@@ -29,7 +27,7 @@ it('queues a card.created activity with the full payload', function () {
             'title' => 'New activity card',
         ])
         ->assertOk();
-    
+
     $card = Card::query()
         ->where('title', 'New activity card')
         ->firstOrFail();
@@ -51,7 +49,7 @@ it('queues a card.created activity with the full payload', function () {
             && $payload['changes'] === []
             && $payload['context']['priority'] === $card->priority?->value;
     });
-    
+
 });
 
 it('stores an activity only once for the same event id', function () {
@@ -91,13 +89,12 @@ it('stores an activity only once for the same event id', function () {
 
 it('records scalar changes as a card.updated activity', function () {
     /** @var TestCase $this */
-
     Queue::fake();
 
     $user = User::factory()->create();
     $card = Card::factory()->create([
         'title' => 'Old name',
-        'description' => 'Old description'
+        'description' => 'Old description',
     ]);
 
     $card->column->board->workspace->members()->attach($user->id);
@@ -109,7 +106,7 @@ it('records scalar changes as a card.updated activity', function () {
             'description' => 'New description',
         ])
         ->assertOk();
-    
+
     Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($card) {
         $property = new ReflectionProperty($job, 'payload');
         $payload = $property->getValue($job);
@@ -127,7 +124,6 @@ it('records scalar changes as a card.updated activity', function () {
 
 it('record label changes as a separate activity', function () {
     /** @var TestCase $this */
-
     Queue::fake();
 
     $user = User::factory()->create();
@@ -135,14 +131,15 @@ it('record label changes as a separate activity', function () {
     $workspace = $card->column->board->workspace;
     $workspace->members()->attach($user->id);
 
-    $attached = Label::factory()->create(['workspace_id' => $workspace->id]);
-    $detached = Label::factory()->create(['workspace_id' => $workspace->id]);
+    $attached = Label::factory()->create(['workspace_id' => $workspace->id, 'name' => 'Attached']);
+    $detached = Label::factory()->create(['workspace_id' => $workspace->id, 'name' => 'Detached']);
+
     $card->labels()->attach($detached->id);
 
     $this
         ->actingAs($user)
         ->patchJson(route('boards.cards.update', $card->id), [
-            'label_ids' => [$attached->id]
+            'label_ids' => [$attached->id],
         ])
         ->assertOk();
 
@@ -166,7 +163,6 @@ it('record label changes as a separate activity', function () {
 
 it('records card movement with from/to context', function () {
     /** @var TestCase $this */
-
     Queue::fake();
 
     $user = User::factory()->create();
@@ -187,12 +183,14 @@ it('records card movement with from/to context', function () {
             'nextCardId' => null,
         ])
         ->assertOk();
-    
+
     $card->refresh();
 
     Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($card, $targetColumn, $fromColumnId, $fromOrd) {
         $property = new ReflectionProperty($job, 'payload');
         $payload = $property->getValue($job);
+
+        // dd([$payload['column_id'], $targetColumn->id]);
 
         return $payload['type'] === 'card.moved'
             && $payload['card_id'] === $card->id
@@ -201,14 +199,12 @@ it('records card movement with from/to context', function () {
             && $payload['context']['from_ord'] === $fromOrd
             && $payload['context']['to_ord'] === (string) $card->ord
             && $payload['context']['prev_card_id'] === null
-            && $payload['context']['next_card_id'] === null
-            ;
+            && $payload['context']['next_card_id'] === null;
     });
 });
 
 it('records a comment.created activity with a text snapshot', function () {
     /** @var TestCase $this */
-
     Queue::fake();
 
     $user = User::factory()->create();
@@ -223,7 +219,7 @@ it('records a comment.created activity with a text snapshot', function () {
             'content' => $content,
         ])
         ->assertOk();
-    
+
     $comment = $card->comments()->firstOrFail();
 
     Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($comment) {
@@ -238,7 +234,6 @@ it('records a comment.created activity with a text snapshot', function () {
 
 it('records a comment.updated activity with a before/after snapshot', function () {
     /** @var TestCase $this */
-
     Queue::fake();
 
     $user = User::factory()->create();
@@ -250,7 +245,7 @@ it('records a comment.updated activity with a before/after snapshot', function (
     $comment = Comment::factory()->create([
         'card_id' => $card->id,
         'user_id' => $user->id,
-        'content' => $oldContent
+        'content' => $oldContent,
     ]);
 
     $this
@@ -259,7 +254,7 @@ it('records a comment.updated activity with a before/after snapshot', function (
             'content' => str_repeat('b', 200),
         ])
         ->assertOk();
-    
+
     $comment->refresh();
     expect($comment->is_edited)->toBeTrue()
         ->and($comment->content)->toBe(str_repeat('b', 200));
@@ -278,7 +273,6 @@ it('records a comment.updated activity with a before/after snapshot', function (
 
 it('does not record activity when comment text is unchanged', function () {
     /** @var TestCase $this */
-
     Queue::fake();
 
     $user = User::factory()->create();
@@ -297,7 +291,7 @@ it('does not record activity when comment text is unchanged', function () {
             'content' => 'Comment',
         ])
         ->assertOk();
-    
+
     Queue::assertNotPushed(PersistCardActivity::class);
 
     expect($comment->refresh()->is_edited)->toBeFalse();
@@ -305,7 +299,6 @@ it('does not record activity when comment text is unchanged', function () {
 
 it('records a comment.deleted activity with the textsnapshot', function () {
     /** @var TestCase $this */
-
     Queue::fake();
 
     $user = User::factory()->create();
@@ -317,7 +310,7 @@ it('records a comment.deleted activity with the textsnapshot', function () {
     $comment = Comment::factory()->create([
         'card_id' => $card->id,
         'user_id' => $user->id,
-        'content' => $content
+        'content' => $content,
     ]);
 
     $commentId = $comment->id;
@@ -326,7 +319,7 @@ it('records a comment.deleted activity with the textsnapshot', function () {
         ->actingAs($user)
         ->deleteJson(route('cards.comments.delete', ['card' => $card->id, 'comment' => $comment->id]))
         ->assertOk();
-    
+
     $this->assertSoftDeleted('kanban_comments', ['id' => $comment->id]);
 
     Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($comment, $content) {
@@ -335,14 +328,12 @@ it('records a comment.deleted activity with the textsnapshot', function () {
         return $payload['type'] === 'comment.deleted'
             && $payload['subject_type'] === 'comment'
             && $payload['subject_id'] === $comment->id
-            && $payload['changes']['content'] === TextSnapshotDTO::from($content)->toArray()
-            ;
+            && $payload['changes']['content'] === TextSnapshotDTO::from($content)->toArray();
     });
 });
 
-it('does not record activity when a non-author tries a comment', function() {
+it('does not record activity when a non-author tries a comment', function () {
     /** @var TestCase $this */
-
     Queue::fake();
 
     $author = User::factory()->create();
@@ -353,7 +344,7 @@ it('does not record activity when a non-author tries a comment', function() {
     $comment = Comment::factory()->create([
         'card_id' => $card->id,
         'user_id' => $author->id,
-        'content' => 'Authors comment'
+        'content' => 'Authors comment',
     ]);
 
     $this
@@ -368,7 +359,6 @@ it('does not record activity when a non-author tries a comment', function() {
 
 it('does not recrod activity when a non-author tries to delete a comment', function () {
     /** @var TestCase $this */
-
     Queue::fake();
 
     $author = User::factory()->create();
@@ -379,7 +369,7 @@ it('does not recrod activity when a non-author tries to delete a comment', funct
     $comment = Comment::factory()->create([
         'card_id' => $card->id,
         'user_id' => $author->id,
-        'content' => 'Authors comment'
+        'content' => 'Authors comment',
     ]);
 
     $this
@@ -388,4 +378,32 @@ it('does not recrod activity when a non-author tries to delete a comment', funct
         ->assertForbidden();
 
     Queue::assertNotPushed(PersistCardActivity::class);
+});
+
+it('records a checklist.created activity with a text snapshot', function () {
+    /** @var TestCase $this */
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->postJson(route('cards.checklist.store', $card->id), [
+            'title' => 'New checklist',
+        ])
+        ->assertOk();
+
+    $checklist = $card->checklists()->firstOrFail();
+    expect($checklist->title)->toBe('New checklist');
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($checklist) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'checklist.created'
+            && $payload['subject_type'] === 'checklist'
+            && $payload['subject_id'] === $checklist->id
+            && $payload['changes']['title'] === 'New checklist';
+    });
 });

@@ -16,6 +16,7 @@ class Comment extends Model
 {
     /** @use HasFactory<CommentFactory> */
     use HasFactory;
+
     use SoftDeletes;
 
     protected $fillable = [

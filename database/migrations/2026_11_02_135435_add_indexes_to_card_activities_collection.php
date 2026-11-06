@@ -1,9 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -41,15 +39,15 @@ return new class extends Migration
                 $options['unique'] = true;
             }
 
-            // ВАЖНО ДЛЯ ПРОДАКШЕНА: 
+            // ВАЖНО ДЛЯ ПРОДАКШЕНА:
             // Если коллекция уже огромная, добавление индекса может заблокировать запись.
-            // В современных версиях MongoDB это происходит в фоне, но можно добавить 'background' => true 
+            // В современных версиях MongoDB это происходит в фоне, но можно добавить 'background' => true
             // или 'commitQuorum' в $options для явного контроля, если потребуется.
 
             try {
                 $collection->createIndex($index['key'], $options);
             } catch (Throwable $e) {
-                throw new \RuntimeException("Не удалось создать индекс {$index['name']}: {$e->getMessage()}", 0, $e);
+                throw new RuntimeException("Не удалось создать индекс {$index['name']}: {$e->getMessage()}", 0, $e);
             }
         }
 

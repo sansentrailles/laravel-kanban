@@ -7,6 +7,7 @@ use MongoDB\Laravel\Eloquent\Model;
 class CardActivity extends Model
 {
     public const SCHEMA_VERSION = 1;
+
     public const UPDATED_AT = null;
 
     protected $connection = 'mongodb';

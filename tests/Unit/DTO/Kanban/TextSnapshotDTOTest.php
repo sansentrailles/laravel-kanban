@@ -6,7 +6,7 @@ it('returns null for null input', function () {
     expect(TextSnapshotDTO::from(null))->toBeNull();
 });
 
-it('keep short text intact', function() {
+it('keep short text intact', function () {
     $snapshot = TextSnapshotDTO::from('short');
 
     expect($snapshot->length)->toBe(5)
@@ -20,7 +20,7 @@ it('truncate long text and stores the real length', function () {
         ->and(mb_strlen($snapshot->preview))->toBe(TextSnapshotDTO::PREVIEW_LIMIT + 1);
 });
 
-it('serializes to the activity payload shape', function() {
+it('serializes to the activity payload shape', function () {
     expect(TextSnapshotDTO::from('text')->toArray())
         ->toBe(['length' => 4, 'preview' => 'text']);
 });
