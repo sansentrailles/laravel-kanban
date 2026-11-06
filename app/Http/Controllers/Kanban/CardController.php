@@ -6,7 +6,6 @@ use App\Actions\Kanban\CreateCardAction;
 use App\Actions\Kanban\MoveCardAction;
 use App\Actions\Kanban\RecordCardActivityAction;
 use App\Actions\Kanban\UpdateCardAction;
-use App\DTO\Kanban\CardActivityDTO;
 use App\DTO\Kanban\CreateCardDTO;
 use App\DTO\Kanban\TextSnapshotDTO;
 use App\DTO\Kanban\UpdateCardDTO;
@@ -23,10 +22,10 @@ use App\Models\Kanban\Card;
 use App\Models\Kanban\Column;
 use App\Models\User;
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class CardController extends Controller
@@ -62,27 +61,20 @@ class CardController extends Controller
             return $this->moveCardAction->execute($card, $lockedColumn, $lastCard, null);
         });
 
-        $card->fresh(['labels', 'checklists', 'assignees', 'comments.user']);
+        $card = $card->fresh(['labels', 'checklists', 'assignees', 'comments.user']);
 
         broadcast(new CardCreated($card))->toOthers();
 
         $actor = $request->user();
-        $board = $column->board;
 
-        $this->recordCardActivityAction->execute(new CardActivityDTO(
+        $this->recordCardActivityAction->executeForCard(
+            card: $card,
+            actor: $actor,
             type: CardActivityType::CardCreated,
-            cardId: $card->id,
-            workspaceId: $board->workspace_id,
-            boardId: $board->id,
-            columnId: $column->id,
-            cardTitle: $card->title,
-            actorId: $actor->id,
-            actorName: $actor->name,
-            subjectId: $card->id,
             context: [
                 'priority' => $card->priority?->value,
             ]
-        ));
+        );
 
         return response()->json([
             'card' => new CardResource($card),
@@ -103,7 +95,7 @@ class CardController extends Controller
 
         broadcast(new CardMoved($movedCard))->toOthers();
 
-        $this->recordCardActivity(
+        $this->recordCardActivityAction->executeForCard(
             card: $movedCard,
             actor: $request->user(),
             type: CardActivityType::CardMoved,
@@ -137,12 +129,11 @@ class CardController extends Controller
             'completed_at' => $card->completed_at,
         ];
 
-
         $labelsBefore = $card->labels()->get(['kanban_labels.id', 'kanban_labels.name', 'kanban_labels.color'])->keyBy('id');
         $assigneesBefore = $card->assignees()->get(['users.id', 'users.name'])->keyBy('id');
 
         // Обновляем основные поля через Action
-        
+
         [$updatedCard, $labelsAfter, $assigneeAfter] = DB::transaction(function () use ($card, $dto, $data) {
             $updatedCard = $this->updateCardAction->execute($card, $dto);
 
@@ -210,8 +201,7 @@ class CardController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $before
-     * @return void
+     * @param  array<string, mixed>  $before
      */
     private function recordScalarChanges(Card $card, User $actor, array $before): void
     {
@@ -242,12 +232,17 @@ class CardController extends Controller
             return;
         }
 
-        $this->recordCardActivity($card, $actor, CardActivityType::CardUpdated, $changes);
+        $this->recordCardActivityAction->executeForCard(
+            card: $card,
+            actor: $actor,
+            type: CardActivityType::CardUpdated,
+            changes: $changes,
+        );
     }
 
     /**
-     * @param Collection<int, \Illuminate\Database\Eloquent\Model> $before
-     * @param Collection<int, \Illuminate\Database\Eloquent\Model> $after
+     * @param  Collection<int, Model>  $before
+     * @param  Collection<int, Model>  $after
      */
     private function recordRelationChanges(
         Card $card,
@@ -265,53 +260,14 @@ class CardController extends Controller
             return;
         }
 
-        $this->recordCardActivity($card, $actor, $type, [
-            'added' => $added->map($snapshot)->all(),
-            'removed' => $removed->map($snapshot)->all(),
-        ]);
-    }
-
-    /**
-     * @param array<string, mixed> $changes
-     * @param array<string, mixed> $context
-     */
-    private function recordCardActivity(
-        Card $card,
-        User $actor,
-        CardActivityType $type,
-        array $changes = [],
-        array $context = [],
-        ?int $subjectId = null,
-    ): void {
-        $board = $card->column->board;
-
-        $this->recordCardActivityAction->execute(new CardActivityDTO(
+        $this->recordCardActivityAction->executeForCard(
+            card: $card,
+            actor: $actor,
             type: $type,
-            cardId: $card->id,
-            workspaceId: $board->workspace_id,
-            boardId: $board->id,
-            columnId: $card->column_id,
-            cardTitle: $card->title,
-            actorId: $actor->id,
-            actorName: $actor->name,
-            subjectId: $subjectId ?? $card->id,
-            changes: $changes,
-            context: $context,
-        ));
-    }
-
-    /**
-     * @return array{length: int, preview: string}|null
-     */
-    private function textSnapshot(?string $text): ?array
-    {
-        if ($text === null) {
-            return null;
-        }
-
-        return [
-            'length' => mb_strlen($text),
-            'preview' => Str::limit($text, 120),
-        ];
+            changes: [
+                'added' => $added->map($snapshot)->all(),
+                'removed' => $removed->map($snapshot)->all(),
+            ],
+        );
     }
 }
