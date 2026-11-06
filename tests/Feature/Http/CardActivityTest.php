@@ -6,6 +6,7 @@ use App\Jobs\Kanban\PersistCardActivity;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\CardActivity;
 use App\Models\Kanban\Column;
+use App\Models\Kanban\Comment;
 use App\Models\Kanban\Label;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -233,4 +234,158 @@ it('records a comment.created activity with a text snapshot', function () {
             && $payload['subject_id'] === $comment->id
             && $payload['changes']['content'] === TextSnapshotDTO::from($comment->content)->toArray();
     });
+});
+
+it('records a comment.updated activity with a before/after snapshot', function () {
+    /** @var TestCase $this */
+
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $oldContent = str_repeat('a', 200);
+
+    $comment = Comment::factory()->create([
+        'card_id' => $card->id,
+        'user_id' => $user->id,
+        'content' => $oldContent
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->patchJson(route('cards.comments.edit', ['card' => $card->id, 'comment' => $comment->id]), [
+            'content' => str_repeat('b', 200),
+        ])
+        ->assertOk();
+    
+    $comment->refresh();
+    expect($comment->is_edited)->toBeTrue()
+        ->and($comment->content)->toBe(str_repeat('b', 200));
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($comment, $oldContent) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'comment.updated'
+            && $payload['subject_type'] === 'comment'
+            && $payload['subject_id'] === $comment->id
+            && $payload['changes']['content']['from'] === TextSnapshotDTO::from($oldContent)->toArray()
+            && $payload['changes']['content']['to'] === TextSnapshotDTO::from($comment->content)->toArray()
+            && $payload['changes']['content']['to']['length'] === 200;
+    });
+});
+
+it('does not record activity when comment text is unchanged', function () {
+    /** @var TestCase $this */
+
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $comment = Comment::factory()->create([
+        'card_id' => $card->id,
+        'user_id' => $user->id,
+        'content' => 'Comment',
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->patchJson(route('cards.comments.edit', ['card' => $card->id, 'comment' => $comment->id]), [
+            'content' => 'Comment',
+        ])
+        ->assertOk();
+    
+    Queue::assertNotPushed(PersistCardActivity::class);
+
+    expect($comment->refresh()->is_edited)->toBeFalse();
+});
+
+it('records a comment.deleted activity with the textsnapshot', function () {
+    /** @var TestCase $this */
+
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $content = str_repeat('a', 200);
+
+    $comment = Comment::factory()->create([
+        'card_id' => $card->id,
+        'user_id' => $user->id,
+        'content' => $content
+    ]);
+
+    $commentId = $comment->id;
+
+    $this
+        ->actingAs($user)
+        ->deleteJson(route('cards.comments.delete', ['card' => $card->id, 'comment' => $comment->id]))
+        ->assertOk();
+    
+    $this->assertSoftDeleted('kanban_comments', ['id' => $comment->id]);
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($comment, $content) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'comment.deleted'
+            && $payload['subject_type'] === 'comment'
+            && $payload['subject_id'] === $comment->id
+            && $payload['changes']['content'] === TextSnapshotDTO::from($content)->toArray()
+            ;
+    });
+});
+
+it('does not record activity when a non-author tries a comment', function() {
+    /** @var TestCase $this */
+
+    Queue::fake();
+
+    $author = User::factory()->create();
+    $intruder = User::factory()->create();
+    $card = Card::factory()->create();
+    $card->column->board->workspace->members()->attach([$author->id, $intruder->id]);
+
+    $comment = Comment::factory()->create([
+        'card_id' => $card->id,
+        'user_id' => $author->id,
+        'content' => 'Authors comment'
+    ]);
+
+    $this
+        ->actingAs($intruder)
+        ->patchJson(route('cards.comments.edit', ['card' => $card->id, 'comment' => $comment->id]), [
+            'content' => 'Edit comment by intruder',
+        ])
+        ->assertForbidden();
+
+    Queue::assertNotPushed(PersistCardActivity::class);
+});
+
+it('does not recrod activity when a non-author tries to delete a comment', function () {
+    /** @var TestCase $this */
+
+    Queue::fake();
+
+    $author = User::factory()->create();
+    $intruder = User::factory()->create();
+    $card = Card::factory()->create();
+    $card->column->board->workspace->members()->attach([$author->id, $intruder->id]);
+
+    $comment = Comment::factory()->create([
+        'card_id' => $card->id,
+        'user_id' => $author->id,
+        'content' => 'Authors comment'
+    ]);
+
+    $this
+        ->actingAs($intruder)
+        ->deleteJson(route('cards.comments.delete', ['card' => $card->id, 'comment' => $comment->id]))
+        ->assertForbidden();
+
+    Queue::assertNotPushed(PersistCardActivity::class);
 });

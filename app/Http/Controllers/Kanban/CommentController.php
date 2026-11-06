@@ -17,6 +17,7 @@ use App\Http\Requests\Kanban\UpdateCommentRequest;
 use App\Http\Resources\Kanban\CommentResource;
 use App\Models\Kanban\Card;
 use App\Models\Kanban\Comment;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
@@ -87,30 +88,79 @@ class CommentController extends Controller
         ]);
     }
 
-    public function destroy(Card $card, Comment $comment)
+    public function update(UpdateCommentRequest $request, Card $card, Comment $comment)
     {
-        Gate::authorize('delete', $comment);
+        Gate::authorize('update', $comment);
 
-        $commentId = $comment->id;
-        $comment->delete();
+        $data = $request->validated();
+        $oldContent = $comment->content;
 
-        broadcast(new CommentDeleted($commentId, $card))->toOthers();
+        if ($oldContent === $data['content']) {
+            return response()->json(['success' => true]);
+        }
+
+        $comment->update([
+            ...$data,
+            'is_edited' => true,
+        ]);
+
+        broadcast(new CommentUpdated($comment, $card))->toOthers();
+
+        $actor = $request->user();
+        $board = $card->column->board;
+
+        $this->recordCardActivityAction->execute(new CardActivityDTO(
+            type: CardActivityType::CommentUpdated,
+            cardId: $card->id,
+            workspaceId: $board->workspace_id,
+            boardId: $board->id,
+            columnId: $card->column->id,
+            cardTitle: $card->title,
+            actorId: $actor->id,
+            actorName: $actor->name,
+            subjectId: $comment->id,
+            changes: [
+                'content' => [
+                    'from' => TextSnapshotDTO::from($oldContent),
+                    'to' => TextSnapshotDTO::from($comment->content),
+                ],
+            ],
+            context: [],
+        ));
 
         return response()->json([
             'success' => true,
         ]);
     }
 
-    public function update(UpdateCommentRequest $request, Card $card, Comment $comment)
+    public function destroy(Card $card, Comment $comment)
     {
-        Gate::authorize('update', $comment);
+        Gate::authorize('delete', $comment);
 
-        $comment->update([
-            ...$request->validated(),
-            'is_edited' => true,
-        ]);
+        $commentId = $comment->id;
+        $content = $comment->content;
+        $comment->delete();
 
-        broadcast(new CommentUpdated($comment, $card))->toOthers();
+        broadcast(new CommentDeleted($commentId, $card))->toOthers();
+
+        $actor = Auth::user();
+        $board = $card->column->board;
+
+        $this->recordCardActivityAction->execute(new CardActivityDTO(
+            type: CardActivityType::CommentDeleted,
+            cardId: $card->id,
+            workspaceId: $board->workspace_id,
+            boardId: $board->id,
+            columnId: $card->column->id,
+            cardTitle: $card->title,
+            actorId: $actor->id,
+            actorName: $actor->name,
+            subjectId: $commentId,
+            changes: [
+                'content' => TextSnapshotDTO::from($content),
+            ],
+            context: [],
+        ));
 
         return response()->json([
             'success' => true,
