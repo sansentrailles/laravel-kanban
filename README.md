@@ -1,9 +1,14 @@
-# 🚀 Laravel 13 + Docker
+# 🗂 Kanban — таск-трекер для команд
 
-Полностью готовая среда разработки для Laravel 13 на базе Docker с использованием **PHP 8.5**, **PostgreSQL 16** и **Redis 7**.
+**Kanban** — full-stack веб-приложение для управления задачами по методологии Kanban. Работа строится вокруг иерархии **воркспейс → доска → колонка → карточка**: команда создаёт пространство, раскладывает задачи по колонкам и двигает их по workflow.
+
+Проект разрабатывается и запускается в Docker-окружении: **PHP 8.5**, **PostgreSQL 16**, **MongoDB 7**, **Redis**, **Laravel Reverb** и **Node.js**.
 
 ## 📋 Содержание
 
+- [О проекте](#-о-проекте)
+  - [Возможности](#возможности)
+  - [Стек технологий](#-стек-технологий)
 - [Требования](#-требования)
 - [Быстрый старт](#-быстрый-старт)
 - [Структура проекта](#-структура-проекта)
@@ -23,6 +28,49 @@
 - [Порты сервисов](#-порты-сервисов)
 - [Решение проблем](#-решение-проблем)
 - [Полезные советы](#-полезные-советы)
+
+---
+
+## 📖 О проекте
+
+Приложение позволяет вести несколько проектов (воркспейсов), разделять доступ между участниками и работать с досками в реальном времени. Все изменения синхронизируются между участниками через WebSocket-соединение, а действия по карточкам сохраняются в отдельный журнал активности.
+
+### Возможности
+
+- **Воркспейсы** — создание и переключение пространств, участники и роли (владелец, администратор, участник, наблюдатель), доступ к доскам.
+- **Доски и колонки** — создание колонок, drag-and-drop карточек и колонок, WIP-лимиты с блокировкой переноса при превышении, горизонтальная прокрутка доски.
+- **Карточки** — rich-text описание, приоритет (низкий/средний/высокий/срочный), метки, исполнители, даты начала и дедлайна, чек-листы с прогрессом, вложения, комментарии.
+- **Realtime** — создание, редактирование и перемещение карточек, изменения колонок, комментарии и чек-листы мгновенно приходят другим участникам доски через WebSockets.
+- **История** — действия по карточкам асинхронно пишутся в журнал активности (MongoDB).
+- **Аутентификация и профиль** — регистрация и вход, восстановление пароля, редактирование профиля; при входе открывается последняя посещённая доска.
+- **Демо-данные** — сидер создаёт пользователей, воркспейсы, доски, колонки и карточки.
+
+### Стек технологий
+
+**Backend**
+
+- PHP 8.5, Laravel 13
+- PostgreSQL 16 — основное хранилище
+- MongoDB 7 — журнал активности карточек
+- Redis — кеш, сессии, очереди
+- Laravel Reverb — WebSockets/realtime
+- Inertia.js (Laravel-адаптер), Laravel Breeze, Ziggy
+- Архитектура: Actions + DTO, Events, очереди (Jobs), Policies
+
+**Frontend**
+
+- Vue 3 + Inertia.js 2, Pinia
+- Tailwind CSS, Vite
+- TipTap 3 — редактор описания карточки
+- vue-draggable-plus — drag-and-drop
+- Laravel Echo + pusher-js, axios
+- Heroicons / Lucide
+
+**Инфраструктура и качество**
+
+- Docker Compose: PHP-FPM, Nginx, PostgreSQL, MongoDB, Redis, queue worker, Reverb, Node.js
+- Makefile для всех типовых операций
+- Pest 5 (тесты), Laravel Pint (стиль кода)
 
 ---
 
@@ -666,6 +714,37 @@ SESSION_DRIVER=redis
 QUEUE_CONNECTION=redis
 ```
 
+### MongoDB
+
+Используется для журнала активности карточек (`App\Models\Kanban\CardActivity`).
+
+```env
+MONGO_DB_CONNECTION=mongodb
+MONGO_DB_HOST=mongodb
+MONGO_DB_PORT=27017
+MONGO_DB_DATABASE=laravel_mongo
+MONGO_DB_USERNAME=laravel
+MONGO_DB_PASSWORD=secret
+MONGO_DB_AUTHENTICATION_DATABASE=admin
+```
+
+### Reverb (WebSockets)
+
+```env
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=123456
+REVERB_APP_KEY=local_dev_key_123
+REVERB_APP_SECRET=local_dev_secret_456
+REVERB_HOST=reverb
+REVERB_PORT=8080
+REVERB_SCHEME=http
+
+VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+VITE_REVERB_HOST="localhost"
+VITE_REVERB_PORT="8080"
+VITE_REVERB_SCHEME="http"
+```
+
 ### Приложение
 
 ```env
@@ -676,7 +755,7 @@ APP_DEBUG=true
 APP_URL=http://localhost
 ```
 
-> **Важно:** Значения `DB_HOST` и `REDIS_HOST` должны совпадать с именами сервисов в `docker-compose.yml` (`db` и `redis` соответственно), а не быть `localhost`.
+> **Важно:** Значения `DB_HOST`, `REDIS_HOST`, `MONGO_DB_HOST` и `REVERB_HOST` должны совпадать с именами сервисов в `docker-compose.yml` (`db`, `redis`, `mongodb` и `reverb` соответственно), а не быть `localhost`.
 
 ---
 
@@ -687,6 +766,8 @@ APP_URL=http://localhost
 | Nginx | 80 | Веб-сервер (http://localhost) |
 | PostgreSQL | 5432 | База данных |
 | Redis | 6379 | Кэш и очереди |
+| Reverb | 8080 | WebSockets (Laravel Echo) |
+| MongoDB | 27017 | Журнал активности (доступен для GUI-клиентов) |
 
 ---
 
