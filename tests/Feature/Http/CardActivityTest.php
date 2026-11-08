@@ -26,7 +26,8 @@ it('queues a card.created activity with the full payload', function () {
     $this
         ->actingAs($user)
         ->postJson(route('boards.cards.store', $column->id), [
-            'title' => 'New activity card', ])
+            'title' => 'New activity card',
+        ])
         ->assertOk();
 
     $card = Card::query()
@@ -123,7 +124,7 @@ it('records scalar changes as a card.updated activity', function () {
     });
 });
 
-it('record label changes as a separate activity', function () {
+it('records label changes as a separate activity', function () {
     /** @var TestCase $this */
     Queue::fake();
 
@@ -149,16 +150,20 @@ it('record label changes as a separate activity', function () {
         $payload = $property->getValue($job);
 
         return $payload['type'] === 'card.labels_changed'
-            && $payload['changes']['added'] === [[
-                'id' => $attached->id,
-                'name' => $attached->name,
-                'color' => $attached->color,
-            ]]
-            && $payload['changes']['removed'] === [[
-                'id' => $detached->id,
-                'name' => $detached->name,
-                'color' => $detached->color,
-            ]];
+            && $payload['changes']['added'] === [
+                [
+                    'id' => $attached->id,
+                    'name' => $attached->name,
+                    'color' => $attached->color,
+                ],
+            ]
+            && $payload['changes']['removed'] === [
+                [
+                    'id' => $detached->id,
+                    'name' => $detached->name,
+                    'color' => $detached->color,
+                ],
+            ];
     });
 });
 
@@ -314,8 +319,6 @@ it('records a comment.deleted activity with the text snapshot', function () {
         'content' => $content,
     ]);
 
-    $commentId = $comment->id;
-
     $this
         ->actingAs($user)
         ->deleteJson(route('cards.comments.delete', ['card' => $card->id, 'comment' => $comment->id]))
@@ -441,5 +444,145 @@ it('records a checklist.deleted activity with the checklist title', function () 
             && $payload['subject_id'] === $checklistId
             && $payload['changes']['title'] === 'New checklist'
             && $payload['context']['items_count'] === 3;
+    });
+});
+
+it('records a checklist_item.created activity with the item content', function () {
+    /** @var TestCase $this */
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $checklist = Checklist::factory()->create(['card_id' => $card->id]);
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->postJson(route('cards.checklist.items.store', $checklist->id), [
+            'content' => 'New checklist item',
+        ])
+        ->assertOk();
+
+    $checklistItem = $checklist->items()->firstOrFail();
+    expect($checklistItem->content)->toBe('New checklist item')
+        ->and($checklistItem->is_completed)->toBeFalse();
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($checklist, $checklistItem) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'checklist_item.created'
+            && $payload['subject_type'] === 'checklist_item'
+            && $payload['subject_id'] === $checklistItem->id
+            && $payload['context'] === [
+                'content' => 'New checklist item',
+                'checklist_id' => $checklist->id,
+                'checklist_title' => $checklist->title,
+            ];
+    });
+});
+
+it('records a checklist_item.toggled activity from false to true', function () {
+    /** @var TestCase $this */
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $checklist = Checklist::factory()->create(['card_id' => $card->id]);
+    $checklistItem = ChecklistItem::factory()->create(['checklist_id' => $checklist->id, 'is_completed' => false, 'content' => 'checklist item']);
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->patchJson(route('cards.checklists.items.toggle', ['checklist' => $checklist->id, 'item' => $checklistItem->id]))
+        ->assertOk();
+
+    $item = $checklistItem->refresh();
+    expect($item->is_completed)->toBeTrue();
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($checklist, $item) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'checklist_item.toggled'
+            && $payload['subject_type'] === 'checklist_item'
+            && $payload['subject_id'] === $item->id
+            && $payload['changes']['is_completed'] === ['from' => false, 'to' => true]
+            && $payload['context'] === [
+                'content' => $item->content,
+                'checklist_id' => $checklist->id,
+                'checklist_title' => $checklist->title,
+            ];
+    });
+});
+
+it('records a checklist_item.toggled activity from true to false', function () {
+    /** @var TestCase $this */
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $checklist = Checklist::factory()->create(['card_id' => $card->id]);
+    $checklistItem = ChecklistItem::factory()->create(['checklist_id' => $checklist->id, 'is_completed' => true, 'content' => 'checklist item']);
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->patchJson(route('cards.checklists.items.toggle', ['checklist' => $checklist->id, 'item' => $checklistItem->id]))
+        ->assertOk();
+
+    $item = $checklistItem->refresh();
+    expect($item->is_completed)->toBeFalse();
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($checklist, $item) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'checklist_item.toggled'
+            && $payload['subject_type'] === 'checklist_item'
+            && $payload['subject_id'] === $item->id
+            && $payload['changes']['is_completed'] === ['from' => true, 'to' => false]
+            && $payload['context'] === [
+                'content' => $item->content,
+                'checklist_id' => $checklist->id,
+                'checklist_title' => $checklist->title,
+            ];
+    });
+});
+
+it('records a checklist_item.deleted activity with the checklist item content', function () {
+    /** @var TestCase $this */
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $checklist = Checklist::factory()->create(['card_id' => $card->id]);
+    $checklistItem = ChecklistItem::factory()->create(['checklist_id' => $checklist->id, 'content' => 'Deleted checklist item']);
+    $other = ChecklistItem::factory()->create(['checklist_id' => $checklist->id]);
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->deleteJson(route('cards.checklists.items.delete', ['checklist' => $checklist->id, 'item' => $checklistItem->id]))
+        ->assertOk();
+
+    $this->assertDatabaseMissing('kanban_checklist_items', [
+        'id' => $checklistItem->id,
+    ]);
+
+    $this->assertDatabaseHas('kanban_checklist_items', [
+        'id' => $other->id,
+    ]);
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($checklist, $checklistItem) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'checklist_item.deleted'
+            && $payload['subject_type'] === 'checklist_item'
+            && $payload['subject_id'] === $checklistItem->id
+            && $payload['context'] === [
+                'content' => $checklistItem->content,
+                'checklist_id' => $checklist->id,
+                'checklist_title' => $checklist->title,
+            ];
     });
 });

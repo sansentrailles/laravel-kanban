@@ -61,7 +61,7 @@ class ChecklistController extends Controller
 
         $this->recordCardActivityAction->executeForCard(
             card: $card,
-            actor: $request->user,
+            actor: $request->user(),
             type: CardActivityType::ChecklistDeleted,
             subjectId: $checklistId,
             changes: [
