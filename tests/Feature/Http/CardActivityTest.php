@@ -10,8 +10,10 @@ use App\Models\Kanban\Column;
 use App\Models\Kanban\Comment;
 use App\Models\Kanban\Label;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -585,4 +587,112 @@ it('records a checklist_item.deleted activity with the checklist item content', 
                 'checklist_title' => $checklist->title,
             ];
     });
+});
+
+it('records an attachment.uploaded activity with file metadata', function () {
+    /** @var TestCase $this */
+    Queue::fake();
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $this
+        ->actingAs($user)
+        ->postJson(route('cards.attachments.store', $card->id), [
+            'file' => UploadedFile::fake()->image('roadmap.png'),
+        ])
+        ->assertCreated();
+
+    $attachment = $card->attachments()->firstOrFail();
+    Storage::disk('public')->assertExists($attachment->path);
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($attachment) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'attachment.uploaded'
+            && $payload['subject_type'] === 'attachment'
+            && $payload['subject_id'] === $attachment->id
+            && $payload['changes'] === []
+            && $payload['context'] === [
+                'name' => $attachment->name,
+                'mime' => $attachment->mime_type,
+                'size' => $attachment->size,
+            ];
+    });
+});
+
+it('records an attachment.deleted activity with file metadata', function () {
+    /** @var TestCase $this */
+    Queue::fake();
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $path = 'attachments/2026/10/test.pdf';
+    Storage::disk('public')->put($path, 'content');
+    $attachment = $card->attachments()->create(['user_id' => $user->id, 'name' => 'test.pdf', 'path' => $path, 'mime_type' => 'application/pdf', 'size' => 7]);
+    $attachmentId = $attachment->id;
+    $meta = [
+        'name' => $attachment->name,
+        'mime' => $attachment->mime_type,
+        'size' => $attachment->size,
+    ];
+
+    Storage::disk('public')->assertExists($path);
+    $this->assertDatabaseHas('kanban_attachments', ['id' => $attachment->id]);
+
+    $this
+        ->actingAs($user)
+        ->deleteJson(route('cards.attachments.destroy', ['card' => $card->id, 'attachment' => $attachment->id]))
+        ->assertOk()
+        ->assertJsonPath('attachments_count', 0)
+        ->assertJsonPath('success', true);
+
+    $this->assertDatabaseMissing('kanban_attachments', ['id' => $attachment->id]);
+    Storage::disk('public')->assertMissing($path);
+
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($attachmentId, $meta) {
+        $payload = (new ReflectionProperty($job, 'payload'))->getValue($job);
+
+        return $payload['type'] === 'attachment.deleted'
+            && $payload['subject_type'] === 'attachment'
+            && $payload['subject_id'] === $attachmentId
+            && $payload['changes'] === []
+            && $payload['context'] === $meta;
+
+    });
+});
+
+it('does not record an attachment.deleted activity for other card', function () {
+    /** @var TestCase $this */
+    Queue::fake();
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $card = Card::factory()->create();
+    $otherCard = Card::factory()->create();
+
+    $card->column->board->workspace->members()->attach($user->id);
+
+    $path = 'attachments/2026/10/test.pdf';
+    Storage::disk('public')->put($path, 'content');
+    $attachment = $card->attachments()->create(['user_id' => $user->id, 'name' => 'test.pdf', 'path' => $path, 'mime_type' => 'application/pdf', 'size' => 7]);
+
+    Storage::disk('public')->assertExists($path);
+    $this->assertDatabaseHas('kanban_attachments', ['id' => $attachment->id]);
+
+    $this
+        ->actingAs($user)
+        ->deleteJson(route('cards.attachments.destroy', ['card' => $otherCard->id, 'attachment' => $attachment->id]))
+        ->assertNotFound();
+
+    $this->assertDatabaseHas('kanban_attachments', ['id' => $attachment->id]);
+    Storage::disk('public')->assertExists($attachment->path);
+
+    Queue::assertNotPushed(PersistCardActivity::class);
 });
