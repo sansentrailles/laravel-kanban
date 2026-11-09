@@ -32,5 +32,6 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="MONGO_DB_DATABASE" value="laravel_mongo_testing" force="true"/>
     </php>
 </phpunit>

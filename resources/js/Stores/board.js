@@ -58,9 +58,41 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+
+  const pendingActivitiesRequests = ref(0)
+  const activitiesLoading = computed(() => pendingActivitiesRequests.value > 0)
+
+  const loadActivities = async (cardId, { append = false, cursor = null } = {}) => {
+    const card = findCard(cardId)
+    if (!card) return
+
+    pendingActivitiesRequests.value++
+
+    try {
+      const { data } = await axios.get(route('cards.activity.index', card.id), {
+        params: cursor ? { cursor } : {},
+      })
+
+      const activities = data.activities ?? []
+
+      card.activities = append
+        ? [...(card.activities ?? []), ...activities]
+        : activities
+
+      card.activities_next_cursor = data.next_cursor ?? null
+    } catch (error) {
+      notifyError(error, 'Не удалось загрузить историю карточки')
+    } finally {
+      pendingActivitiesRequests.value--
+    }
+  }
+
   const selectCard = (card) => {
     selectedCard.value = card
-    if (card) loadComments(card.id)
+    if (card) {
+      loadComments(card.id)
+      loadActivities(card.id)
+    }
   }
 
   const setFilters = (newFilters) => { filters.value = newFilters }
@@ -747,6 +779,7 @@ export const useBoardStore = defineStore('board', () => {
   return {
     currentBoard, columns, selectedCard, filters, sortedColumns, labels,
     commentsLoading,
+    activitiesLoading,
     createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
     saveColumnsOrder, saveCardOrder, applyCardMove, findCard, updateCard,
     updateCardField, updateCardDates, snapshotBoard,
@@ -755,6 +788,7 @@ export const useBoardStore = defineStore('board', () => {
     createChecklist, deleteChecklist, addChecklistItem, toggleChecklistItem, deleteChecklistItem,
     addComment, deleteComment, editComment,
     setLabels, createLabel,
-    uploadAttachment, deleteAttachment
+    uploadAttachment, deleteAttachment,
+    loadActivities
   }
 })

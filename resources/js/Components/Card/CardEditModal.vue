@@ -111,24 +111,14 @@ const commitTitle = () => {
             <template v-if="!isTitleEditing">
               <h2
                 class="text-xl font-semibold text-gray-900 cursor-text hover:text-gray-600 flex items-center gap-1.5 min-w-0"
-                title="Нажмите, чтобы отредактировать заголовок"
-                @click="startTitleEditing"
-              >
+                title="Нажмите, чтобы отредактировать заголовок" @click="startTitleEditing">
                 <span class="truncate">{{ card.title }}</span>
                 <PencilIcon class="w-4 h-4 flex-shrink-0 text-gray-300 hover:text-gray-500" />
               </h2>
             </template>
-            <input
-              v-else
-              ref="titleInput"
-              v-model="titleDraft"
-              type="text"
-              maxlength="255"
+            <input v-else ref="titleInput" v-model="titleDraft" type="text" maxlength="255"
               class="text-xl font-semibold text-gray-900 border-2 border-blue-500 rounded px-2 py-1 outline-none w-full max-w-xl"
-              @blur="commitTitle"
-              @keyup.enter="commitTitle"
-              @keyup.esc="cancelTitleEditing"
-            />
+              @blur="commitTitle" @keyup.enter="commitTitle" @keyup.esc="cancelTitleEditing" />
 
             <button @click="close" class="ml-2 text-gray-400 hover:text-gray-600 flex-shrink-0" aria-label="Закрыть">
               <XMarkIcon class="w-6 h-6" />
@@ -145,25 +135,15 @@ const commitTitle = () => {
                 </FormField>
 
                 <FormField label="Метки">
-                  <LabelSelector
-                    :value="card.labels"
-                    :available-labels="workspaceLabels"
-                    :workspace-id="workspaceId"
-                    @change="updateLabels"
-                  />
+                  <LabelSelector :value="card.labels" :available-labels="workspaceLabels" :workspace-id="workspaceId"
+                    @change="updateLabels" />
                 </FormField>
 
                 <!-- Передаем card.id и колбэки для чеклистов -->
-                <ChecklistSection
-                  :card-id="card.id"
-                  :checklists="card.checklists"
-                  @create-checklist="handleCreateChecklist"
-                  @delete-checklist="handleDeleteChecklist"
-                  @add-item="handleAddItem"
-                  @toggle-item="handleToggleItem"
-                  @delete-item="handleDeleteItem"
-                  @to-card="convertItemToCard"
-                />
+                <ChecklistSection :card-id="card.id" :checklists="card.checklists"
+                  @create-checklist="handleCreateChecklist" @delete-checklist="handleDeleteChecklist"
+                  @add-item="handleAddItem" @toggle-item="handleToggleItem" @delete-item="handleDeleteItem"
+                  @to-card="convertItemToCard" />
 
                 <FormField label="Приоритет">
                   <PrioritySelector :value="card.priority" @change="updatePriority" />
@@ -174,25 +154,25 @@ const commitTitle = () => {
                 </FormField>
 
                 <FormField label="Вложения">
-                  <AttachmentsList
-                    :attachments="card.attachments"
+                  <AttachmentsList :attachments="card.attachments"
                     @upload="(files) => store.uploadAttachment(card.id, files)"
-                    @delete="(attachemtId) => store.deleteAttachment(card.id, attachemtId)"
-                  />
+                    @delete="(attachemtId) => store.deleteAttachment(card.id, attachemtId)" />
                 </FormField>
 
-                <CommentsSection
-                  :comments="card.comments"
-                  :loading="store.commentsLoading"
-                  @change="handleCreateComment"
-                  @delete-comment="handleDeleteComment"
-                  @edit-comment="handleEditComment"
-                />
+                <CommentsSection :comments="card.comments" :loading="store.commentsLoading"
+                  @change="handleCreateComment" @delete-comment="handleDeleteComment"
+                  @edit-comment="handleEditComment" />
               </div>
 
               <div class="space-y-4">
                 <FormField label="История">
-                  <ActivityLog :activities="card.activities" />
+                  <ActivityLog
+                    :activities="card.activities || []"
+                    :loading="store.activitiesLoading"
+                    :has-more="Boolean(card.activities_next_cursor)"
+                    :columns="store.columns"
+                    @load-more="store.loadActivities(card.id, { append: true, cursor: card.activities_next_cursor })"
+                  />
                 </FormField>
               </div>
             </div>

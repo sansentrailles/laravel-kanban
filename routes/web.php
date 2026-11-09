@@ -5,6 +5,7 @@
 use App\Events\TestReverbEvent;
 use App\Http\Controllers\Kanban\AttachmentController;
 use App\Http\Controllers\Kanban\BoardController;
+use App\Http\Controllers\Kanban\CardActivityController;
 use App\Http\Controllers\Kanban\CardController;
 use App\Http\Controllers\Kanban\ChecklistController;
 use App\Http\Controllers\Kanban\ChecklistItemController;
@@ -32,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/columns/{column}/cards', [CardController::class, 'store'])->name('boards.cards.store');
     Route::patch('/cards/orders', [CardController::class, 'orders'])->name('boards.cards.orders');
     Route::patch('/cards/{card}', [CardController::class, 'update'])->name('boards.cards.update');
+    Route::get('/cards/{card}/activity', [CardActivityController::class, 'index'])->name('cards.activity.index');
 
     // Чеклисты
     Route::post('/card/{card}/checklist', [ChecklistController::class, 'store'])->name('cards.checklist.store');
