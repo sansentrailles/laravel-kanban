@@ -123,6 +123,7 @@ export const useBoardStore = defineStore('board', () => {
       .listen('.comment.updated', (e) => applyCommentUpdated(e))
       .listen('.comment.deleted', (e) => applyCommentDeleted(e))
       .listen('.checklist.updated', (e) => applyChecklistUpdated(e))
+      .listen('.activity.created', (e) => applyActivityCreated(e))
       .listen('.card.moved', (e) => {
         moveCardRemote(e.card)
       })
@@ -214,6 +215,17 @@ export const useBoardStore = defineStore('board', () => {
 
     card.checklists = checklists || []
     card.checklists_count = checklistsCount ?? card.checklists.length
+  }
+
+  // История загружается лениво; если карточку ещё не открывали,
+  // патчить нечего — при открытии список придёт целиком из API.
+  const applyActivityCreated = ({ card_id: cardId, activity }) => {
+    const card = findCard(cardId)
+    if (!card || !Array.isArray(card.activities)) return
+
+    if (!card.activities.some((item) => item.id === activity.id)) {
+      card.activities.unshift(activity)
+    }
   }
 
   const updateColumn = (updatedColumn, fromRealtime = false) => {

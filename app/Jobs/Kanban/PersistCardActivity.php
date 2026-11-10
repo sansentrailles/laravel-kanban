@@ -2,9 +2,12 @@
 
 namespace App\Jobs\Kanban;
 
+use App\Events\Kanban\ActivityCreated;
+use App\Http\Resources\Kanban\CardActivityResource;
 use App\Models\Kanban\CardActivity;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Http\Request;
 
 class PersistCardActivity implements ShouldQueue
 {
@@ -27,9 +30,23 @@ class PersistCardActivity implements ShouldQueue
      */
     public function handle(): void
     {
-        CardActivity::query()->createOrFirst(
+        $activity = CardActivity::query()->createOrFirst(
             ['event_id' => $this->payload['event_id']],
             $this->payload,
         );
+
+        // При повторе job'а createOrFirst вернёт уже существующую запись —
+        // событие повторно не отправляем.
+        if (! $activity->wasRecentlyCreated) {
+            return;
+        }
+
+        // resolve(new Request()) вместо resolve(): job выполняется в воркере,
+        // где контейнер не обязан содержать текущий HTTP-запрос.
+        broadcast(new ActivityCreated(
+            workspaceId: (int) $activity->workspace_id,
+            cardId: (int) $activity->card_id,
+            activity: CardActivityResource::make($activity)->resolve(new Request),
+        ));
     }
 }
