@@ -204,8 +204,7 @@ class CardController extends Controller
             'assignees',
         ]);
 
-        // TODO: переделать в broadcast
-        event(new CardUpdated($updatedCard));
+        broadcast(new CardCreated($updatedCard))->toOthers();
 
         $actor = $request->user();
 
