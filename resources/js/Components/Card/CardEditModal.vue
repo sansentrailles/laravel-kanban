@@ -1,5 +1,5 @@
 <script setup>
-import { XMarkIcon, PencilIcon } from '@heroicons/vue/24/outline';
+import { XMarkIcon, PencilIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
 import { computed, nextTick, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
@@ -49,6 +49,10 @@ const updateDates = (dates) => {
 
 const updatePriority = (priority) => {
   store.updateCardField(card.value.id, 'priority', priority)
+}
+
+const toggleCompletion = () => {
+  store.setCardCompletion(card.value.id, !card.value.completed_at)
 }
 
 // Прокси-методы для чеклистов
@@ -153,6 +157,23 @@ const commitTitle = () => {
                   <DateRangePicker :start="card.start_date" :end="card.due_date" @change="updateDates" />
                 </FormField>
 
+                <FormField label="Статус">
+                  <div class="space-y-1">
+                    <button type="button"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors"
+                      :class="card.completed_at
+                        ? 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'" @click="toggleCompletion">
+                      <CheckCircleIcon class="w-4 h-4" />
+                      {{ card.completed_at ? 'Вернуть в работу' : 'Завершить' }}
+                    </button>
+
+                    <p v-if="card.completed_at" class="text-xs text-gray-500">
+                      Завершена {{ new Date(card.completed_at).toLocaleString('ru-RU') }}
+                    </p>
+                  </div>
+                </FormField>
+
                 <FormField label="Вложения">
                   <AttachmentsList :attachments="card.attachments"
                     @upload="(files) => store.uploadAttachment(card.id, files)"
@@ -166,13 +187,9 @@ const commitTitle = () => {
 
               <div class="space-y-4">
                 <FormField label="История">
-                  <ActivityLog
-                    :activities="card.activities || []"
-                    :loading="store.activitiesLoading"
-                    :has-more="Boolean(card.activities_next_cursor)"
-                    :columns="store.columns"
-                    @load-more="store.loadActivities(card.id, { append: true, cursor: card.activities_next_cursor })"
-                  />
+                  <ActivityLog :activities="card.activities || []" :loading="store.activitiesLoading"
+                    :has-more="Boolean(card.activities_next_cursor)" :columns="store.columns"
+                    @load-more="store.loadActivities(card.id, { append: true, cursor: card.activities_next_cursor })" />
                 </FormField>
               </div>
             </div>

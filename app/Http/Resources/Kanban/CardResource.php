@@ -22,6 +22,7 @@ final class CardResource extends JsonResource
             'priority' => $this->priority?->value,
             'due_date' => $this->due_date?->format('Y-m-d'),
             'start_date' => $this->start_date?->format('Y-m-d'),
+            'completed_at' => $this->completed_at?->toIso8601String(),
             // Ключ именно 'ord': moveCardRemote в board.js читает updatedCard.ord
             // и сортирует card.ord — строка нужна для точности decimal в JS
             'ord' => (string) $this->ord,

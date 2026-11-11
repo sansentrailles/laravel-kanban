@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Kanban;
 use App\Actions\Kanban\CreateCardAction;
 use App\Actions\Kanban\MoveCardAction;
 use App\Actions\Kanban\RecordCardActivityAction;
+use App\Actions\Kanban\SetCardCompletionAction;
 use App\Actions\Kanban\UpdateCardAction;
 use App\DTO\Kanban\CreateCardDTO;
 use App\DTO\Kanban\TextSnapshotDTO;
@@ -14,6 +15,7 @@ use App\Events\Kanban\CardCreated;
 use App\Events\Kanban\CardMoved;
 use App\Events\Kanban\CardUpdated;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Kanban\CardCompletionRequest;
 use App\Http\Requests\Kanban\CardCreateRequest;
 use App\Http\Requests\Kanban\CardOrderRequest;
 use App\Http\Requests\Kanban\CardUpdateRequest;
@@ -34,7 +36,8 @@ class CardController extends Controller
         private readonly MoveCardAction $moveCardAction,
         private readonly UpdateCardAction $updateCardAction,
         private readonly CreateCardAction $createCardAction,
-        private readonly RecordCardActivityAction $recordCardActivityAction
+        private readonly RecordCardActivityAction $recordCardActivityAction,
+        private readonly SetCardCompletionAction $setCardCompletionAction,
     ) {}
 
     public function store(CardCreateRequest $request, Column $column): JsonResponse
@@ -78,6 +81,49 @@ class CardController extends Controller
 
         return response()->json([
             'card' => new CardResource($card),
+        ]);
+    }
+
+    public function setCompletion(CardCompletionRequest $request, Card $card): JsonResponse
+    {
+        $completed = $request->boolean('completed');
+
+        $result = DB::transaction(function () use ($card, $completed): array {
+            $locked = Card::query()->whereKey($card->id)->lockForUpdate()->firstOrFail();
+
+            if ($locked->isCompleted() === $completed) {
+                return ['card' => $locked, 'changed' => false];
+            }
+
+            return [
+                'card' => $this->setCardCompletionAction->execute($locked, $completed),
+                'changed' => true,
+            ];
+        });
+
+        $card = $result['card'];
+        $card->load('labels', 'assignees');
+
+        if (! $result['changed']) {
+            return response()->json([
+                'success' => true,
+                'card' => new CardResource($card),
+                'message' => 'Статус уже актуален',
+            ]);
+        }
+
+        broadcast(new CardUpdated($card))->toOthers();
+
+        $this->recordCardActivityAction->executeForCard(
+            card: $card,
+            actor: $request->user(),
+            type: $completed ? CardActivityType::CardCompleted : CardActivityType::CardReopened,
+        );
+
+        return response()->json([
+            'success' => true,
+            'card' => new CardResource($card),
+            'message' => $completed ? 'Карточка завершена' : 'Карточка возвращена в работу',
         ]);
     }
 
@@ -126,7 +172,6 @@ class CardController extends Controller
             'priority' => $card->priority,
             'start_date' => $card->start_date,
             'due_date' => $card->due_date,
-            'completed_at' => $card->completed_at,
         ];
 
         $labelsBefore = $card->labels()->get(['kanban_labels.id', 'kanban_labels.name', 'kanban_labels.color'])->keyBy('id');
@@ -211,7 +256,6 @@ class CardController extends Controller
             'priority' => static fn ($value): ?string => $value?->value,
             'start_date' => static fn ($value): ?string => $value?->format('Y-m-d'),
             'due_date' => static fn ($value): ?string => $value?->format('Y-m-d'),
-            'completed_at' => static fn ($value): ?string => $value?->toIso8601String(),
         ];
 
         $changes = [];

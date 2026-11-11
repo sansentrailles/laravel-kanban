@@ -1,9 +1,9 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { 
-  CheckCircleIcon, 
-  PaperClipIcon, 
-  CalendarIcon, 
+import {
+  CheckCircleIcon,
+  PaperClipIcon,
+  CalendarIcon,
   ChatBubbleBottomCenterIcon
 } from '@heroicons/vue/24/outline'
 import { SquareCheckBig } from '@lucide/vue';
@@ -18,7 +18,10 @@ const props = defineProps({
   }
 })
 
+const isCompleted = computed(() => Boolean(props.card.completed_at))
+
 const isOverdue = computed(() => {
+  if (isCompleted.value) return false
   if (!props.card.due_date) return false
   return new Date(props.card.due_date) < new Date()
 })
@@ -48,7 +51,7 @@ const tooltipUser = ref(null)
 const showTooltip = (user, event) => {
   tooltipUser.value = user
   const rect = event.currentTarget.getBoundingClientRect()
-  
+
   tooltipStyle.value = {
     // Верхний край тултипа на 8px выше аватара
     top: `${rect.top - 8}px`,
@@ -68,34 +71,30 @@ const hideTooltip = () => {
 </script>
 
 <template>
-  <div 
-    v-bind="$attrs"
+  <div v-bind="$attrs"
     class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 cursor-pointer hover:shadow-md transition-shadow"
-    :class="{ 'border-l-4 border-l-red-500': isOverdue }"
-  >
-    <!-- Приоритет и метки -->
+    :class="{
+      'border-l-4 border-l-red-500': isOverdue,
+      'border-l-4 border-l-green-500': isCompleted,
+    }"> <!-- Приоритет и метки -->
     <div v-if="priority || card.labels.length" class="flex flex-wrap items-center gap-1 mb-2">
-      <span
-        v-if="priority"
-        class="inline-flex items-center px-1.5 py-0.5 rounded border text-[11px] font-medium"
-        :class="priority.class"
-        title="Приоритет"
-      >
+      <span v-if="priority" class="inline-flex items-center px-1.5 py-0.5 rounded border text-[11px] font-medium"
+        :class="priority.class" title="Приоритет">
         {{ priority.label }}
       </span>
 
-      <LabelBadge 
-        v-for="label in card.labels"
-        :key="label.id"
-        :label="label"
-      />
+      <LabelBadge v-for="label in card.labels" :key="label.id" :label="label" />
     </div>
 
     <!-- Заголовок -->
-    <h4 class="text-sm font-medium text-gray-900 mb-2 line-clamp-2">
-      {{ card.title }}
-    </h4>
-    
+    <div class="flex items-start gap-1.5 mb-2">
+      <CheckCircleIcon v-if="isCompleted" class="w-4 h-4 flex-shrink-0 text-green-500 mt-0.5" />
+      <h4 class="text-sm font-medium line-clamp-2"
+        :class="isCompleted ? 'line-through text-gray-400' : 'text-gray-900'">
+        {{ card.title }}
+      </h4>
+    </div>
+
     <!-- Превью описания -->
     <p v-if="card.description" class="text-xs text-gray-500 mb-2 line-clamp-2">
       {{ card.description }}
@@ -107,75 +106,52 @@ const hideTooltip = () => {
         <CheckCircleIcon class="w-3 h-3" />
         <span>{{ card.checklist.completed }}/{{ card.checklist.total }}</span>
         <div class="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
-          <div 
-            class="h-full bg-green-500"
-            :style="{ width: `${(card.checklist.completed / card.checklist.total) * 100}%` }"
-          />
+          <div class="h-full bg-green-500"
+            :style="{ width: `${(card.checklist.completed / card.checklist.total) * 100}%` }" />
         </div>
       </div>
     </div>
-    
+
     <!-- Футер -->
     <div class="flex items-center justify-between text-xs text-gray-500">
       <div class="flex items-center gap-2">
         <!-- Исполнители -->
         <div v-if="card.assignees?.length" class="flex -space-x-1">
-          <div 
-            v-for="assignee in card.assignees.slice(0, 3)"
-            :key="assignee.id"
-            class="relative cursor-pointer"
-            @mouseenter="showTooltip(assignee, $event)"
-            @mouseleave="hideTooltip"
-          >
+          <div v-for="assignee in card.assignees.slice(0, 3)" :key="assignee.id" class="relative cursor-pointer"
+            @mouseenter="showTooltip(assignee, $event)" @mouseleave="hideTooltip">
             <Avatar :user="assignee" size="xs" />
           </div>
 
           <!-- Индикатор, если исполнителей больше 3 -->
-          <div 
-            v-if="card.assignees.length > 3"
+          <div v-if="card.assignees.length > 3"
             class="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-medium text-gray-600 border border-white"
-            title="И еще {{ card.assignees.length - 3 }}"
-          >
+            title="И еще {{ card.assignees.length - 3 }}">
             +{{ card.assignees.length - 3 }}
           </div>
         </div>
-        
+
         <!-- Комментарии -->
-        <div
-          v-if="card.comments_count"
-          class="flex items-center gap-1"
-          title="Комментарии"
-        >
+        <div v-if="card.comments_count" class="flex items-center gap-1" title="Комментарии">
           <ChatBubbleBottomCenterIcon class="w-3 h-3" />
           <span>{{ card.comments_count }}</span>
         </div>
 
         <!-- Чеклисты -->
-        <div
-          v-if="card.checklists_count"
-          class="flex items-center gap-1"
-          title="Чеклисты"
-        >
-          <SquareCheckBig
-            size="12"
-          />
+        <div v-if="card.checklists_count" class="flex items-center gap-1" title="Чеклисты">
+          <SquareCheckBig size="12" />
           <span>{{ card.checklists_count }}</span>
         </div>
-        
+
         <!-- Вложения -->
         <div v-if="card.attachments_count" class="flex items-center gap-1">
           <PaperClipIcon class="w-3 h-3" />
           <span>{{ card.attachments_count }}</span>
         </div>
       </div>
-      
+
       <!-- Дедлайн -->
-      <div 
-        v-if="card.due_date"
-        class="flex items-center gap-1"
-        :class="{ 'text-red-600 font-medium': isOverdue }"
-        title="Дедлайн"
-      >
+      <div v-if="card.due_date" class="flex items-center gap-1" :class="{ 'text-red-600 font-medium': isOverdue }"
+        title="Дедлайн">
         <CalendarIcon class="w-3 h-3" />
         <span>{{ formatDate(card.due_date) }}</span>
       </div>
@@ -184,11 +160,9 @@ const hideTooltip = () => {
 
   <!-- TELEPORT: Тултип вынесен в <body> -->
   <Teleport to="body">
-    <div 
-      v-if="isTooltipVisible && tooltipUser"
+    <div v-if="isTooltipVisible && tooltipUser"
       class="z-[100] bg-gray-900 text-white text-xs rounded-lg shadow-2xl p-2.5 whitespace-nowrap pointer-events-none"
-      :style="tooltipStyle"
-    >
+      :style="tooltipStyle">
       <div class="flex items-center gap-2.5">
         <Avatar :user="tooltipUser" size="sm" />
         <div class="flex flex-col">
@@ -197,7 +171,8 @@ const hideTooltip = () => {
         </div>
       </div>
       <!-- Стрелочка вниз (указывает на аватар) -->
-      <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+      <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900">
+      </div>
     </div>
   </Teleport>
 </template>

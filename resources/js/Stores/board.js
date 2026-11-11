@@ -124,12 +124,8 @@ export const useBoardStore = defineStore('board', () => {
       .listen('.comment.deleted', (e) => applyCommentDeleted(e))
       .listen('.checklist.updated', (e) => applyChecklistUpdated(e))
       .listen('.activity.created', (e) => applyActivityCreated(e))
-      .listen('.card.moved', (e) => {
-        moveCardRemote(e.card)
-      })
-      .listen('.cards.reordered', (e) => {
-        applyCardsReordered(e)
-      })
+      .listen('.card.moved', (e) => moveCardRemote(e.card))
+      .listen('.cards.reordered', (e) => applyCardsReordered(e))
       .listen('.card.created', (e) => {
         const column = columns.value.find(c => c.id === e.card.column_id)
         if (column) {
@@ -568,6 +564,30 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  const setCardCompletion = async (cardId, completed) => {
+    const card = findCard(cardId)
+    if (!card) return
+
+    const oldCompleted = card.completed_at
+
+    card.completed_at = completed ? new Date().toISOString() : null
+
+    try {
+      const response = await axios.patch(route('boards.cards.completion', cardId), {
+        completed
+      })
+
+      const updated = response.data?.card
+      if (updated) {
+        card.completed_at = updated.completed_at
+      }
+
+    } catch (error) {
+      card.completed_at = oldCompleted
+      console.error('Ошибка изменения статуса карточки:', error)
+    }
+  }
+
   // Логика комментариев
   const addComment = async (cardId, comment) => {
     const card = findCard(cardId)
@@ -794,6 +814,7 @@ export const useBoardStore = defineStore('board', () => {
     activitiesLoading,
     createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
     saveColumnsOrder, saveCardOrder, applyCardMove, findCard, updateCard,
+    setCardCompletion,
     updateCardField, updateCardDates, snapshotBoard,
     updateColumnField,
     cardsRenderTick, bumpCardsRenderTick,
