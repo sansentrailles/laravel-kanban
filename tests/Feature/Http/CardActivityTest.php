@@ -180,7 +180,9 @@ it('records card movement with from/to context', function () {
     $card->column->board->workspace->members()->attach($user->id);
 
     $fromColumnId = $card->column_id;
+    $fromColumnTitle = $card->column->title;
     $fromOrd = (string) $card->ord;
+    $toColumnTitle = $targetColumn->title;
 
     $this
         ->actingAs($user)
@@ -194,16 +196,16 @@ it('records card movement with from/to context', function () {
 
     $card->refresh();
 
-    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($card, $targetColumn, $fromColumnId, $fromOrd) {
+    Queue::assertPushed(PersistCardActivity::class, function (PersistCardActivity $job) use ($card, $targetColumn, $fromColumnId, $fromColumnTitle, $fromOrd, $toColumnTitle) {
         $property = new ReflectionProperty($job, 'payload');
         $payload = $property->getValue($job);
-
-        // dd([$payload['column_id'], $targetColumn->id]);
 
         return $payload['type'] === 'card.moved'
             && $payload['card_id'] === $card->id
             && $payload['column_id'] === $targetColumn->id
             && $payload['context']['from_column_id'] === $fromColumnId
+            && $payload['context']['from_column_title'] === $fromColumnTitle
+            && $payload['context']['to_column_title'] === $toColumnTitle
             && $payload['context']['from_ord'] === $fromOrd
             && $payload['context']['to_ord'] === (string) $card->ord
             && $payload['context']['prev_card_id'] === null

@@ -135,6 +135,9 @@ class CardController extends Controller
         $nextCard = Card::find($request->validated('nextCardId'));
 
         $fromColumnId = $card->column_id;
+        // Название снимаем до переноса: MoveCardAction мог бы изменить
+        // column_id у переданной модели, и в истории оказалась бы новая колонка.
+        $fromColumnTitle = $card->column->title;
         $fromOrd = (string) $card->ord;
 
         $movedCard = $this->moveCardAction->execute($card, $column, $prevCard, $nextCard);
@@ -150,6 +153,8 @@ class CardController extends Controller
                 'to_column_id' => $movedCard->column_id,
                 'from_ord' => $fromOrd,
                 'to_ord' => (string) $movedCard->ord,
+                'from_column_title' => $fromColumnTitle,
+                'to_column_title' => $column->title,
                 'prev_card_id' => $prevCard?->id,
                 'next_card_id' => $nextCard?->id,
             ],

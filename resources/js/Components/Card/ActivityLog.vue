@@ -110,8 +110,10 @@ const actionText = (activity) => {
     case 'card.updated':
       return 'изменил(а) карточку'
     case 'card.moved': {
-      const from = columnTitle(context.from_column_id)
-      const to = columnTitle(context.to_column_id)
+      // Новые записи хранят названия колонок в контексте — история не ломается
+      // после переименования или удаления колонки. Старые резолвим по id.
+      const from = context.from_column_title ?? columnTitle(context.from_column_id)
+      const to = context.to_column_title ?? columnTitle(context.to_column_id)
 
       return from === to
         ? `изменил(а) порядок в колонке «${to}»`
