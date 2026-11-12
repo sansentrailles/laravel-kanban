@@ -135,6 +135,7 @@ export const useBoardStore = defineStore('board', () => {
           }
         }
       })
+      .listen('.card.archived', (e) => removeCardRemote(e.card_id))
       .listen('.column.updated', (e) => {
         updateColumn(e.column)
       })
@@ -808,13 +809,50 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  const archiveCard = async (cardId) => {
+    const id = Number(cardId)
+    const card = findCard(id)
+    const column = columns.value.find(c => c.cards.some(item => item.id === id))
+    if (!card || !column) return
+
+    const index = column.cards.findIndex(item => item.id === id)
+
+    if (selectedCard.value?.id === id) {
+      selectedCard.value = null
+    }
+
+    column.cards.splice(index, 1)          // оптимистично
+
+    try {
+      await axios.patch(route('boards.cards.archive', id))
+      window.toast?.success('Карточка в архиве')
+    } catch (error) {
+      column.cards.splice(index, 0, card)  // откат
+      notifyError(error, 'Не удалось архивировать карточку')
+    }
+  }
+
+  const removeCardRemote = (cardId) => {
+    const id = Number(cardId)
+
+    for (const column of columns.value) {
+      const index = column.cards.findIndex(c => c.id === id)
+      if (index !== -1) {
+        column.cards.splice(index, 1)
+        break
+      }
+    }
+
+    if (selectedCard.value?.id === id) selectedCard.value = null
+  }
+
   return {
     currentBoard, columns, selectedCard, filters, sortedColumns, labels,
     commentsLoading,
     activitiesLoading,
     createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
     saveColumnsOrder, saveCardOrder, applyCardMove, findCard, updateCard,
-    setCardCompletion,
+    setCardCompletion, archiveCard,
     updateCardField, updateCardDates, snapshotBoard,
     updateColumnField,
     cardsRenderTick, bumpCardsRenderTick,

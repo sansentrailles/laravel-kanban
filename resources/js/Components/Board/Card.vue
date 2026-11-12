@@ -4,12 +4,14 @@ import {
   CheckCircleIcon,
   PaperClipIcon,
   CalendarIcon,
-  ChatBubbleBottomCenterIcon
+  ChatBubbleBottomCenterIcon,
+  ArchiveBoxIcon
 } from '@heroicons/vue/24/outline'
 import { SquareCheckBig } from '@lucide/vue';
 
 import Avatar from '@/Components/UI/Avatar.vue'
 import LabelBadge from '@/Components/UI/LabelBadge.vue'
+import ConfirmDialog from '../UI/ConfirmDialog.vue';
 
 const props = defineProps({
   card: {
@@ -17,6 +19,14 @@ const props = defineProps({
     required: true
   }
 })
+
+const emit = defineEmits(['archive'])
+const isArchiveOpen = ref(false)
+
+const confirmArchive = () => {
+  isArchiveOpen.value = false
+  emit('archive', props.card.id)
+}
 
 const isCompleted = computed(() => Boolean(props.card.completed_at))
 
@@ -72,11 +82,17 @@ const hideTooltip = () => {
 
 <template>
   <div v-bind="$attrs"
-    class="bg-white rounded-lg shadow-sm border border-gray-200 p-3 cursor-pointer hover:shadow-md transition-shadow"
+    class="relative group bg-white rounded-lg shadow-sm border border-gray-200 p-3 cursor-pointer hover:shadow-md transition-shadow"
     :class="{
       'border-l-4 border-l-red-500': isOverdue,
       'border-l-4 border-l-green-500': isCompleted,
     }"> <!-- Приоритет и метки -->
+    <button class="absolute top-1.5 right-1.5 z-10 p-1 rounded-md bg-white/90 text-gray-400 shadow-sm
+         opacity-0 group-hover:opacity-100 hover:text-amber-600 hover:bg-white transition-opacity"
+      title="Архивировать карточку" aria-label="Архивировать карточку" @mousedown.stop @touchstart.stop
+      @click.stop="isArchiveOpen = true">
+      <ArchiveBoxIcon class="w-3.5 h-3.5" />
+    </button>
     <div v-if="priority || card.labels.length" class="flex flex-wrap items-center gap-1 mb-2">
       <span v-if="priority" class="inline-flex items-center px-1.5 py-0.5 rounded border text-[11px] font-medium"
         :class="priority.class" title="Приоритет">
@@ -156,6 +172,10 @@ const hideTooltip = () => {
         <span>{{ formatDate(card.due_date) }}</span>
       </div>
     </div>
+
+    <ConfirmDialog :show="isArchiveOpen" title="Архивировать карточку?" confirm-label="Архивировать"
+      :message="`Карточка «${card.title}» переместится в архив. Её можно будет вернуть.`" @confirm="confirmArchive"
+      @cancel="isArchiveOpen = false" />
   </div>
 
   <!-- TELEPORT: Тултип вынесен в <body> -->

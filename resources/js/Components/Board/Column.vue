@@ -106,8 +106,6 @@ const resetWipLimit = () => {
   closeWipPopover()
 }
 
-
-
 // --- Переименование колонки (инлайн в шапке) ---
 const isRenaming = ref(false)
 const titleDraft = ref('')
@@ -328,6 +326,7 @@ onUnmounted(() => {
         :card="card"
         :data-card-id="card.id"
         @click="handleCardClick(card)"
+        @archive="store.archiveCard(card.id)"
       />
     </div>
     

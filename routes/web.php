@@ -35,6 +35,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/cards/{card}', [CardController::class, 'update'])->name('boards.cards.update');
     Route::get('/cards/{card}/activity', [CardActivityController::class, 'index'])->name('cards.activity.index');
     Route::patch('/cards/{card}/completion', [CardController::class, 'setCompletion'])->name('boards.cards.completion');
+    Route::patch('/cards/{card}/archive', [CardController::class, 'archive'])->name('boards.cards.archive');
 
     // Чеклисты
     Route::post('/card/{card}/checklist', [ChecklistController::class, 'store'])->name('cards.checklist.store');

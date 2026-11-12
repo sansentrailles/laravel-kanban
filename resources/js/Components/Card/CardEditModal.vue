@@ -1,5 +1,5 @@
 <script setup>
-import { XMarkIcon, PencilIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
+import { XMarkIcon, PencilIcon, CheckCircleIcon, ArchiveBoxIcon } from '@heroicons/vue/24/outline';
 import { computed, nextTick, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
@@ -15,11 +15,13 @@ import PrioritySelector from './PrioritySelector.vue';
 import AttachmentsList from './AttachmentsList.vue';
 import ChecklistSection from './ChecklistSection.vue';
 import CommentsSection from './CommentsSection.vue';
+import ConfirmDialog from '../UI/ConfirmDialog.vue';
 
 const store = useBoardStore()
 const page = usePage()
 
 const card = computed(() => store.selectedCard)
+const isArchiveOpen = ref(false)
 
 // const workspaceLabels = computed(() => page.props.workspaceLabels?.data || [])
 const workspaceLabels = computed(() => store.labels || [])
@@ -101,6 +103,13 @@ const commitTitle = () => {
   store.updateCardField(card.value.id, 'title', newTitle)
 }
 
+const confirmArchiveCard = () => {
+  if (!card.value) return
+
+  isArchiveOpen.value = false
+  store.archiveCard(card.value.id)
+}
+
 </script>
 
 <template>
@@ -124,9 +133,20 @@ const commitTitle = () => {
               class="text-xl font-semibold text-gray-900 border-2 border-blue-500 rounded px-2 py-1 outline-none w-full max-w-xl"
               @blur="commitTitle" @keyup.enter="commitTitle" @keyup.esc="cancelTitleEditing" />
 
-            <button @click="close" class="ml-2 text-gray-400 hover:text-gray-600 flex-shrink-0" aria-label="Закрыть">
-              <XMarkIcon class="w-6 h-6" />
-            </button>
+            <div class="flex items-center gap-1 ml-2 flex-shrink-0">
+              <button @click="isArchiveOpen = true"
+                class="p-1 text-gray-400 hover:text-amber-600 rounded transition-colors" title="Архивировать карточку"
+                aria-label="Архивировать карточку">
+                <ArchiveBoxIcon class="w-5 h-5" />
+              </button>
+              <button @click="close" class="ml-2 text-gray-400 hover:text-gray-600 flex-shrink-0" aria-label="Закрыть">
+                <XMarkIcon class="w-6 h-6" />
+              </button>
+            </div>
+
+            <ConfirmDialog :show="isArchiveOpen" title="Архивировать карточку?" confirm-label="Архивировать"
+              :message="`Карточка «${card.title}» переместится в архив. Её можно будет вернуть.`" @confirm="confirmArchiveCard"
+              @cancel="isArchiveOpen = false" />
           </div>
 
           <div class="flex-1 overflow-y-auto p-6">

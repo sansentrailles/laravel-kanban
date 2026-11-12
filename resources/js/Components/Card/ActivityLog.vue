@@ -123,8 +123,8 @@ const actionText = (activity) => {
       return 'изменил(а) метки'
     case 'card.assignees_changed':
       return 'изменил(а) исполнителей'
-    case 'card.deleted':
-      return 'удалил(а) карточку'
+    case 'card.archived':
+      return 'архивировал(а) карточку'
     case 'card.restored':
       return 'восстановил(а) карточку'
     case 'card.completed':

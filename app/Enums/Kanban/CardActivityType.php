@@ -12,7 +12,7 @@ enum CardActivityType: string
     case CardMoved = 'card.moved';
     case CardLabelsChanged = 'card.labels_changed';
     case CardAssigneesChanged = 'card.assignees_changed';
-    case CardDeleted = 'card.deleted';
+    case CardArchived = 'card.archived';
     case CardRestored = 'card.restored';
     case CardCompleted = 'card.completed';
     case CardReopened = 'card.reopened';
@@ -41,7 +41,7 @@ enum CardActivityType: string
             self::CardMoved,
             self::CardLabelsChanged,
             self::CardAssigneesChanged,
-            self::CardDeleted,
+            self::CardArchived,
             self::CardRestored,
             self::CardCompleted,
             self::CardReopened => 'card',
@@ -70,7 +70,7 @@ enum CardActivityType: string
             self::CardMoved => 'Перемещение карточки',
             self::CardLabelsChanged => 'Изменение меток',
             self::CardAssigneesChanged => 'Изменение исполнителей',
-            self::CardDeleted => 'Удаление карточки',
+            self::CardArchived => 'Архивация карточки',
             self::CardRestored => 'Восстановление карточки',
             self::CardCompleted => 'Завершение карточки',
             self::CardReopened => 'Возврат карточки в работу',

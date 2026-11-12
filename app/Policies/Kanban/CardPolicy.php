@@ -20,4 +20,9 @@ class CardPolicy
 
         return $workspace->hasMember($user);
     }
+
+    public function archive(User $user, Card $card): bool
+    {
+        return $card->column->board->workspace->hasMember($user);
+    }
 }

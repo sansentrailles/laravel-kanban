@@ -11,6 +11,7 @@ use App\DTO\Kanban\CreateCardDTO;
 use App\DTO\Kanban\TextSnapshotDTO;
 use App\DTO\Kanban\UpdateCardDTO;
 use App\Enums\Kanban\CardActivityType;
+use App\Events\Kanban\CardArchived;
 use App\Events\Kanban\CardCreated;
 use App\Events\Kanban\CardMoved;
 use App\Events\Kanban\CardUpdated;
@@ -26,8 +27,10 @@ use App\Models\User;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class CardController extends Controller
@@ -246,6 +249,32 @@ class CardController extends Controller
             'message' => 'Обновлено',
             'data' => $updatedCard,
             'labels' => $updatedCard->labels,
+        ]);
+    }
+
+    public function archive(Request $request, Card $card): JsonResponse
+    {
+        Gate::authorize('archive', $card);
+
+        $cardId = $card->id;
+        $columnId = $card->column_id;
+        $workspaceId = $card->column->board->workspace_id;
+
+        // Активность — до архивации: после delete() карточка скрыта
+        // глобальным scope, и executeForCard уже не соберёт данные.
+        $this->recordCardActivityAction->executeForCard(
+            card: $card,
+            actor: $request->user(),
+            type: CardActivityType::CardArchived
+        );
+
+        $card->delete();
+
+        broadcast(new CardArchived($cardId, $columnId, $workspaceId))->toOthers();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Карточка в архиве',
         ]);
     }
 
