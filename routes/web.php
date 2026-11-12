@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/workspaces/{slug}', [WorkspaceController::class, 'show'])->name('kanban.workspace');
     Route::get('/workspaces/{workspace:slug}/boards/{board:uuid}', [BoardController::class, 'show'])->name('kanban.board');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('kanban.workspaces.store');
+    Route::get('/workspaces/{workspace:slug}/boards/{board:uuid}/archive', [BoardController::class, 'archive'])->name('kanban.board.archive');
 
     // Колонки
     Route::post('/boards/{board}/columns', [ColumnController::class, 'store'])->name('boards.columns.store');
@@ -36,6 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/cards/{card}/activity', [CardActivityController::class, 'index'])->name('cards.activity.index');
     Route::patch('/cards/{card}/completion', [CardController::class, 'setCompletion'])->name('boards.cards.completion');
     Route::patch('/cards/{card}/archive', [CardController::class, 'archive'])->name('boards.cards.archive');
+    Route::patch('/cards/{card}/restore', [CardController::class, 'restore'])->name('boards.cards.restore')->withTrashed();
 
     // Чеклисты
     Route::post('/card/{card}/checklist', [ChecklistController::class, 'store'])->name('cards.checklist.store');

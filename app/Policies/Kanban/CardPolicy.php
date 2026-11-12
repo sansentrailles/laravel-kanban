@@ -25,4 +25,9 @@ class CardPolicy
     {
         return $card->column->board->workspace->hasMember($user);
     }
+
+    public function restore(User $user, Card $card): bool
+    {
+        return $card->column->board->workspace->hasMember($user);
+    }
 }

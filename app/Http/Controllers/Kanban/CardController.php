@@ -14,6 +14,7 @@ use App\Enums\Kanban\CardActivityType;
 use App\Events\Kanban\CardArchived;
 use App\Events\Kanban\CardCreated;
 use App\Events\Kanban\CardMoved;
+use App\Events\Kanban\CardRestored;
 use App\Events\Kanban\CardUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Kanban\CardCompletionRequest;
@@ -275,6 +276,35 @@ class CardController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Карточка в архиве',
+        ]);
+    }
+
+    public function restore(Request $request, Card $card): JsonResponse
+    {
+        Gate::authorize('restore', $card);
+
+        if (! $card->trashed()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Карточка уже активна',
+            ]);
+        }
+
+        $card->restore();
+        $card->load(['labels', 'assignees', 'checklists.items', 'attachments']);
+
+        $this->recordCardActivityAction->executeForCard(
+            card: $card,
+            actor: $request->user(),
+            type: CardActivityType::CardRestored,
+        );
+
+        broadcast(new CardRestored($card))->toOthers();
+
+        return response()->json([
+            'success' => true,
+            'card' => new CardResource($card),
+            'message' => 'Карточка восстановлена',
         ]);
     }
 

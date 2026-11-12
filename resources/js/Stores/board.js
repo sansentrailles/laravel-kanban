@@ -136,6 +136,7 @@ export const useBoardStore = defineStore('board', () => {
         }
       })
       .listen('.card.archived', (e) => removeCardRemote(e.card_id))
+      .listen('.card.restored', (e) => insertCardIntoColumns(e.card))
       .listen('.column.updated', (e) => {
         updateColumn(e.column)
       })
@@ -846,13 +847,39 @@ export const useBoardStore = defineStore('board', () => {
     if (selectedCard.value?.id === id) selectedCard.value = null
   }
 
+  const insertCardIntoColumns = (card) => {
+    const column = columns.value.find(c => c.id === Number(card.column_id))
+    if (!column) return
+    if (column.cards.some(c => c.id === card.id)) return
+
+    column.cards.push(card)
+    column.cards.sort((a, b) => Number(a.ord) - Number(b.ord))
+  }
+
+  const restoreCard = async (cardId) => {
+    try {
+      const response = await axios.patch(route('boards.cards.restore', cardId))
+      const card = response.data.card ?? null
+
+      if (card) {
+        insertCardIntoColumns(card)
+        window.toast?.success('Карточка восстановлена')
+      }
+
+      return card
+    } catch (error) {
+      notifyError(error, 'Не удалось восстановить карточку')
+      return null
+    }
+  }
+
   return {
     currentBoard, columns, selectedCard, filters, sortedColumns, labels,
     commentsLoading,
     activitiesLoading,
     createCard, selectCard, setFilters, setBoardData, connectRealtime, disconnectRealtime,
     saveColumnsOrder, saveCardOrder, applyCardMove, findCard, updateCard,
-    setCardCompletion, archiveCard,
+    setCardCompletion, archiveCard, restoreCard, insertCardIntoColumns,
     updateCardField, updateCardDates, snapshotBoard,
     updateColumnField,
     cardsRenderTick, bumpCardsRenderTick,
