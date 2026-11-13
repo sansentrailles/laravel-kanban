@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3'
 import { ArchiveBoxIcon, ArrowLeftIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/outline'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -22,6 +22,10 @@ const props = defineProps({
 
 const store = useBoardStore()
 
+// Сбрасываем карточку, открытую на доске, до первого рендера: AppLayout
+// рисует CardEditModal по selectedCard, иначе модалка мигнёт на один кадр.
+store.selectCard(null)
+
 // Локальная копия: после восстановления строка исчезает без перезагрузки.
 const cards = ref([...props.archivedCards.data])
 const restoringId = ref(null)
@@ -31,9 +35,6 @@ watch(
   () => props.archivedCards,
   (value) => { cards.value = [...value.data] }
 )
-
-// На доске могла остаться открытая модалка карточки.
-onMounted(() => store.selectCard(null))
 
 const priorities = {
   low: { label: 'Низкий', class: 'bg-green-50 text-green-700 border-green-200' },

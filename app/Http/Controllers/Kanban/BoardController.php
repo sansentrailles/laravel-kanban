@@ -41,28 +41,6 @@ class BoardController extends Controller
             ]))->resolve(),
             ...$this->layoutProps($user, $workspace),
         ]);
-
-        $workspaces = Workspace::where('owner_id', $user->id)
-            ->orWhereHas('members', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            })
-            ->withCount('members')
-            ->get();
-
-        return Inertia::render('Boards/Show', [
-            'board' => BoardResource::make($board->load([
-                'columns.cards' => fn ($q) => $q
-                    ->withCount(['comments', 'attachments', 'checklists'])
-                    // Комментарии не грузим: их может быть много, а нужны они
-                    // только в открытой карточке (GET cards.comments.index).
-                    ->with(['labels', 'checklists.items', 'attachments', 'assignees']),
-            ]))->resolve(),
-            // members нужны AssigneePicker в модалке карточки.
-            'currentWorkspace' => WorkspaceResource::make($workspace->load(['labels', 'members']))->resolve(),
-            'boards' => BoardResource::collection($workspace->boards()->withCount(['columns'])->ordered()->get())->resolve(),
-            'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
-            'unreadNotifications' => 0,
-        ]);
     }
 
     public function archive(Workspace $workspace, Board $board): Response
@@ -78,8 +56,7 @@ class BoardController extends Controller
 
         return Inertia::render('Boards/Archive', [
             'board' => BoardResource::make($board)->resolve(),
-            // 'archivedCards' => ArchivedCardResource::collection($archivedCards)->resolve(),
-            'archivedCards' => ArchivedCardResource::collection($archivedCards),
+            'archivedCards' => ArchivedCardResource::collection($archivedCards)->response()->getData(true),
             ...$this->layoutProps(Auth::user(), $workspace),
         ]);
     }

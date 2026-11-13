@@ -16,7 +16,7 @@ function restoreActivityPayload(PersistCardActivity $job): array
     return (new ReflectionProperty($job, 'payload'))->getValue($job);
 }
 
-it('restores an archived card and records a card.restores', function () {
+it('restores an archived card and records a card.restored activity', function () {
     /** @var TestCase $this */
     Queue::fake();
 
